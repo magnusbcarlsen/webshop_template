@@ -1,5 +1,51 @@
+# dependencies
+node_modules/
+
+# environment variables
 .env
-package-lock.json
-package.json
-node_modules
-.next
+.env.* 
+
+# build output
+dist/
+build/
+out/
+
+# system files
+.DS_Store
+Thumbs.db
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editor/IDE settings
+.vscode/
+.idea/
+*.swp
+
+# coverage reports
+coverage/
+*.lcov
+
+# OS-specific
+*.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# misc
+*.log
+*.local
+
+# next.js
+.next/
+
+# vercel or netlify
+.vercel/
+.netlify/
+
+# optional cache folders
+.cache/
+.eslintcache
