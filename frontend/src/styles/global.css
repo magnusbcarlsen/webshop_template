@@ -1,0 +1,33 @@
+/* styles/globals.css */
+
+/* 1) Tailwind’s base reset + your custom base styles */
+@import "tailwindcss/preflight";
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+  h1 {
+    @apply text-4xl font-extrabold;
+  }
+}
+
+@tailwind utilities;
+@layer components {
+  .btn {
+    @apply inline-block px-5 py-2 rounded-lg font-medium transition;
+  }
+  .btn-brand {
+    @apply bg-brand text-white hover:bg-brand-dark;
+  }
+}
+
+/* 3) All of Tailwind’s utility classes */
+@tailwind utilities;
+
+/* 4) Truly global overrides, if needed */
+html, body, #__next {
+  height: 100%;
+}
