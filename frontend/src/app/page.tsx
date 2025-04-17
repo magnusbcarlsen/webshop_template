@@ -1,6 +1,6 @@
 import Navbar from "@/components/NavBar";
 import ProductList from "@/components/ProductList";
-import "@/styles/globals.css";
+
 
 export default function Home() {
   return (

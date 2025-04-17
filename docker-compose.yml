@@ -36,11 +36,19 @@ services:
       - app-net
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev              # ensures HMR
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app                # bind‑mount source
+      - /app/node_modules             # anonymous volume for node_modules
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true      # force polling across Docker mounts
+      - CHOKIDAR_INTERVAL=100         # poll every 100ms (optional)
     depends_on:
       - backend
     networks:
