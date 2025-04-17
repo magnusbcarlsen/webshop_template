@@ -2,7 +2,7 @@
 require ('dotenv-safe').config();
 import * as mysql from 'mysql2';
 
-const requiredEnvVars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE'];
+const requiredEnvVars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_ROOT_PASSWORD', 'MYSQL_DATABASE'];
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
     throw new Error(`Missing environment variable: ${key}`);
@@ -22,3 +22,5 @@ const pool = mysql.createPool({
 });
 
 module.exports = pool;
+
+export default pool;
