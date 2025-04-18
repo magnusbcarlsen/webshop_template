@@ -6,6 +6,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+ENV NODE_ENV=development
+ENV WATCHPACK_POLLING=true
+ENV CHOKEIDAR_USEPOLLING=true
+
 # bind‑mount will supply the rest of your code
 EXPOSE 3000
 

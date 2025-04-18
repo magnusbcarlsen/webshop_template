@@ -48,7 +48,8 @@ services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true      # force polling across Docker mounts
-      - CHOKIDAR_INTERVAL=100         # poll every 100ms (optional)
+      - CHOKIDAR_INTERVAL=100
+      - WATCHPACK_POLLING=true         # poll every 100ms (optional)
     depends_on:
       - backend
     networks:
