@@ -10,7 +10,7 @@ interface Product{
   name: string;
   slug: string;
   description: string;
-  price: string; // Note: the JSON has this as a string, not a number
+  price: number; 
   sale_price: string | null;
   stock_quantity: number;
   sku: string;
