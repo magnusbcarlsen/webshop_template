@@ -1,6 +1,8 @@
 /// <reference types="node" />
-require ('dotenv-safe').config();
 import * as mysql from 'mysql2';
+import dotenv from 'dotenv-safe';
+
+dotenv.config();
 
 const requiredEnvVars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_ROOT_PASSWORD', 'MYSQL_DATABASE'];
 requiredEnvVars.forEach((key) => {
@@ -21,6 +23,5 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-module.exports = pool;
 
 export default pool;
