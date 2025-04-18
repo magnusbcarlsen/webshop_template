@@ -5,14 +5,25 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 interface Product{
-    product_id: number;
-    name: string;
-    description: string;
-    price: number;
-    category_id: number;
-    category_name: string;
-    // images: Image[];
-    // variants: Variant[];
+  product_id: number;
+  category_id: number;
+  name: string;
+  slug: string;
+  description: string;
+  price: string; // Note: the JSON has this as a string, not a number
+  sale_price: string | null;
+  stock_quantity: number;
+  sku: string;
+  weight: string;
+  dimensions: string;
+  is_featured: number;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+  category_name: string;
+  // These might be undefined in your current API response
+  // images?: ProductImage[];
+  // variants?: ProductVariant[];
 }
 
 export default function ProductList() {
@@ -48,7 +59,7 @@ export default function ProductList() {
                 <h2 className="text-lg font-bold">{product.name}</h2>
                 <p className="text-gray-600">{product.category_name}</p>
                 <p className="mt-2">${product.price}</p>
-                <Link href={`/product/${product.product_id}`} className="mt-2 text-blue-500">
+                <Link href={`/products/${product.product_id}`} className="mt-2 text-blue-500">
                   View Details
                 </Link>
               </div>

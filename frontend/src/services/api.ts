@@ -1,4 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+console.log('API_URL:', API_URL);
 
 export async function testConnection() {
     const response = await fetch(`${API_URL}/test-connection`);
@@ -16,12 +17,21 @@ export async function fetchProducts() {
   return response.json();
 }
 
-export async function fetchProductById(id: string) {
-  const response = await fetch(`${API_URL}/products/${id}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch product');
+export async function fetchProductById(id: number) {
+  console.log(`Fetching product with ID: ${id} from ${API_URL}/products/${id}`);
+  try {
+    const response = await fetch(`${API_URL}/products/${id}`);
+    
+    if (!response.ok) {
+      console.error(`Error response: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
   }
-  return response.json();
 }
 
 export async function fetchCategories() {
