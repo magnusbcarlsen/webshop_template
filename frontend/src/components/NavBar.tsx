@@ -1,110 +1,150 @@
 "use client"
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import InputBase from '@mui/material/InputBase';
+import Badge from '@mui/material/Badge';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemButton from '@mui/material/ListItemButton';
+import { styled, alpha } from '@mui/material/styles';
+import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+// Styled search components
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.25) },
+  marginLeft: 0,
+  width: '100%',
+  [theme.breakpoints.up('sm')]: {
+    marginLeft: theme.spacing(1),
+    width: 'auto',
+  },
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: '100%',
+  position: 'absolute',
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: 'inherit',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 0),
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('md')]: {
+      width: '20ch',
+    },
+  },
+}));
+
+const navItems = ['Home', 'Shop', 'About', 'Contact'];
+
+export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const drawer = (
+    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
+      <Typography variant="h6" sx={{ my: 2 }}>
+        WebShop
+      </Typography>
+      <List>
+        {navItems.map((item) => (
+          <ListItem key={item} disablePadding>
+            <ListItemButton component={Link} href={`/${item.toLowerCase()}`}>
+              <ListItemText primary={item} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
   return (
-    <div className="flex justify-center py-4">
-      <nav className="w-full max-w-4xl bg-white bg-opacity-20 backdrop-blur-lg rounded-lg shadow-lg">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            {/* Logo and desktop menu */}
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                {/* your logo here */}
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/about"
-                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent 
-                             text-sm font-medium text-gray-500 hover:border-indigo-500 hover:text-gray-700"
-                >
-                  About
-                </Link>
-                <Link
-                  href="/services"
-                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent 
-                             text-sm font-medium text-gray-500 hover:border-indigo-500 hover:text-gray-700"
-                >
-                  Services
-                </Link>
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent 
-                             text-sm font-medium text-gray-500 hover:border-indigo-500 hover:text-gray-700"
-                >
-                  Contact
-                </Link>
-              </div>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="flex items-center sm:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 
-                           hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar component="nav" position="sticky" className='bg-background'>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { sm: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography
+            variant="h6"
+            component={Link}
+            href="/"
+            sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit', display: { xs: 'none', sm: 'block' } }}
+          >
+            WebShop
+          </Typography>
+          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+            {navItems.map((item) => (
+              <Button
+                key={item}
+                component={Link}
+                href={`/${item.toLowerCase()}`}
+                sx={{ color: '#fff' }}
               >
-                <span className="sr-only">Open main menu</span>
-                {isOpen ? (
-                  <svg
-                    className="block h-6 w-6"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg
-                    className="block h-6 w-6"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {isOpen && (
-          <div className="sm:hidden">
-            <div className="pt-2 pb-3 space-y-1">
-              <Link
-                href="/about"
-                className="block pl-3 pr-4 py-2 border-l-4 border-indigo-500 
-                           bg-indigo-50 text-base font-medium text-indigo-700"
-              >
-                About
-              </Link>
-              <Link
-                href="/services"
-                className="block pl-3 pr-4 py-2 border-l-4 border-transparent 
-                           text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
-              >
-                Services
-              </Link>
-              <Link
-                href="/contact"
-                className="block pl-3 pr-4 py-2 border-l-4 border-transparent 
-                           text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-        )}
-      </nav>
-    </div>
+                {item}
+              </Button>
+            ))}
+          </Box>
+          <Search>
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ 'aria-label': 'search' }}
+            />
+          </Search>
+          <IconButton
+            size="large"
+            aria-label="show 4 new items"
+            color="inherit"
+            sx={{ ml: 2 }}
+          >
+            <Badge badgeContent={4} color="error">
+              <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 } }}
+      >
+        {drawer}
+      </Drawer>
+    </Box>
   );
-};
-
-export default Navbar;
+}
