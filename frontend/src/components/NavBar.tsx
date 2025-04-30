@@ -1,150 +1,147 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 import Link from 'next/link';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import InputBase from '@mui/material/InputBase';
-import Badge from '@mui/material/Badge';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemButton from '@mui/material/ListItemButton';
-import { styled, alpha } from '@mui/material/styles';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-
-// Styled search components
-const Search = styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.25) },
-  marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(1),
-    width: 'auto',
-  },
-}));
-
-const SearchIconWrapper = styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
-    },
-  },
-}));
+import { Menu, Search, ShoppingCart, X } from 'lucide-react';
 
 const navItems = ['Home', 'Shop', 'About', 'Contact'];
 
+function keyToggle(toggle: () => void) {
+  return (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggle();
+    }
+  };
+}
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-      <Typography variant="h6" sx={{ my: 2 }}>
-        WebShop
-      </Typography>
-      <List>
-        {navItems.map((item) => (
-          <ListItem key={item} disablePadding>
-            <ListItemButton component={Link} href={`/${item.toLowerCase()}`}>
-              <ListItemText primary={item} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
+  const [searchOpen, setSearchOpen] = useState(false);
+  const toggleMobile = () => setMobileOpen(open => !open);
+  const toggleSearch = () => setSearchOpen(open => !open);
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar component="nav" position="sticky" className='bg-background'>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography
-            variant="h6"
-            component={Link}
-            href="/"
-            sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit', display: { xs: 'none', sm: 'block' } }}
-          >
-            WebShop
-          </Typography>
-          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-            {navItems.map((item) => (
-              <Button
+    <header className="sticky top-0 bg-[var(--background)] text-[var(--foreground)] z-50">
+      <div className="flex items-center px-4 py-2">
+        {/* Mobile menu icon */}
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Open menu"
+          onClick={toggleMobile}
+          onKeyDown={keyToggle(toggleMobile)}
+          className="md:hidden mr-2 focus:outline-none cursor-pointer"
+        >
+          <Menu className="w-6 h-6" />
+        </div>
+
+        {/* Logo / Title */}
+        <Link
+          href="/"
+          className="hidden md:block font-bold text-lg hover:text-[var(--secondaryColor)]"
+        >
+          WebShop
+        </Link>
+
+        {/* Desktop nav, search, cart */}
+        <div className="flex items-center ml-auto gap-4 w-full md:w-auto">
+          {/* Desktop links */}
+          <nav className="hidden md:flex gap-4">
+            {navItems.map(item => (
+              <Link
                 key={item}
-                component={Link}
                 href={`/${item.toLowerCase()}`}
-                sx={{ color: '#fff' }}
+                className="text-[var(--foreground)] font-medium hover:text-[var(--secondaryColor)] transition-colors"
               >
                 {item}
-              </Button>
+              </Link>
             ))}
-          </Box>
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ 'aria-label': 'search' }}
-            />
-          </Search>
-          <IconButton
-            size="large"
-            aria-label="show 4 new items"
-            color="inherit"
-            sx={{ ml: 2 }}
+          </nav>
+
+          {/* Search icon / input */}
+          <div className="relative flex items-center">
+            {!searchOpen ? (
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Open search"
+                onClick={toggleSearch}
+                onKeyDown={keyToggle(toggleSearch)}
+                className="focus:outline-none cursor-pointer"
+              >
+                <Search className="w-6 h-6 text-[var(--foreground)]" />
+              </div>
+            ) : (
+              <div className="relative rounded-md bg-[var(--foreground)] bg-opacity-10 hover:bg-opacity-20 transition-colors ml-0 w-full sm:ml-2 sm:w-auto">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="w-5 h-5 text-[var(--foreground)]" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search…"
+                  aria-label="search"
+                  autoFocus
+                  onBlur={toggleSearch}
+                  className="block w-full md:w-20 focus:md:w-40 transition-all duration-200 bg-transparent py-1 pl-10 pr-3 text-current placeholder:text-[var(--foreground)] placeholder:opacity-50 focus:outline-none"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Cart icon */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="View cart"
+            onClick={() => {/* handle cart */}}
+            onKeyDown={keyToggle(() => {/* handle cart */})}
+            className="relative focus:outline-none cursor-pointer"
           >
-            <Badge badgeContent={4} color="error">
-              <ShoppingCartIcon />
-            </Badge>
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 } }}
-      >
-        {drawer}
-      </Drawer>
-    </Box>
+            <ShoppingCart className="w-6 h-6" />
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              4
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile drawer & backdrop */}
+      {mobileOpen && (
+        <>  {/* backdrop */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={toggleMobile}
+          />
+          {/* Drawer */}
+          <div className="fixed top-0 left-0 h-full w-64 bg-[var(--background)] text-[var(--foreground)] p-4 z-50 transform transition-transform duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-lg">WebShop</h2>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Close menu"
+                onClick={toggleMobile}
+                onKeyDown={keyToggle(toggleMobile)}
+                className="focus:outline-none cursor-pointer"
+              >
+                <X className="w-6 h-6" />
+              </div>
+            </div>
+            <nav className="flex flex-col gap-2">
+              {navItems.map(item => (
+                <Link
+                  key={item}
+                  href={`/${item.toLowerCase()}`}
+                  onClick={toggleMobile}
+                  className="py-2 px-2 rounded hover:bg-[var(--foreground)] hover:bg-opacity-10 transition-colors font-medium"
+                >
+                  {item}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </>
+      )}
+    </header>
   );
 }

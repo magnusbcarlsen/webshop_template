@@ -1,33 +1,39 @@
+version: '3.8'
 services:
   db:
     image: mysql:8.0
     restart: always
+    env_file:
+      - .env
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
       - ./database:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    env_file:
-      - .env
     networks:
       - app-net
 
   backend:
     build: ./backend
+    command: npm run start:dev
     ports:
       - "3001:3001"
     env_file:
       - .env
     environment:
       - DB_HOST=db
-      - DB_USER=${MYSQL_USER}
+      - DB_PORT=3306
+      - DB_USERNAME=${MYSQL_USER}
       - DB_PASSWORD=${MYSQL_PASSWORD}
-      - DB_NAME=${MYSQL_DATABASE}
-      - PORT=3001
+      - DB_DATABASE=${MYSQL_DATABASE}
+      - PORT=${PORT}
+      - FRONTEND_URL=${FRONTEND_URL}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     depends_on:
       - db
     networks:
@@ -37,17 +43,20 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    command: npm run dev              # ensures HMR
+    command: npm run dev
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app                # bind‑mount source
-      - /app/node_modules             # anonymous volume for node_modules
+    env_file:
+      - .env
     environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true      # force polling across Docker mounts
+      - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=100
-      - WATCHPACK_POLLING=true         # poll every 100ms (optional)
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     networks:

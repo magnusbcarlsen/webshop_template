@@ -1,14 +1,15 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files and install dependencies
 COPY package*.json ./
+
 RUN npm install
 
-# Copy remaining source code
 COPY . .
+
+RUN npm run build
 
 EXPOSE 3001
 
-CMD ["npm", "run", "start:ts"]
+CMD ["npm", "run", "start:prod"]

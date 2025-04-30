@@ -5,7 +5,7 @@ import ProductList from "@/components/ProductList";
 export default function Home() {
   return (
     <div className="">
-      <main className="">
+      <main className="bg-[var(--background)]">
 
         <Navbar />
        
