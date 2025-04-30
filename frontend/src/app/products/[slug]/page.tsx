@@ -7,24 +7,23 @@ import Link from 'next/link';
 
 export default function ProductDetailsPage() {
   const params = useParams();
-  const id = params.id;
+  const slug = params.slug;
   
   // Debug what's being received
-  console.log("Product ID from params:", id, typeof id);
+  console.log("Product slug from prams:", slug, typeof slug);
   
-  if (!id) {
+  if (!slug) {
     return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }
 
-  const productId = parseInt(id as string, 10);
   
   // Check if the ID is valid
-  console.log("Parsed product ID:", productId);
+  console.log("Parsed slug:", slug);
   
-  if (isNaN(productId) || productId <= 0) {
+  if (typeof slug !== 'string' ) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p>Invalid product ID: {id}</p>
+        <p>Invalid product </p>
         <Link href="/" className="text-blue-500">Back to Products</Link>
       </div>
     );
@@ -35,7 +34,7 @@ export default function ProductDetailsPage() {
       <Link href="/" className="text-blue-500 mb-4 inline-block">
         &larr; Back to Products
       </Link>
-      <ProductDetail productId={productId} />
+      <ProductDetail slug={slug} />
     </div>
   );
 }

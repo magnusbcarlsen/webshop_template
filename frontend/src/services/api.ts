@@ -1,43 +1,45 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-console.log('API_URL:', API_URL);
+// frontend/src/services/api.ts
+ // use the NEXT_PUBLIC_ var if set (e.g. in dev), otherwise fall back to the proxy path
+ const API_ROOT = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
-export async function testConnection() {
-    const response = await fetch(`${API_URL}/test-connection`);
-    if (!response.ok) {
-        throw new Error('Failed to connect to the database');
-    }
-    return response.json();
+
+ export async function fetchProducts() {
+   const res = await fetch(`${API_ROOT}/products`);
+   if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+   return res.json() as Promise<ProductAPI[]>;
+ }
+
+/**
+ * Fetch a single product by its numeric ID
+ */
+export async function fetchProductById(id: number | string) {
+  const res = await fetch(`${API_ROOT}/products/${id}`);
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+  return res.json() as Promise<ProductAPI>;
 }
 
-export async function fetchProducts() {
-  const response = await fetch(`${API_URL}/products`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch products');
-  }
-  return response.json();
+export async function fetchProductBySlug(slug: string) {
+  const res = await fetch(`${API_ROOT}/products/slug/${slug}`);
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+  return res.json() as Promise<ProductAPI>;
 }
 
-export async function fetchProductById(id: number) {
-  console.log(`Fetching product with ID: ${id} from ${API_URL}/products/${id}`);
-  try {
-    const response = await fetch(`${API_URL}/products/${id}`);
-    
-    if (!response.ok) {
-      console.error(`Error response: ${response.status} ${response.statusText}`);
-      throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
-}
-
-export async function fetchCategories() {
-  const response = await fetch(`${API_URL}/categories`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch categories');
-  }
-  return response.json();
-}
+ export type ProductAPI = {
+   id: number;
+   category: { id: number; name: string } | null;
+   name: string;
+   slug: string;
+   description: string | null;
+   price: number;
+   salePrice: number | null;
+   stockQuantity: number;
+   sku: string | null;
+   weight: number | null;
+   dimensions: string | null;
+   isFeatured: boolean;
+   isActive: boolean;
+   createdAt: string;
+   updatedAt: string;
+   images: { id: number; imageUrl: string; altText: string | null; isPrimary: boolean }[];
+   variants: { id: number; sku: string; price: number; salePrice: number | null; stockQuantity: number; isActive: boolean }[];
+ };

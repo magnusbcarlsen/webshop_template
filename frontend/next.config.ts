@@ -1,14 +1,12 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
- reactStrictMode: true,
- webpack: (config) => {
-   config.watchOptions = {
-     poll: 1000,
-      aggregateTimeout: 300,
-  };
-    return config;
+/** @type {import('next').NextConfig} */
+module.exports = {
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        // point to your Nest backend
+        destination: 'http://localhost:3001/api/:path*',
+      },
+    ];
   },
 };
-
-export default nextConfig;

@@ -1,5 +1,10 @@
 {
-  "dependencies": {
-    "dotenv": "^16.5.0"
+  "name": "dockerized-full-stack-env",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "docker-compose build",
+    "up":    "docker-compose up -d",
+    "logs":  "docker-compose logs -f",
+    "down":  "docker-compose down -v"
   }
 }

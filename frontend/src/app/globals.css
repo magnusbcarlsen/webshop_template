@@ -1,15 +1,41 @@
 @import "tailwindcss";
 
 :root {
+  /* Base Theme */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Color Scheme */
+  --color-primary: #1e3a8a;      /* Deep Blue */
+  --color-secondary: #64748b;    /* Slate Gray */
+  --color-accent: #ef4444;       /* Vibrant Red */
+
+  /* Typography */
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
+
+  /* Font Sizes */
+  --h1-size: 2.5rem;
+  --h2-size: 2rem;
+  --h3-size: 1.5rem;
+  --h4-size: 1.25rem;
+  --p-size: 1rem;
+
+  /* Button Styling */
+  --btn-padding: 0.75rem 1.5rem;
+  --btn-radius: 2rem;
+  --btn-font-size: 1rem;
+  --btn-font-weight: 600;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,15 +45,59 @@
   }
 }
 
+/* Global Body */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   width: 100%;
 }
 
+/* Typography */
 h1 {
-  font-size: 2.5rem;
+  font-size: var(--h1-size);
   font-weight: bold;
   color: var(--foreground);
+}
+
+h2 {
+  font-size: var(--h2-size);
+  font-weight: bold;
+  color: var(--foreground);
+}
+
+h3 {
+  font-size: var(--h3-size);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+h4 {
+  font-size: var(--h4-size);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+p {
+  font-size: var(--p-size);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+/* Button Base Styles */
+button {
+  background-color: var(--color-primary);
+  color: #fff;
+  padding: var(--btn-padding);
+  border: none;
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--color-accent);
 }
