@@ -108,6 +108,7 @@ CREATE TABLE product_images (
     is_primary BOOLEAN DEFAULT FALSE,
     sort_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 );
 
@@ -301,7 +302,7 @@ INSERT INTO roles (role_name, description) VALUES
 
 -- Users
 INSERT INTO users (role_id, email, password, first_name, last_name, phone, is_active) VALUES 
-(1, 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', '+1234567890', true),
+(1, 'admin@example.com', 'Password', 'Admin', 'User', '+1234567890', true),
 (2, 'john.doe@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John', 'Doe', '+1987654321', true),
 (2, 'jane.smith@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane', 'Smith', '+1122334455', true),
 (3, 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Store', 'Manager', '+1555666777', true),
@@ -317,11 +318,12 @@ INSERT INTO user_addresses (user_id, address_type, is_default, street_address, c
 (5, 'shipping', true, '101 Lake St', 'Chicago', 'IL', '60601', 'USA');
 
 -- Categories
-INSERT INTO categories (name, slug, description, image_url, is_active) VALUES 
-('Electronics', 'electronics', 'Electronic devices and accessories', '/images/categories/electronics.jpg', true),
-('Clothing', 'clothing', 'Apparel and fashion items', '/images/categories/clothing.jpg', true),
-('Books', 'books', 'Books and publications', '/images/categories/books.jpg', true),
-('Home & Kitchen', 'home-kitchen', 'Home and kitchen products', '/images/categories/home-kitchen.jpg', true);
+INSERT INTO categories (name, slug, description, image_url, is_active) VALUES
+ 
+('Oliemaleri', 'oliemaleri', 'Olie på lærred', '/images/categories/olie.jpg', true),
+('Stregtegning', 'stregtegning', 'Blyant på papir', '/images/categories/stregtegning.jpg', true),
+('Portræt på bestilling', 'portraet-på-bestilling', 'DU KAN BESTILLE DIT EGET UNIKKE PORTRÆT', '/images/categories/unik.jpg', true),
+('Bryllup & begivenheder', 'Bryllup-&-begivenhede', 'Gæster maler med', '/images/categories/bryllup.jpg', true);
 
 -- Sub-categories
 INSERT INTO categories (parent_category_id, name, slug, description, image_url, is_active) VALUES 

@@ -6,9 +6,9 @@
   --foreground: #171717;
 
   /* Color Scheme */
-  --color-primary: #1e3a8a;      /* Deep Blue */
+  --color-primary: #d75615;      /* Deep Blue */
   --color-secondary: #64748b;    /* Slate Gray */
-  --color-accent: #ef4444;       /* Vibrant Red */
+  --color-accent: #eb763b;       /* Vibrant Red */
 
   /* Typography */
   --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -95,9 +95,11 @@ button {
   font-size: var(--btn-font-size);
   font-weight: var(--btn-font-weight);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 button:hover {
   background-color: var(--color-accent);
+  transform: scale(1.05);
+  
 }
