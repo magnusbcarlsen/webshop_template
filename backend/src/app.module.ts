@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductsModule } from './products/products.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { AdminController } from './admin/admin.controller';
 
 @Module({
   imports: [
@@ -17,10 +20,13 @@ import { ProductsModule } from './products/products.module';
         password: cfg.get('DB_PASSWORD'),
         database: cfg.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // or false in prod
+        synchronize: false, // or false in prod
       }),
     }),
-    ProductsModule, // ← make sure this is here
+    ProductsModule,
+    UsersModule,
+    AuthModule, // ← make sure this is here
   ],
+  controllers: [AdminController], // ← add this line
 })
 export class AppModule {}

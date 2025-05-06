@@ -34,4 +34,12 @@ export class ProductImage extends BaseEntity {
   })
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @Column({
+    name: 'updated_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  declare updatedAt: Date;
 }

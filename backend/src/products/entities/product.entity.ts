@@ -44,7 +44,7 @@ export class Product extends BaseEntity {
   @Column({ name: 'stock_quantity', default: 0 })
   stockQuantity: number;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ nullable: true, unique: true, length: 100 })
   sku: string;
 
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })

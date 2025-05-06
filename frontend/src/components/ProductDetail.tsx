@@ -107,7 +107,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             </div>
           )}
           
-          <button className="bg-blue-500 text-white px-4 py-2 rounded">
+          <button className="bg-[var(--primary-color)] text-white px-4 py-2 rounded">
             Add to Cart
           </button>
         </div>
