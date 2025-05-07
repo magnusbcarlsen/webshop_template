@@ -16,4 +16,7 @@ export class UsersService {
   findById(id: number): Promise<User | null> {
     return this.userRepository.findOne({ where: { id } });
   }
+  async updatePassword(id: number, newHash: string): Promise<void> {
+    await this.userRepository.update(id, { password: newHash });
+  }
 }
