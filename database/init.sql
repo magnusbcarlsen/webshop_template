@@ -2,6 +2,7 @@
 CREATE DATABASE IF NOT EXISTS webshop;
 USE webshop;
 
+-- Drop existing tables in dependency order
 DROP TABLE IF EXISTS wishlist_items;
 DROP TABLE IF EXISTS wishlists;
 DROP TABLE IF EXISTS reviews;
@@ -26,7 +27,7 @@ DROP TABLE IF EXISTS roles;
 -- Create tables
 -- Roles table
 CREATE TABLE roles (
-    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    role_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -35,8 +36,8 @@ CREATE TABLE roles (
 
 -- Users table
 CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    role_id INT NOT NULL,
+    user_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    role_id INT UNSIGNED NOT NULL,
     email VARCHAR(320) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
@@ -51,8 +52,8 @@ CREATE TABLE users (
 
 -- User addresses
 CREATE TABLE user_addresses (
-    address_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    address_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
     address_type ENUM('billing', 'shipping') NOT NULL,
     is_default BOOLEAN DEFAULT FALSE,
     street_address VARCHAR(255) NOT NULL,
@@ -67,8 +68,8 @@ CREATE TABLE user_addresses (
 
 -- Categories table
 CREATE TABLE categories (
-    category_id INT AUTO_INCREMENT PRIMARY KEY,
-    parent_category_id INT NULL,
+    category_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    parent_category_id INT UNSIGNED NULL,
     name VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
@@ -81,17 +82,17 @@ CREATE TABLE categories (
 
 -- Products table
 CREATE TABLE products (
-    product_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_id INT,
+    product_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    category_id INT UNSIGNED,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
-    price DECIMAL(10, 2) NOT NULL,
-    sale_price DECIMAL(10, 2),
-    stock_quantity INT NOT NULL DEFAULT 0,
-    sku VARCHAR(100) UNIQUE,
-    weight DECIMAL(8, 2),
-    dimensions VARCHAR(100),
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    sale_price DECIMAL(10, 2) CHECK (sale_price >= 0),
+    stock_quantity MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+    sku VARCHAR(50) UNIQUE,
+    weight DECIMAL(8, 2) CHECK (weight >= 0),
+    dimensions VARCHAR(50),
     is_featured BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -101,12 +102,12 @@ CREATE TABLE products (
 
 -- Product images
 CREATE TABLE product_images (
-    image_id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT NOT NULL,
+    image_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    product_id INT UNSIGNED NOT NULL,
     image_url VARCHAR(255) NOT NULL,
     alt_text VARCHAR(255),
     is_primary BOOLEAN DEFAULT FALSE,
-    sort_order INT DEFAULT 0,
+    sort_order TINYINT UNSIGNED DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
@@ -114,24 +115,24 @@ CREATE TABLE product_images (
 
 -- Product attributes
 CREATE TABLE attributes (
-    attribute_id INT AUTO_INCREMENT PRIMARY KEY,
+    attribute_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Product attribute values
 CREATE TABLE attribute_values (
-    attribute_value_id INT AUTO_INCREMENT PRIMARY KEY,
-    attribute_id INT NOT NULL,
-    value VARCHAR(255) NOT NULL,
+    attribute_value_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    attribute_id INT UNSIGNED NOT NULL,
+    value VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (attribute_id) REFERENCES attributes(attribute_id) ON DELETE CASCADE
 );
 
 -- Product attribute mapping
 CREATE TABLE product_attributes (
-    product_id INT NOT NULL,
-    attribute_value_id INT NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    attribute_value_id INT UNSIGNED NOT NULL,
     PRIMARY KEY (product_id, attribute_value_id),
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
     FOREIGN KEY (attribute_value_id) REFERENCES attribute_values(attribute_value_id) ON DELETE CASCADE
@@ -139,11 +140,11 @@ CREATE TABLE product_attributes (
 
 -- Product variants
 CREATE TABLE product_variants (
-    variant_id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT NOT NULL,
-    sku VARCHAR(100) UNIQUE,
-    price DECIMAL(10, 2) NOT NULL,
-    sale_price DECIMAL(10, 2),
+    variant_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    product_id INT UNSIGNED NOT NULL,
+    sku VARCHAR(50) UNIQUE,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    sale_price DECIMAL(10, 2) CHECK (sale_price >= 0),
     stock_quantity INT NOT NULL DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -153,8 +154,8 @@ CREATE TABLE product_variants (
 
 -- Product variant attribute mapping
 CREATE TABLE variant_attributes (
-    variant_id INT NOT NULL,
-    attribute_value_id INT NOT NULL,
+    variant_id INT UNSIGNED NOT NULL,
+    attribute_value_id INT UNSIGNED NOT NULL,
     PRIMARY KEY (variant_id, attribute_value_id),
     FOREIGN KEY (variant_id) REFERENCES product_variants(variant_id) ON DELETE CASCADE,
     FOREIGN KEY (attribute_value_id) REFERENCES attribute_values(attribute_value_id) ON DELETE CASCADE
@@ -162,8 +163,8 @@ CREATE TABLE variant_attributes (
 
 -- Carts table
 CREATE TABLE carts (
-    cart_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
+    cart_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED,
     session_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -172,11 +173,11 @@ CREATE TABLE carts (
 
 -- Cart items
 CREATE TABLE cart_items (
-    cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
-    cart_id INT NOT NULL,
-    product_id INT NOT NULL,
-    variant_id INT,
-    quantity INT NOT NULL DEFAULT 1,
+    cart_item_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    cart_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    variant_id INT UNSIGNED,
+    quantity SMALLINT UNSIGNED NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cart_id) REFERENCES carts(cart_id) ON DELETE CASCADE,
@@ -186,16 +187,16 @@ CREATE TABLE cart_items (
 
 -- Orders table
 CREATE TABLE orders (
-    order_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
+    order_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED,
     status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
-    total_amount DECIMAL(10, 2) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL,
-    tax_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
-    shipping_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
-    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
-    shipping_address_id INT,
-    billing_address_id INT,
+    total_amount DECIMAL(10, 2) NOT NULL CHECK (total_amount >= 0),
+    subtotal DECIMAL(10, 2) NOT NULL CHECK (subtotal >= 0),
+    tax_amount DECIMAL(10, 2) NOT NULL DEFAULT 0 CHECK (tax_amount >= 0),
+    shipping_amount DECIMAL(10, 2) NOT NULL DEFAULT 0 CHECK (shipping_amount >= 0),
+    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
+    shipping_address_id INT UNSIGNED,
+    billing_address_id INT UNSIGNED,
     payment_method VARCHAR(50),
     tracking_number VARCHAR(100),
     notes TEXT,
@@ -208,25 +209,25 @@ CREATE TABLE orders (
 
 -- Order items
 CREATE TABLE order_items (
-    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
-    product_id INT NOT NULL,
-    variant_id INT,
+    order_item_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    variant_id INT UNSIGNED,
     quantity INT NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
+    subtotal DECIMAL(12, 2) NOT NULL CHECK (subtotal >= 0),
     FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
     FOREIGN KEY (variant_id) REFERENCES product_variants(variant_id) ON DELETE SET NULL
 );
 
--- Order statuses history
+-- Order status history
 CREATE TABLE order_status_history (
-    history_id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
+    history_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
     status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') NOT NULL,
     comment TEXT,
-    created_by INT,
+    created_by INT UNSIGNED,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL
@@ -234,27 +235,27 @@ CREATE TABLE order_status_history (
 
 -- Discounts table
 CREATE TABLE discounts (
-    discount_id INT AUTO_INCREMENT PRIMARY KEY,
+    discount_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(50) UNIQUE,
     type ENUM('percentage', 'fixed_amount') NOT NULL,
-    value DECIMAL(10, 2) NOT NULL,
-    minimum_order_amount DECIMAL(10, 2),
+    value DECIMAL(10, 2) NOT NULL CHECK (value >= 0),
+    minimum_order_amount DECIMAL(10, 2) CHECK (minimum_order_amount >= 0),
     is_active BOOLEAN DEFAULT TRUE,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    usage_limit INT,
-    used_count INT DEFAULT 0,
+    usage_limit INT UNSIGNED,
+    used_count INT UNSIGNED DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Product reviews
 CREATE TABLE reviews (
-    review_id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT NOT NULL,
-    user_id INT NOT NULL,
+    review_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    product_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
     rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    title VARCHAR(255),
+    title VARCHAR(100),
     comment TEXT,
     is_approved BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -265,8 +266,8 @@ CREATE TABLE reviews (
 
 -- Wishlists
 CREATE TABLE wishlists (
-    wishlist_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    wishlist_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
     name VARCHAR(100) NOT NULL DEFAULT 'Default',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -275,8 +276,8 @@ CREATE TABLE wishlists (
 
 -- Wishlist items
 CREATE TABLE wishlist_items (
-    wishlist_id INT NOT NULL,
-    product_id INT NOT NULL,
+    wishlist_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (wishlist_id, product_id),
     FOREIGN KEY (wishlist_id) REFERENCES wishlists(wishlist_id) ON DELETE CASCADE,
@@ -291,6 +292,14 @@ CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_carts_user ON carts(user_id);
 CREATE INDEX idx_carts_session ON carts(session_id);
+
+CREATE INDEX idx_product_name ON products(name);
+CREATE INDEX idx_product_slug ON products(slug);
+CREATE INDEX idx_category_slug ON categories(slug);
+CREATE INDEX idx_product_variants_product ON product_variants(product_id);
+CREATE INDEX idx_reviews_product ON reviews(product_id);
+CREATE INDEX idx_order_items_product ON order_items(product_id);
+CREATE INDEX idx_cart_items_product ON cart_items(product_id);
 
 -- Insert dummy data
 
