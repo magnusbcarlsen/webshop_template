@@ -1,4 +1,5 @@
 // app/src/app/admin/page.tsx
+import Navbar from "@/components/NavBar";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -37,6 +38,7 @@ export default async function AdminPage() {
 
   return (
     <div>
+      <Navbar />
       <h1>Admin Dashboard</h1>
       <p>
         {message} {firstName} {lastName}

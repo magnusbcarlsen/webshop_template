@@ -1,13 +1,14 @@
-"use client"
-import React, { useState, KeyboardEvent } from 'react';
-import Link from 'next/link';
-import { Menu, Search, ShoppingCart, X } from 'lucide-react';
+"use client";
+import React, { useState, useEffect, KeyboardEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Menu, Search, ShoppingCart, X } from "lucide-react";
 
-const navItems = ['Home', 'Shop', 'About', 'Contact'];
+const navItems = ["Home", "Shop", "About", "Contact"];
 
 function keyToggle(toggle: () => void) {
   return (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggle();
     }
@@ -17,8 +18,40 @@ function keyToggle(toggle: () => void) {
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const toggleMobile = () => setMobileOpen(open => !open);
-  const toggleSearch = () => setSearchOpen(open => !open);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  // Base API URL (default to '/api' if env var is missing)
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+
+  // on mount, check session validity via /auth/me
+  useEffect(() => {
+    fetch(`${apiUrl}/auth/me`, {
+      credentials: "include",
+    })
+      .then((res) => setIsLoggedIn(res.ok))
+      .catch(() => setIsLoggedIn(false));
+  }, [apiUrl]);
+
+  const toggleMobile = () => setMobileOpen((open) => !open);
+  const toggleSearch = () => setSearchOpen((open) => !open);
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setIsLoggedIn(false);
+        router.push("/");
+      } else {
+        console.error("Logout failed with status:", res.status);
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   return (
     <header className="sticky top-0 bg-[var(--background)] text-[var(--foreground)] z-50">
@@ -45,9 +78,8 @@ export default function Navbar() {
 
         {/* Desktop nav, search, cart */}
         <div className="flex items-center ml-auto gap-4 w-full md:w-auto">
-          {/* Desktop links */}
           <nav className="hidden md:flex gap-4">
-            {navItems.map(item => (
+            {navItems.map((item) => (
               <Link
                 key={item}
                 href={`/${item.toLowerCase()}`}
@@ -56,9 +88,25 @@ export default function Navbar() {
                 {item}
               </Link>
             ))}
+
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="font-medium hover:text-[var(--secondaryColor)] transition-colors"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="font-medium hover:text-[var(--secondaryColor)] transition-colors"
+              >
+                Login
+              </Link>
+            )}
           </nav>
 
-          {/* Search icon / input */}
+          {/* Search icon/input */}
           <div className="relative flex items-center">
             {!searchOpen ? (
               <div
@@ -93,8 +141,12 @@ export default function Navbar() {
             role="button"
             tabIndex={0}
             aria-label="View cart"
-            onClick={() => {/* handle cart */}}
-            onKeyDown={keyToggle(() => {/* handle cart */})}
+            onClick={() => {
+              /* handle cart */
+            }}
+            onKeyDown={keyToggle(() => {
+              /* handle cart */
+            })}
             className="relative focus:outline-none cursor-pointer"
           >
             <ShoppingCart className="w-6 h-6" />
@@ -107,7 +159,9 @@ export default function Navbar() {
 
       {/* Mobile drawer & backdrop */}
       {mobileOpen && (
-        <>  {/* backdrop */}
+        <>
+          {" "}
+          {/* backdrop */}
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={toggleMobile}
@@ -128,7 +182,7 @@ export default function Navbar() {
               </div>
             </div>
             <nav className="flex flex-col gap-2">
-              {navItems.map(item => (
+              {navItems.map((item) => (
                 <Link
                   key={item}
                   href={`/${item.toLowerCase()}`}

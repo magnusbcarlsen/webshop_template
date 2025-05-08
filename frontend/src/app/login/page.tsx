@@ -1,4 +1,5 @@
 "use client";
+import Navbar from "@/components/NavBar";
 import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 
@@ -31,6 +32,7 @@ export default function LoginPage() {
   }
   return (
     <div>
+      <Navbar />
       <h1>Login</h1>
       <form onSubmit={handleSubmit}>
         <input type="email" name="email" required placeholder="Email" />
