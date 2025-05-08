@@ -1,10 +1,13 @@
 // src/auth/auth.controller.ts
-import { Controller, Post, UseGuards, Req, Res } from '@nestjs/common';
+import { Controller, Post, UseGuards, Req, Res, Get } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
 import { UsersService } from '@/users/users.service';
 import { UserRole } from '@/users/user.entity';
+import { JwtAuthGuard } from './jwt-auth.guard';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 @Controller('auth')
 export class AuthController {
@@ -38,12 +41,31 @@ export class AuthController {
     // 4) Set your cookie as before
     res.cookie('jwt', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/', // so it’s sent on /api/admin
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
+    return { success: true };
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@Req() req: Request & { user: { id: number; role: string } }) {
+    return {
+      id: req.user.id,
+      role: req.user.role,
+    };
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
+    });
     return { success: true };
   }
 }
