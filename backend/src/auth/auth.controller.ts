@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { UsersService } from '@/users/users.service';
 import { UserRole } from '@/users/user.entity';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtService } from '@nestjs/jwt';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -14,6 +15,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly usersService: UsersService, // ← inject the UsersService
+    private readonly jwtService: JwtService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -49,13 +51,26 @@ export class AuthController {
 
     return { success: true };
   }
-  @UseGuards(JwtAuthGuard)
+
   @Get('me')
-  me(@Req() req: Request & { user: { id: number; role: string } }) {
-    return {
-      id: req.user.id,
-      role: req.user.role,
-    };
+  async status(@Req() req: Request & { cookies: { jwt?: string } }) {
+    const token = req.cookies?.jwt;
+    if (!token) {
+      return { authenticated: false };
+    }
+    try {
+      const payload = this.jwtService.verify<{ sub: string; role: string }>(
+        token,
+      );
+      const userId = Number(payload.sub);
+      const user = await this.usersService.findById(userId);
+      if (!user) {
+        return { authenticated: false };
+      }
+      return { authenticated: true, id: userId, role: payload.role };
+    } catch {
+      return { authenticated: false };
+    }
   }
 
   @Post('logout')
