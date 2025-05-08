@@ -19,18 +19,26 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const router = useRouter();
 
-  // Base API URL (default to '/api' if env var is missing)
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-  // on mount, check session validity via /auth/me
   useEffect(() => {
-    fetch(`${apiUrl}/auth/me`, {
-      credentials: "include",
-    })
-      .then((res) => setIsLoggedIn(res.ok))
-      .catch(() => setIsLoggedIn(false));
+    async function checkAuth() {
+      try {
+        const res = await fetch(`${apiUrl}/auth/me`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setIsLoggedIn(data.authenticated === true);
+      } catch {
+        setIsLoggedIn(false);
+      } finally {
+        setLoaded(true);
+      }
+    }
+    checkAuth();
   }, [apiUrl]);
 
   const toggleMobile = () => setMobileOpen((open) => !open);
@@ -56,7 +64,6 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 bg-[var(--background)] text-[var(--foreground)] z-50">
       <div className="flex items-center px-4 py-2">
-        {/* Mobile menu icon */}
         <div
           role="button"
           tabIndex={0}
@@ -68,7 +75,6 @@ export default function Navbar() {
           <Menu className="w-6 h-6" />
         </div>
 
-        {/* Logo / Title */}
         <Link
           href="/"
           className="hidden md:block font-bold text-lg hover:text-[var(--secondaryColor)]"
@@ -76,7 +82,6 @@ export default function Navbar() {
           WebShop
         </Link>
 
-        {/* Desktop nav, search, cart */}
         <div className="flex items-center ml-auto gap-4 w-full md:w-auto">
           <nav className="hidden md:flex gap-4">
             {navItems.map((item) => (
@@ -88,25 +93,16 @@ export default function Navbar() {
                 {item}
               </Link>
             ))}
-
-            {isLoggedIn ? (
+            {loaded && isLoggedIn && (
               <button
                 onClick={handleLogout}
                 className="font-medium hover:text-[var(--secondaryColor)] transition-colors"
               >
                 Logout
               </button>
-            ) : (
-              <Link
-                href="/login"
-                className="font-medium hover:text-[var(--secondaryColor)] transition-colors"
-              >
-                Login
-              </Link>
             )}
           </nav>
 
-          {/* Search icon/input */}
           <div className="relative flex items-center">
             {!searchOpen ? (
               <div
@@ -136,7 +132,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Cart icon */}
           <div
             role="button"
             tabIndex={0}
@@ -157,16 +152,12 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile drawer & backdrop */}
       {mobileOpen && (
         <>
-          {" "}
-          {/* backdrop */}
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={toggleMobile}
           />
-          {/* Drawer */}
           <div className="fixed top-0 left-0 h-full w-64 bg-[var(--background)] text-[var(--foreground)] p-4 z-50 transform transition-transform duration-300">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-lg">WebShop</h2>
@@ -192,6 +183,14 @@ export default function Navbar() {
                   {item}
                 </Link>
               ))}
+              {loaded && isLoggedIn && (
+                <button
+                  onClick={handleLogout}
+                  className="py-2 px-2 rounded font-medium hover:bg-[var(--foreground)] hover:bg-opacity-10 transition-colors text-left"
+                >
+                  Logout
+                </button>
+              )}
             </nav>
           </div>
         </>
