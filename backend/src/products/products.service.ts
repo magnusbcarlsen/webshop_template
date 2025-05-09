@@ -64,7 +64,6 @@ export class ProductsService {
 
   async remove(id: number): Promise<void> {
     const product = await this.findOne(id);
-    product.isActive = false;
-    await this.productsRepository.save(product);
+    await this.productsRepository.remove(product);
   }
 }

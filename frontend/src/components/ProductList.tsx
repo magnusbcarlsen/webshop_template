@@ -1,14 +1,14 @@
 // frontend/src/app/products/page.tsx
 "use client";
 
-import { fetchProducts, ProductAPI } from "@/services/api";
+import { fetchProducts, ProductAPI } from "@/services/product-api";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<ProductAPI[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     fetchProducts()
@@ -18,7 +18,7 @@ export default function ProductsPage() {
   }, []);
 
   if (loading) return <p>Loading…</p>;
-  if (error)   return <p className="text-red-600">{error}</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <section className="p-8">

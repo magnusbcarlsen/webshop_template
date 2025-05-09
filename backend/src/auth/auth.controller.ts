@@ -5,7 +5,6 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
 import { UsersService } from '@/users/users.service';
 import { UserRole } from '@/users/user.entity';
-import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
 
 const isProduction = process.env.NODE_ENV === 'production';

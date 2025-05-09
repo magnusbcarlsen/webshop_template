@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { fetchProducts, createProduct, ProductAPI } from "@/services/api";
+import {
+  fetchProducts,
+  createProduct,
+  ProductAPI,
+  deleteProduct,
+  editProduct,
+} from "@/services/product-api";
 
 // Minimal form shape for creating a product
 interface NewProductForm {
@@ -16,6 +22,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<ProductAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [form, setForm] = useState<NewProductForm>({
     name: "",
@@ -55,20 +62,39 @@ export default function AdminPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      await createProduct({
-        name: form.name,
-        slug: form.slug,
-        description: form.description || null,
-        price: form.price,
-        salePrice: null,
-        stockQuantity: form.stockQuantity,
-        sku: null,
-        weight: null,
-        dimensions: null,
-        isFeatured: false,
-        isActive: true,
-        categoryId: null,
-      });
+      if (editingId) {
+        await editProduct(editingId, {
+          name: form.name,
+          slug: form.slug,
+          description: form.description ?? null,
+          price: form.price,
+          salePrice: null,
+          stockQuantity: form.stockQuantity,
+          sku: null,
+          weight: null,
+          dimensions: null,
+          isFeatured: false,
+          isActive: true,
+          categoryId: null,
+        });
+        setEditingId(null);
+      } else {
+        await createProduct({
+          name: form.name,
+          slug: form.slug,
+          description: form.description || null,
+          price: form.price,
+          salePrice: null,
+          stockQuantity: form.stockQuantity,
+          sku: null,
+          weight: null,
+          dimensions: null,
+          isFeatured: false,
+          isActive: true,
+          categoryId: null,
+        });
+      }
+      
       setForm({
         name: "",
         slug: "",
@@ -76,11 +102,34 @@ export default function AdminPage() {
         price: 0,
         stockQuantity: 0,
       });
+    
       await loadProducts();
     } catch (err) {
       console.error(err);
       setError("Failed to create product");
     }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await deleteProduct(id);
+      await loadProducts();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to delete product");
+    }
+  }
+  // Implement delete functionality here}
+  function handleEdit(p: ProductAPI) {
+    setEditingId(p.id);
+    setForm({
+      name: p.name,
+      slug: p.slug,
+      description: p.description ?? "",
+      price: p.price,
+      stockQuantity: p.stockQuantity,
+    });
   }
 
   if (loading) return <p>Loading products…</p>;
@@ -158,6 +207,22 @@ export default function AdminPage() {
               <td className="border p-2">{p.slug}</td>
               <td className="border p-2">{p.price}</td>
               <td className="border p-2">{p.stockQuantity}</td>
+              <td className="border p-2">
+                <button
+                  onClick={() => handleEdit(p)}
+                  className="text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+              </td>
+              <td className="border p-2">
+                <button
+                  onClick={() => handleDelete(p.id)}
+                  className="text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
