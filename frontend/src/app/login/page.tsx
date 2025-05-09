@@ -12,6 +12,8 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
       {
@@ -25,7 +27,7 @@ export default function LoginPage() {
     );
 
     if (response.ok) {
-      router.push("/admin");
+      router.push("/admin/products");
     } else {
       console.error("Login failed");
     }
@@ -43,6 +45,7 @@ export default function LoginPage() {
           placeholder="Password"
         />
         <button type="submit">Login</button>
+        <div></div>
       </form>
     </div>
   );
