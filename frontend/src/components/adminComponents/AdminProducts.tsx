@@ -8,8 +8,6 @@ import {
   deleteProduct,
   updateProduct,
 } from "@/services/product-api";
-import Navbar from "@/components/NavBar";
-import AdminSidebar from "@/components/AdminSidebar";
 
 // Minimal form shape for creating a product
 interface ProductForm {
@@ -156,8 +154,6 @@ export default function AdminPage() {
 
   return (
     <div>
-      <Navbar />
-
       <div className="p-8">
         <h1 className="text-2xl font-bold mb-4">Product Admin</h1>
 
