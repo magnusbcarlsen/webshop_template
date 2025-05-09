@@ -110,6 +110,7 @@ export async function createProduct(
 /**
  * Update an existing product
  */
+
 export async function updateProduct(
   id: number,
   payload: Partial<
@@ -124,31 +125,13 @@ export async function updateProduct(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Update product failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Edit product failed: ${res.status}`);
   return res.json();
 }
 
 /**
  * Delete a product by ID
  */
-export async function editProduct(
-  id: number,
-  payload: Partial<
-    Omit<
-      ProductAPI,
-      "id" | "createdAt" | "updatedAt" | "images" | "variants" | "category"
-    >
-  > & { categoryId: number | null }
-): Promise<ProductAPI> {
-  const res = await fetch(`${API_ROOT}/products/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`Edit product failed: ${res.status}`);
-  return res.json();
-}
-
 
 export async function deleteProduct(id: number): Promise<void> {
   const res = await fetch(`${API_ROOT}/products/${id}`, { method: "DELETE" });
