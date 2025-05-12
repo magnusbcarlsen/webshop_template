@@ -11,6 +11,7 @@ import { BaseEntity } from '../../common/entities/base.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { ProductImage } from './product-image.entity';
 import { ProductVariant } from './product-variant.entity';
+import { OrderItem } from '@/orders/entities/order-item.entity';
 
 @Entity('products')
 export class Product extends BaseEntity {
@@ -71,4 +72,7 @@ export class Product extends BaseEntity {
 
   @OneToMany(() => ProductVariant, (variant) => variant.product)
   variants: ProductVariant[];
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
+  orderItems: OrderItem[];
 }

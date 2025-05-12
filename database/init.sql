@@ -186,52 +186,83 @@ CREATE TABLE cart_items (
 );
 
 -- Orders table
+-- ORDERS (always guest, optional user link)
 CREATE TABLE orders (
-    order_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED,
-    status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
-    total_amount DECIMAL(10, 2) NOT NULL CHECK (total_amount >= 0),
-    subtotal DECIMAL(10, 2) NOT NULL CHECK (subtotal >= 0),
-    tax_amount DECIMAL(10, 2) NOT NULL DEFAULT 0 CHECK (tax_amount >= 0),
-    shipping_amount DECIMAL(10, 2) NOT NULL DEFAULT 0 CHECK (shipping_amount >= 0),
-    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
-    shipping_address_id INT UNSIGNED,
-    billing_address_id INT UNSIGNED,
-    payment_method VARCHAR(50),
-    tracking_number VARCHAR(100),
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-    FOREIGN KEY (shipping_address_id) REFERENCES user_addresses(address_id) ON DELETE SET NULL,
-    FOREIGN KEY (billing_address_id) REFERENCES user_addresses(address_id) ON DELETE SET NULL
+  order_id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id           INT UNSIGNED               NULL,
+  guest_name        VARCHAR(100)    NOT NULL,
+  guest_email       VARCHAR(150)    NOT NULL,
+  status            ENUM(
+                      'pending',
+                      'processing',
+                      'shipped',
+                      'delivered',
+                      'cancelled',
+                      'refunded'
+                    )              NOT NULL DEFAULT 'pending',
+  subtotal          DECIMAL(10,2)   NOT NULL CHECK (subtotal >= 0),
+  tax_amount        DECIMAL(10,2)   NOT NULL DEFAULT 0 CHECK (tax_amount >= 0),
+  shipping_amount   DECIMAL(10,2)   NOT NULL DEFAULT 0 CHECK (shipping_amount >= 0),
+  discount_amount   DECIMAL(10,2)   NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
+  total_amount      DECIMAL(10,2)   NOT NULL CHECK (total_amount >= 0),
+  shipping_address  VARCHAR(500)    NOT NULL,
+  billing_address   VARCHAR(500)    NOT NULL,
+  payment_method    VARCHAR(50)     NULL,
+  tracking_number   VARCHAR(100)    NULL,
+  notes             TEXT            NULL,
+  created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)
+    REFERENCES users(user_id)
+    ON DELETE SET NULL
 );
 
--- Order items
+
+-- ORDER ITEMS
 CREATE TABLE order_items (
-    order_item_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    order_id INT UNSIGNED NOT NULL,
-    product_id INT UNSIGNED NOT NULL,
-    variant_id INT UNSIGNED,
-    quantity INT NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
-    subtotal DECIMAL(12, 2) NOT NULL CHECK (subtotal >= 0),
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
-    FOREIGN KEY (variant_id) REFERENCES product_variants(variant_id) ON DELETE SET NULL
+  order_item_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id        INT UNSIGNED               NOT NULL,
+  product_id      INT UNSIGNED               NOT NULL,
+  variant_id      INT UNSIGNED               NULL,
+  quantity        INT                        NOT NULL,
+  unit_price      DECIMAL(10,2)              NOT NULL CHECK (unit_price >= 0),
+  subtotal        DECIMAL(12,2)              NOT NULL CHECK (subtotal >= 0),
+  FOREIGN KEY (order_id)
+    REFERENCES orders(order_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (product_id)
+    REFERENCES products(product_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (variant_id)
+    REFERENCES product_variants(variant_id)
+    ON DELETE SET NULL
 );
 
--- Order status history
+
+-- ORDER STATUS HISTORY
 CREATE TABLE order_status_history (
-    history_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    order_id INT UNSIGNED NOT NULL,
-    status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') NOT NULL,
-    comment TEXT,
-    created_by INT UNSIGNED,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL
+  history_id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id      INT UNSIGNED               NOT NULL,
+  status        ENUM(
+                   'pending',
+                   'processing',
+                   'shipped',
+                   'delivered',
+                   'cancelled',
+                   'refunded'
+                 )              NOT NULL,
+  comment       TEXT                       NULL,
+  created_by    INT UNSIGNED               NULL,
+  created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id)
+    REFERENCES orders(order_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (created_by)
+    REFERENCES users(user_id)
+    ON DELETE SET NULL
 );
+
 
 -- Discounts table
 CREATE TABLE discounts (

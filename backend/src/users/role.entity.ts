@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from './entities/user.entity';
 
 @Entity('roles')
 export class Role {
@@ -22,4 +23,5 @@ export class Role {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+  users: User[]; // This is a reverse relation to the User entity
 }
