@@ -13,8 +13,7 @@ const ProductsView: React.FC = () => (
 );
 const OrdersView: React.FC = () => (
   <div>
-    {" "}
-    <AdminOrders />{" "}
+    <AdminOrders />
   </div>
 );
 

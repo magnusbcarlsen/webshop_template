@@ -1,7 +1,8 @@
 // src/main.ts
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { ClassSerializerInterceptor } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,6 +11,8 @@ async function bootstrap() {
 
   // 1) prefix all routes with /api
   app.setGlobalPrefix('api');
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // 2) allow CORS from your frontend
   app.enableCors({

@@ -190,7 +190,7 @@ CREATE TABLE cart_items (
 CREATE TABLE orders (
   order_id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id           INT UNSIGNED               NULL,
-  guest_name        VARCHAR(100)    NOT NULL,
+  guest_name        VARCHAR(320)    NOT NULL,
   guest_email       VARCHAR(150)    NOT NULL,
   status            ENUM(
                       'pending',
@@ -497,12 +497,109 @@ INSERT INTO cart_items (cart_id, product_id, variant_id, quantity) VALUES
 (4, 5, NULL, 2); -- Another guest added 2 mystery books
 
 -- Orders
-INSERT INTO orders (user_id, status, total_amount, subtotal, tax_amount, shipping_amount, discount_amount, shipping_address_id, billing_address_id, payment_method, tracking_number) VALUES 
-(2, 'delivered', 1059.99, 999.99, 50.00, 10.00, 0.00, 2, 1, 'credit_card', 'TRK123456789'),
-(3, 'shipped', 134.98, 119.98, 10.00, 5.00, 0.00, 4, 3, 'paypal', 'TRK987654321'),
-(2, 'processing', 384.97, 359.97, 25.00, 0.00, 0.00, 2, 1, 'credit_card', NULL),
-(5, 'pending', 129.99, 119.99, 10.00, 0.00, 0.00, 6, 5, 'bank_transfer', NULL),
-(3, 'cancelled', 24.99, 24.99, 0.00, 0.00, 0.00, 4, 3, 'credit_card', NULL);
+-- Orders
+-- Orders
+INSERT INTO orders (
+    user_id,
+    guest_name,
+    guest_email,
+    status,
+    total_amount,
+    subtotal,
+    tax_amount,
+    shipping_amount,
+    discount_amount,
+    shipping_address,
+    billing_address,
+    payment_method,
+    tracking_number
+) VALUES
+  -- John’s first delivered order
+  (
+    2,
+    'John Doe',
+    'john.doe@example.com',
+    'delivered',
+    1059.99,
+    999.99,
+    50.00,
+    10.00,
+    0.00,
+    '123 Main St, New York, NY 10001, USA',
+    '123 Main St, New York, NY 10001, USA',
+    'credit_card',
+    'TRK123456789'
+  ),
+
+  -- Jane’s shipped order
+  (
+    3,
+    'Jane Smith',
+    'jane.smith@example.com',
+    'shipped',
+    134.98,
+    119.98,
+    10.00,
+    5.00,
+    0.00,
+    '789 Work Blvd, Boston, MA 02110, USA',
+    '456 Park Ave, Boston, MA 02108, USA',
+    'paypal',
+    'TRK987654321'
+  ),
+
+  -- John’s processing order
+  (
+    2,
+    'John Doe',
+    'john.doe@example.com',
+    'processing',
+    384.97,
+    359.97,
+    25.00,
+    0.00,
+    0.00,
+    '123 Main St, New York, NY 10001, USA',
+    '123 Main St, New York, NY 10001, USA',
+    'credit_card',
+    NULL
+  ),
+
+  -- Bob’s pending order
+  (
+    5,
+    'Bob Johnson',
+    'bob.johnson@example.com',
+    'pending',
+    129.99,
+    119.99,
+    10.00,
+    0.00,
+    0.00,
+    '101 Lake St, Chicago, IL 60601, USA',
+    '101 Lake St, Chicago, IL 60601, USA',
+    'bank_transfer',
+    NULL
+  ),
+
+  -- Jane’s cancelled order
+  (
+    3,
+    'Jane Smith',
+    'jane.smith@example.com',
+    'cancelled',
+    24.99,
+    24.99,
+    0.00,
+    0.00,
+    0.00,
+    '789 Work Blvd, Boston, MA 02110, USA',
+    '456 Park Ave, Boston, MA 02108, USA',
+    'credit_card',
+    NULL
+  );
+
+
 
 -- Order items
 INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, subtotal) VALUES 
