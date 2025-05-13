@@ -1,22 +1,31 @@
-// src/categories/entities/category.entity.ts
+import { Product } from '@/products/entities/product.entity';
 import {
-  Column,
+  BaseEntity,
   Entity,
-  JoinColumn,
+  PrimaryGeneratedColumn,
+  Column,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn,
+  ManyToMany,
 } from 'typeorm';
-import { BaseEntity } from '../../common/entities/base.entity';
-import { Product } from '../../products/entities/product.entity';
 
 @Entity('categories')
 export class Category extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'category_id' })
+  @PrimaryGeneratedColumn({ name: 'category_id', unsigned: true })
   id: number;
 
-  @Column({ name: 'parent_category_id', nullable: true })
-  parentCategoryId: number;
+  @ManyToOne(() => Category, (cat) => cat.children, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'parent_category_id' })
+  parent?: Category;
+
+  @OneToMany(() => Category, (cat) => cat.parent)
+  children: Category[];
 
   @Column({ length: 100 })
   name: string;
@@ -25,24 +34,20 @@ export class Category extends BaseEntity {
   slug: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description?: string;
 
   @Column({ name: 'image_url', length: 255, nullable: true })
-  imageUrl: string;
+  imageUrl?: string;
 
-  @Column({ name: 'is_active', default: true })
+  @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Category, (cat) => cat.children, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'parent_category_id' })
-  parentCategory: Category;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @OneToMany(() => Category, (cat) => cat.parentCategory)
-  children: Category[];
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
-  @OneToMany(() => Product, (product) => product.category)
+  @ManyToMany(() => Product, (product) => product.categories)
   products: Product[];
 }

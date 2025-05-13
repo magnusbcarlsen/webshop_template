@@ -1,167 +1,128 @@
 "use client";
+import React, { useState, KeyboardEvent } from "react";
+import AdminProducts from "../../components/adminComponents/AdminProducts";
+import Navbar from "@/components/NavBar";
+import AdminOrders from "../../components/adminComponents/AdminOrders";
 
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { fetchProducts, createProduct, ProductAPI } from "@/services/api";
-
-// Minimal form shape for creating a product
-interface NewProductForm {
-  name: string;
-  slug: string;
-  description?: string;
-  price: number;
-  stockQuantity: number;
-}
+// Placeholder views; replace with your actual components or import them
+const ProductsView: React.FC = () => (
+  <div>
+    <AdminProducts />
+    {/* Add your product management components here */}
+  </div>
+);
+const OrdersView: React.FC = () => (
+  <div>
+    {" "}
+    <AdminOrders />{" "}
+  </div>
+);
 
 export default function AdminPage() {
-  const [products, setProducts] = useState<ProductAPI[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
+  const [view, setView] = useState<"products" | "orders">("products");
 
-  const [form, setForm] = useState<NewProductForm>({
-    name: "",
-    slug: "",
-    description: "",
-    price: 0,
-    stockQuantity: 0,
-  });
-
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  async function loadProducts() {
-    setLoading(true);
-    try {
-      const data = await fetchProducts();
-      setProducts(data);
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load products");
-    } finally {
-      setLoading(false);
-    }
+  // keyboard accessibility helper
+  function keyToggle(toggle: () => void) {
+    return (e: KeyboardEvent<HTMLElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle();
+      }
+    };
   }
 
-  function handleChange(
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const { name, value, type } = e.target;
-    let v: any = value;
-    if (type === "number") v = parseFloat(value);
-    setForm((f) => ({ ...f, [name]: v }));
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    try {
-      await createProduct({
-        name: form.name,
-        slug: form.slug,
-        description: form.description || null,
-        price: form.price,
-        salePrice: null,
-        stockQuantity: form.stockQuantity,
-        sku: null,
-        weight: null,
-        dimensions: null,
-        isFeatured: false,
-        isActive: true,
-        categoryId: null,
-      });
-      setForm({
-        name: "",
-        slug: "",
-        description: "",
-        price: 0,
-        stockQuantity: 0,
-      });
-      await loadProducts();
-    } catch (err) {
-      console.error(err);
-      setError("Failed to create product");
-    }
-  }
-
-  if (loading) return <p>Loading products…</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  const selectView = (newView: "products" | "orders") => {
+    setView(newView);
+  };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Product Admin</h1>
-      <form onSubmit={handleSubmit} className="mb-6 space-y-4">
-        <div>
-          <label className="block">Name</label>
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            className="w-full border p-2"
-          />
-        </div>
-        <div>
-          <label className="block">Slug</label>
-          <input
-            name="slug"
-            value={form.slug}
-            onChange={handleChange}
-            required
-            className="w-full border p-2"
-          />
-        </div>
-        <div>
-          <label className="block">Price</label>
-          <input
-            type="number"
-            name="price"
-            value={form.price}
-            onChange={handleChange}
-            step="0.01"
-            required
-            className="w-full border p-2"
-          />
-        </div>
-        <div>
-          <label className="block">Stock Quantity</label>
-          <input
-            type="number"
-            name="stockQuantity"
-            value={form.stockQuantity}
-            onChange={handleChange}
-            className="w-full border p-2"
-          />
-        </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Create Product
-        </button>
-      </form>
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar Container */}
+      <aside
+        className={`flex-none h-full bg-[var(--color-secondary)] transition-all duration-300 ease-in-out ${
+          isOpen ? "w-64" : "w-0"
+        }`}
+      >
+        {/* Close Icon */}
+        {isOpen && (
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Close sidebar"
+            onClick={() => setIsOpen(false)}
+            onKeyDown={keyToggle(() => setIsOpen(false))}
+            className="absolute top-4 right-4 text-2xl font-bold cursor-pointer focus:outline-none"
+            style={{ color: "var(--foreground)" }}
+          >
+            ×
+          </div>
+        )}
 
-      <table className="w-full table-auto border-collapse">
-        <thead>
-          <tr>
-            <th className="border p-2">ID</th>
-            <th className="border p-2">Name</th>
-            <th className="border p-2">Slug</th>
-            <th className="border p-2">Price</th>
-            <th className="border p-2">Stock</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((p) => (
-            <tr key={p.id}>
-              <td className="border p-2">{p.id}</td>
-              <td className="border p-2">{p.name}</td>
-              <td className="border p-2">{p.slug}</td>
-              <td className="border p-2">{p.price}</td>
-              <td className="border p-2">{p.stockQuantity}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {/* Navigation */}
+        {isOpen && (
+          <nav className="mt-6 w-full mt-15">
+            <ul className="w-full ">
+              <li className=" w-full">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => selectView("products")}
+                  onKeyDown={keyToggle(() => selectView("products"))}
+                  className={`block w-full py-2 px-4 transition-colors focus:outline-none ${
+                    view === "products"
+                      ? "bg-[var(--background)]"
+                      : "hover:bg-[var(--color-accent)]"
+                  }`}
+                  style={{ color: "var(--foreground)" }}
+                >
+                  Products
+                </div>
+              </li>
+              <li className="mb-4 w-full">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => selectView("orders")}
+                  onKeyDown={keyToggle(() => selectView("orders"))}
+                  className={`block w-full py-2 px-4 transition-colors focus:outline-none ${
+                    view === "orders"
+                      ? "bg-[var(--background)]"
+                      : "hover:bg-[var(--color-accent)]"
+                  }`}
+                  style={{ color: "var(--foreground)" }}
+                >
+                  Orders
+                </div>
+              </li>
+            </ul>
+          </nav>
+        )}
+      </aside>
+
+      {/* Main content area */}
+      <main className="flex-1 relative bg-[var(--background)] overflow-auto">
+        {/* Open Icon when closed */}
+        <Navbar />
+        {!isOpen && (
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Open sidebar"
+            onClick={() => setIsOpen(true)}
+            onKeyDown={keyToggle(() => setIsOpen(true))}
+            className="absolute top-4 left-4 text-2xl font-bold p-2 rounded shadow cursor-pointer focus:outline-none"
+            style={{
+              backgroundColor: "var(--color-primary)",
+              color: "var(--background)",
+            }}
+          >
+            ☰
+          </div>
+        )}
+        {/* Render selected view */}
+        {view === "products" ? <ProductsView /> : <OrdersView />}
+      </main>
     </div>
   );
 }

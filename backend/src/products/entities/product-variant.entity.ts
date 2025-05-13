@@ -1,24 +1,31 @@
-// src/products/entities/product-variant.entity.ts
 import {
-  Column,
+  BaseEntity,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
 } from 'typeorm';
-import { BaseEntity } from '../../common/entities/base.entity';
 import { Product } from './product.entity';
+import { AttributeValue } from './attribute-value.entity';
+import { OrderItem } from '@/orders/entities/order-item.entity';
 
 @Entity('product_variants')
 export class ProductVariant extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'variant_id' })
+  @PrimaryGeneratedColumn({ name: 'variant_id', unsigned: true })
   id: number;
 
-  @Column({ name: 'product_id' })
-  productId: number;
+  @ManyToOne(() => Product, (p) => p.variants, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 
-  @Column({ length: 100, unique: true })
-  sku: string;
+  @Column({ length: 50, unique: true, nullable: true })
+  sku?: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
@@ -30,17 +37,32 @@ export class ProductVariant extends BaseEntity {
     scale: 2,
     nullable: true,
   })
-  salePrice: number;
+  salePrice?: number;
 
   @Column({ name: 'stock_quantity', default: 0 })
   stockQuantity: number;
 
-  @Column({ name: 'is_active', default: true })
+  @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Product, (product) => product.variants, {
-    onDelete: 'CASCADE',
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  // join table for variant_attributes
+  @ManyToMany(() => AttributeValue, (val) => val.variants, { cascade: true })
+  @JoinTable({
+    name: 'variant_attributes',
+    joinColumn: { name: 'variant_id', referencedColumnName: 'id' },
+    inverseJoinColumn: {
+      name: 'attribute_value_id',
+      referencedColumnName: 'id',
+    },
   })
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
+  attributes: AttributeValue[];
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.variant)
+  orderItems: OrderItem[];
 }

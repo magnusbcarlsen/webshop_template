@@ -110,6 +110,7 @@ export async function createProduct(
 /**
  * Update an existing product
  */
+
 export async function updateProduct(
   id: number,
   payload: Partial<
@@ -124,13 +125,14 @@ export async function updateProduct(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Update product failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Edit product failed: ${res.status}`);
   return res.json();
 }
 
 /**
  * Delete a product by ID
  */
+
 export async function deleteProduct(id: number): Promise<void> {
   const res = await fetch(`${API_ROOT}/products/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error(`Delete product failed: ${res.status}`);

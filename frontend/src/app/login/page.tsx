@@ -43,6 +43,7 @@ export default function LoginPage() {
           placeholder="Password"
         />
         <button type="submit">Login</button>
+        <div></div>
       </form>
     </div>
   );
