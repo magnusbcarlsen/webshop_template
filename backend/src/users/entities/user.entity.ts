@@ -14,6 +14,8 @@ import {
 import { Role } from '../role.entity';
 import { UserAddress } from './user-address.entity';
 import { Order } from '../../orders/entities/order.entity';
+import { CartItem } from '@/carts/entities/cart-item.entity';
+import { Wishlist } from '@/wishlists/entities/wishlist.entity';
 
 export enum UserRole {
   ADMIN = 'ADMIN',
@@ -67,4 +69,8 @@ export class User extends BaseEntity {
   // now matches your OrdersModule, and Optional in the DB
   @OneToMany(() => Order, (order) => order.user, { cascade: true })
   orders: Order[];
+  carts: CartItem[];
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.user, { cascade: true })
+  wishlists: Wishlist[];
+  // @OneToMany(() => CartItem, (cartItem) => cartItem.user, { cascade: true })
 }

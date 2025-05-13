@@ -3,6 +3,8 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -12,14 +14,12 @@ import { Category } from '../../categories/entities/category.entity';
 import { ProductImage } from './product-image.entity';
 import { ProductVariant } from './product-variant.entity';
 import { OrderItem } from '@/orders/entities/order-item.entity';
+import { AttributeValue } from './attribute-value.entity';
 
 @Entity('products')
 export class Product extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'product_id' })
   id: number;
-
-  @Column({ name: 'category_id', nullable: true })
-  categoryId: number;
 
   @Column()
   name: string;
@@ -60,12 +60,13 @@ export class Product extends BaseEntity {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Category, (category) => category.products, {
-    nullable: true,
-    onDelete: 'SET NULL',
+  @ManyToMany(() => Category, (category) => category.products)
+  @JoinTable({
+    name: 'product_categories',
+    joinColumn: { name: 'product_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
   })
-  @JoinColumn({ name: 'category_id' })
-  category: Category;
+  categories: Category[];
 
   @OneToMany(() => ProductImage, (image) => image.product)
   images: ProductImage[];
@@ -75,4 +76,15 @@ export class Product extends BaseEntity {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
   orderItems: OrderItem[];
+
+  @ManyToMany(() => AttributeValue, (attr) => attr.products)
+  @JoinTable({
+    name: 'product_attribute',
+    joinColumn: { name: 'product_id', referencedColumnName: 'id' },
+    inverseJoinColumn: {
+      name: 'attribute_value_id',
+      referencedColumnName: 'id',
+    },
+  })
+  attributes: AttributeValue[];
 }
