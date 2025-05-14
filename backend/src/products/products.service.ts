@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -47,7 +52,24 @@ export class ProductsService {
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const product = this.productsRepository.create(createProductDto);
-    return this.productsRepository.save(product);
+    try {
+      return await this.productsRepository.save(product);
+    } catch (err: unknown) {
+      if (err instanceof QueryFailedError) {
+        // narrow driverError into a typed object
+        const driverErr = err.driverError as {
+          code: string;
+          sqlMessage: string;
+        };
+        if (
+          driverErr.code === 'ER_DUP_ENTRY' &&
+          driverErr.sqlMessage.includes('products.slug')
+        ) {
+          throw new ConflictException('Name must be unique');
+        }
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   async update(
@@ -55,11 +77,24 @@ export class ProductsService {
     updateProductDto: UpdateProductDto,
   ): Promise<Product> {
     const product = await this.findOne(id);
-    const updatedProduct = this.productsRepository.merge(
-      product,
-      updateProductDto,
-    );
-    return this.productsRepository.save(updatedProduct);
+    const merged = this.productsRepository.merge(product, updateProductDto);
+    try {
+      return await this.productsRepository.save(merged);
+    } catch (err: unknown) {
+      if (err instanceof QueryFailedError) {
+        const driverErr = err.driverError as {
+          code: string;
+          sqlMessage: string;
+        };
+        if (
+          driverErr.code === 'ER_DUP_ENTRY' &&
+          driverErr.sqlMessage.includes('products.slug')
+        ) {
+          throw new ConflictException('Name must be unique');
+        }
+      }
+      throw new InternalServerErrorException();
+    }
   }
 
   async remove(id: number): Promise<void> {

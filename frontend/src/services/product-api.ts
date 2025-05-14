@@ -16,6 +16,15 @@ export type CategoryAPI = {
   isActive: boolean;
 };
 
+export type CreateCategoryPatyload = {
+  parentCategoryId?: number | null;
+  name: string;
+  slug: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  isActive?: boolean;
+};
+
 /**
  * Product shape from backend
  */
@@ -52,7 +61,7 @@ export type ProductAPI = {
 };
 
 /**
- * Fetch all categories
+ * CATEGORIES
  */
 export async function fetchCategories(): Promise<CategoryAPI[]> {
   const res = await fetch(`${API_ROOT}/categories`);
@@ -60,7 +69,20 @@ export async function fetchCategories(): Promise<CategoryAPI[]> {
   return res.json();
 }
 
+export async function createCategory(
+  payload: CreateCategoryPatyload
+): Promise<CategoryAPI> {
+  const res = await fetch(`${API_ROOT}/categories`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Create category failed: ${res.status}`);
+  return res.json();
+}
+
 /**
+ * PRODUCTS
  * Fetch all products
  */
 export async function fetchProducts(): Promise<ProductAPI[]> {
@@ -103,8 +125,16 @@ export async function createProduct(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Create product failed: ${res.status}`);
-  return res.json();
+
+  const body = await res.json();
+  if (!res.ok) {
+    if (res.status === 409 || body.message?.toLowerCase().includes("unique")) {
+      throw new Error(body.message || "Name already exists");
+    }
+    throw new Error(`Create product failed: ${res.status}`);
+  }
+
+  return body;
 }
 
 /**
@@ -125,8 +155,16 @@ export async function updateProduct(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Edit product failed: ${res.status}`);
-  return res.json();
+
+  const body = await res.json();
+  if (!res.ok) {
+    if (res.status === 409 || body.message?.toLowerCase().includes("unique")) {
+      throw new Error(body.message || "Name already exists");
+    }
+    throw new Error(`Edit product failed: ${res.status}`);
+  }
+
+  return body;
 }
 
 /**
