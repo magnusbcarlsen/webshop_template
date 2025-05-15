@@ -73,7 +73,7 @@ export default function AdminOrders() {
               >
                 <td className="px-6 py-4">{order.id}</td>
                 <td className="px-6 py-4">
-                  <div className="font-medium">{order.customerName}</div>
+                  <div className="font-medium">{order.guestName}</div>
                   <div className="text-sm text-gray-500">
                     {order.guestEmail}
                   </div>

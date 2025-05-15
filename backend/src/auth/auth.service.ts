@@ -10,6 +10,10 @@ import * as bcrypt from 'bcryptjs';
 // Continue and succeed
 
 // Every login thereafter uses bcrypt.compare() against the stored hash.
+export type JwtPayload = {
+  sub: number;
+  role: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -45,9 +49,16 @@ export class AuthService {
   }
 
   login(user: { id: string | number; role: string }) {
-    const payload = { sub: user.id, role: user.role };
+    // normalize the role string to exactly "ADMIN" or "USER"
+    const normalizedRole = user.role.toUpperCase();
+
+    // build the JWT payload
+    const payload = { sub: user.id, role: normalizedRole };
+
+    // sign and return both token and role
     return {
       accessToken: this.jwt.sign(payload),
+      role: normalizedRole,
     };
   }
 }
