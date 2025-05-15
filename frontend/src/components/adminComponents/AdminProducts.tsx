@@ -7,7 +7,11 @@ import {
   ProductAPI,
   deleteProduct,
   updateProduct,
+  fetchCategories,
+  CategoryAPI,
+  createCategory,
 } from "@/services/product-api";
+import { slugify } from "utils/slugify";
 
 // Minimal form shape for creating a product
 interface ProductForm {
@@ -16,6 +20,7 @@ interface ProductForm {
   description?: string;
   price: number;
   stockQuantity: number;
+  categoryName?: string;
 }
 
 export default function AdminPage() {
@@ -25,6 +30,7 @@ export default function AdminPage() {
     description: "",
     price: 0,
     stockQuantity: 0,
+    categoryName: "",
   };
 
   const [products, setProducts] = useState<ProductAPI[]>([]);
@@ -34,9 +40,11 @@ export default function AdminPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<ProductForm>(initialForm);
+  const [categories, setCategories] = useState<CategoryAPI[]>([]);
 
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
 
   async function loadProducts() {
@@ -52,6 +60,20 @@ export default function AdminPage() {
       setLoading(false);
     }
   }
+
+  async function loadCategories() {
+    try {
+      const data = await fetchCategories();
+      setCategories(data);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // handle input changes
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -59,10 +81,17 @@ export default function AdminPage() {
     const { name, value, type } = e.target;
     let v: string | number = value;
     if (type === "number") v = parseFloat(value);
-    setForm((f) => ({ ...f, [name]: v }));
+    setForm((f) => ({
+      ...f,
+      [name]: v,
+      ...(name === "name"
+        ? { slug: slugify(v.toString(), { lower: true }) }
+        : {}),
+    }));
   }
 
   function openCreateModal() {
+    setError(null);
     setIsEditing(false);
     setEditingId(null);
     setForm(initialForm);
@@ -70,6 +99,7 @@ export default function AdminPage() {
   }
 
   function openEditModal(p: ProductAPI) {
+    setError(null);
     setIsEditing(true);
     setEditingId(p.id);
     setForm({
@@ -78,6 +108,7 @@ export default function AdminPage() {
       description: p.description ?? "",
       price: p.price,
       stockQuantity: p.stockQuantity,
+      categoryName: p.category?.name ?? "",
     });
     setIsModalOpen(true);
   }
@@ -91,45 +122,56 @@ export default function AdminPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
+      // ── determine or create category based on form.categoryName ──
+      let categoryId: number | null = null;
+      if (form.categoryName) {
+        const existing = categories.find((c) => c.name === form.categoryName);
+        if (existing) {
+          categoryId = existing.id;
+        } else {
+          const newCat = await createCategory({
+            name: form.categoryName,
+            slug: slugify(form.categoryName, { lower: true }),
+          });
+          setCategories([...categories, newCat]);
+          categoryId = newCat.id;
+        }
+      }
+
+      // build common payload
+      const productData = {
+        name: form.name,
+        slug: form.slug,
+        description: form.description ?? null,
+        price: form.price,
+        salePrice: null,
+        stockQuantity: form.stockQuantity,
+        sku: null,
+        weight: null,
+        dimensions: null,
+        isFeatured: false,
+        isActive: true,
+        categoryId, // ← here’s the change
+      };
+
       if (isEditing && editingId !== null) {
-        await updateProduct(editingId, {
-          name: form.name,
-          slug: form.slug,
-          description: form.description ?? null,
-          price: form.price,
-          salePrice: null,
-          stockQuantity: form.stockQuantity,
-          sku: null,
-          weight: null,
-          dimensions: null,
-          isFeatured: false,
-          isActive: true,
-          categoryId: null,
-        });
+        await updateProduct(editingId, productData);
         setEditingId(null);
       } else {
-        await createProduct({
-          name: form.name,
-          slug: form.slug,
-          description: form.description || null,
-          price: form.price,
-          salePrice: null,
-          stockQuantity: form.stockQuantity,
-          sku: null,
-          weight: null,
-          dimensions: null,
-          isFeatured: false,
-          isActive: true,
-          categoryId: null,
-        });
+        await createProduct(productData);
       }
+
       closeModal();
       await loadProducts();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(
-        isEditing ? "Failed to create product" : "Failed to edit product"
-      );
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : isEditing
+          ? "Failed to edit product"
+          : "Failed to create product";
+      setError(errorMessage);
     }
   }
 
@@ -149,8 +191,8 @@ export default function AdminPage() {
     }
   }
 
-  if (loading) return <p>Loading products…</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  // if (loading) return <p>Loading products…</p>;
+  // if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div>
@@ -166,8 +208,9 @@ export default function AdminPage() {
             <tr>
               <th className="border p-2">ID</th>
               <th className="border p-2">Name</th>
-              <th className="border p-2">Slug</th>
+              <th className="border p-2">Slug (URL)</th>
               <th className="border p-2">Price</th>
+              <th className="border p-2">Category</th>
               <th className="border p-2">Stock</th>
             </tr>
           </thead>
@@ -178,7 +221,9 @@ export default function AdminPage() {
                 <td className="border p-2">{p.name}</td>
                 <td className="border p-2">{p.slug}</td>
                 <td className="border p-2">{p.price}</td>
+                <td className="border p-2">{p.category?.name || "-"}</td>
                 <td className="border p-2">{p.stockQuantity}</td>
+
                 <td className="border p-2">
                   <button
                     onClick={() => openEditModal(p)}
@@ -211,22 +256,17 @@ export default function AdminPage() {
               <h2 className="text-xl font-bold mb-4">
                 {isEditing ? "Edit Product" : "Create Product"}
               </h2>
+              {error && (
+                <div className="mb-2 p-2 bg-red-100 text-red-800 rounded">
+                  {error}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block">Name</label>
                   <input
                     name="name"
                     value={form.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full border p-2"
-                  />
-                </div>
-                <div>
-                  <label className="block">Slug</label>
-                  <input
-                    name="slug"
-                    value={form.slug}
                     onChange={handleChange}
                     required
                     className="w-full border p-2"
@@ -253,6 +293,22 @@ export default function AdminPage() {
                     className="w-full border p-2"
                   />
                 </div>
+                <div>
+                  <label className="block">Category</label>
+                  <input
+                    list="category-list"
+                    name="categoryName"
+                    value={form.categoryName}
+                    onChange={handleChange}
+                    className="w-full border p-2"
+                  />
+                  <datalist id="category-list">
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                  </datalist>
+                </div>
+
                 <div>
                   <label className="block">Stock Quantity</label>
                   <input

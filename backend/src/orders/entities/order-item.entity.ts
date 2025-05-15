@@ -9,12 +9,14 @@ import {
 import { Order } from './order.entity';
 import { Product } from '../../products/entities/product.entity';
 import { ProductVariant } from '../../products/entities/product-variant.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('order_items')
 export class OrderItem extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'order_item_id', unsigned: true })
   id: number;
 
+  @Exclude()
   @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: Order;

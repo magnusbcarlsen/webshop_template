@@ -31,7 +31,7 @@ export class Order extends BaseEntity {
   @Column({ name: 'guest_name', type: 'varchar', length: 100 })
   guestName: string;
 
-  @Column({ name: 'guest_email', type: 'varchar', length: 150 })
+  @Column({ name: 'guest_email', type: 'varchar', length: 320 })
   guestEmail: string;
 
   @Column({

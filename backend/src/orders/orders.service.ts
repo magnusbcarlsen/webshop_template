@@ -27,8 +27,17 @@ export class OrdersService {
     return this.repo.save(order);
   }
 
-  findAll(): Promise<Order[]> {
-    return this.repo.find({ relations: ['items', 'statusHistory'] });
+  async findAll(): Promise<Order[]> {
+    const orders = await this.repo.find({
+      relations: ['items', 'statusHistory'],
+    });
+    return orders.map((o) => {
+      const cleanedOrder = this.repo.create({
+        ...o,
+        items: o.items.map(({ order, ...item }) => item),
+      });
+      return cleanedOrder;
+    });
   }
 
   async findOne(id: number): Promise<Order> {
