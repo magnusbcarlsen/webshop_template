@@ -12,24 +12,40 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      }
-    );
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    // const response = await fetch(
+    //   `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+    //   {
+    //     method: "POST",
+    //     credentials: "include",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({ email, password }),
+    //   }
+    // );
 
     if (response.ok) {
-      router.push("/admin");
+      const { role } = await response.json();
+
+      if (role.toUpperCase() === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } else {
       console.error("Login failed");
     }
   }
+
   return (
     <div>
       <Navbar />

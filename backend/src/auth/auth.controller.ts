@@ -18,37 +18,39 @@ export class AuthController {
   ) {}
 
   @UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
     @Req() req: Request & { user: { id: number } },
     @Res({ passthrough: true }) res: Response,
   ) {
-    // 1) Lookup your full user so you can read role_id
+    // 1) Load the full user (so we get role_id)
     const userEntity = await this.usersService.findById(req.user.id);
     if (!userEntity) {
       throw new Error('User not found');
     }
 
-    // 2) Map numeric role_id → the enum string your RolesGuard expects
-    const roleString =
-      userEntity.role_id === 1 ? UserRole.ADMIN : UserRole.USER; // or whatever your mapping is
+    // 2) Map numeric role_id → enum string, then normalize to uppercase
+    const baseRole = userEntity.role_id === 1 ? UserRole.ADMIN : UserRole.USER;
+    const normalizedRole = baseRole.toUpperCase();
 
-    // 3) Sign your JWT with the correct role
-    const { accessToken } = this.auth.login({
+    // 3) Sign the JWT via AuthService.login()
+    const { accessToken, role } = this.auth.login({
       id: userEntity.id,
-      role: roleString,
+      role: normalizedRole,
     });
 
-    // 4) Set your cookie as before
+    // 4) Set the HttpOnly cookie
     res.cookie('jwt', accessToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
       path: '/',
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      maxAge: 1000 * 60 * 60, // 1 hour
     });
 
-    return { success: true };
+    // 5) Return the normalized role for client-side routing
+    return { success: true, role };
   }
 
   @Get('me')

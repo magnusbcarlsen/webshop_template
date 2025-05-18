@@ -191,18 +191,21 @@ export default function AdminPage() {
     }
   }
 
-  // if (loading) return <p>Loading products…</p>;
-  // if (error) return <p className="text-red-600">{error}</p>;
-
   return (
     <div>
       <div className="p-8">
         <h1 className="text-2xl font-bold mb-4">Product Admin</h1>
+        <div></div>
 
         <button onClick={openCreateModal} className="mb-6">
           Create new product
         </button>
         <h2>All your products</h2>
+        {loading && (
+          <div className="flex justify-center py-20">
+            <p className="text-gray-500">Loading products…</p>
+          </div>
+        )}
         <table className="w-full table-auto border-collapse">
           <thead>
             <tr>

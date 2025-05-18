@@ -343,7 +343,7 @@ INSERT INTO roles (role_name, description) VALUES
 -- Users
 INSERT INTO users (role_id, email, password, first_name, last_name, phone, is_active) VALUES 
 (1, 'admin@example.com', 'Password', 'Admin', 'User', '+1234567890', true),
-(2, 'john.doe@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John', 'Doe', '+1987654321', true),
+(2, 'john.doe@example.com', 'Password', 'John', 'Doe', '+1987654321', true),
 (2, 'jane.smith@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane', 'Smith', '+1122334455', true),
 (3, 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Store', 'Manager', '+1555666777', true),
 (2, 'bob.johnson@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Bob', 'Johnson', '+1444333222', true);
