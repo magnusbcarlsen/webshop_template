@@ -1,64 +1,50 @@
-// src/orders/orders.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Order } from './entities/order.entity';
+import { Repository, UpdateResult } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
-  constructor(@InjectRepository(Order) private repo: Repository<Order>) {}
+  constructor(
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+  ) {}
 
-  async create(dto: CreateOrderDto): Promise<Order> {
-    const order = this.repo.create({
-      guestName: dto.guestName,
-      guestEmail: dto.guestEmail,
-      shippingAddress: dto.shippingAddress,
-      billingAddress: dto.billingAddress,
-      paymentMethod: dto.paymentMethod,
-      items: dto.items.map((i) => ({
-        product: { id: i.productId },
-        quantity: i.quantity,
-        // assume unitPrice & subtotal calculated elsewhere or fetched
-      })),
-    });
-    // TODO: calculate subtotal, tax, shipping, discount, total
-    return this.repo.save(order);
-  }
-
-  async findAll(): Promise<Order[]> {
-    const orders = await this.repo.find({
+  // Fetch all, optionally including soft-deleted
+  findAll(withDeleted = false): Promise<Order[]> {
+    return this.orderRepository.find({
+      withDeleted,
       relations: ['items', 'statusHistory'],
-    });
-    return orders.map((o) => {
-      const cleanedOrder = this.repo.create({
-        ...o,
-        items: o.items.map(({ order, ...item }) => item),
-      });
-      return cleanedOrder;
+      order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: number): Promise<Order> {
-    const order = await this.repo.findOne({
+  findOne(id: number): Promise<Order> {
+    return this.orderRepository.findOneOrFail({
       where: { id },
       relations: ['items', 'statusHistory'],
     });
+  }
 
-    if (!order) {
-      throw new Error(`Order with id ${id} not found`);
-    }
-
-    return order;
+  create(dto: CreateOrderDto): Promise<Order> {
+    const order = this.orderRepository.create(dto);
+    return this.orderRepository.save(order);
   }
 
   async update(id: number, dto: UpdateOrderDto): Promise<Order> {
-    await this.repo.update(id, dto);
+    await this.orderRepository.update(id, dto);
     return this.findOne(id);
   }
 
-  remove(id: number): Promise<void> {
-    return this.repo.delete(id).then(() => undefined);
+  // Soft-delete
+  remove(id: number): Promise<UpdateResult> {
+    return this.orderRepository.softDelete(id);
+  }
+
+  // Restore soft-deleted
+  restore(id: number): Promise<UpdateResult> {
+    return this.orderRepository.restore(id);
   }
 }

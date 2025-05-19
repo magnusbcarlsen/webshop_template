@@ -1,13 +1,14 @@
-// src/orders/orders.controller.ts
 import {
   Controller,
   Get,
   Post,
-  Body,
-  Param,
   Patch,
   Delete,
-  ParseIntPipe,
+  Param,
+  Body,
+  Query,
+  DefaultValuePipe,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -16,33 +17,40 @@ import { Order } from './entities/order.entity';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly orders: OrdersService) {}
-
-  @Post()
-  create(@Body() dto: CreateOrderDto): Promise<Order> {
-    return this.orders.create(dto);
-  }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
-  findAll(): Promise<Order[]> {
-    return this.orders.findAll();
+  async findAll(
+    @Query('withDeleted', new DefaultValuePipe(false), ParseBoolPipe)
+    withDeleted: boolean,
+  ) {
+    return this.ordersService.findAll(withDeleted);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Order> {
-    return this.orders.findOne(id);
+  findOne(@Param('id') id: string): Promise<Order> {
+    return this.ordersService.findOne(+id);
+  }
+
+  @Post()
+  create(@Body() dto: CreateOrderDto): Promise<Order> {
+    return this.ordersService.create(dto);
   }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateOrderDto,
-  ): Promise<Order> {
-    return this.orders.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateOrderDto): Promise<Order> {
+    return this.ordersService.update(+id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.orders.remove(id);
+  async softDelete(@Param('id') id: string) {
+    await this.ordersService.remove(+id);
+    return { success: true };
+  }
+
+  @Post(':id/restore')
+  async restore(@Param('id') id: string) {
+    await this.ordersService.restore(+id);
+    return { success: true };
   }
 }
