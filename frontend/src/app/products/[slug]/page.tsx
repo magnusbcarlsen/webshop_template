@@ -103,7 +103,7 @@ export default async function ProductDetailsPage({
     <div>
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <Link href="/" className="text-blue-500 mb-4 inline-block">
+        <Link href="/products" className="text-blue-500 mb-4 inline-block">
           &larr; Back to Products
         </Link>
 
