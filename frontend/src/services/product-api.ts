@@ -1,7 +1,20 @@
-// frontend/src/services/api.ts
+// frontend/src/services/product-api.ts
 
-// Root for API calls: either explicit NEXT_PUBLIC_API_URL or proxy via /api
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+// frontend/src/services/product-api.ts
+
+// Root for API calls: handle server vs client environment correctly
+function getBaseUrl() {
+  if (typeof window === "undefined") {
+    // Server-side: use absolute URL with /api prefix to match NestJS global prefix
+    return process.env.BACKEND_URL
+      ? `${process.env.BACKEND_URL}/api`
+      : "http://backend:3001/api";
+  }
+  // Client-side: use relative path for API proxy (already handled by nginx)
+  return "/api";
+}
+
+const API_ROOT = getBaseUrl();
 
 /**
  * Category shape from backend

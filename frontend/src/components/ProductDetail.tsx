@@ -1,50 +1,11 @@
-import { fetchProductBySlug, ProductAPI } from "@/services/product-api";
-import { useEffect, useState } from "react";
+// src/components/ProductDetail.tsx
+import { ProductAPI } from "@/services/product-api";
 
 interface ProductDetailProps {
-  slug: string;
+  product: ProductAPI;
 }
 
-export default function ProductDetail({ slug }: ProductDetailProps) {
-  const [product, setProduct] = useState<ProductAPI | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // useEffect(() => {
-  //   async function loadProduct() {
-  //     try {
-  //       const data = await fetchProductById(productId);
-  //       setProduct(data);
-  //       setLoading(false);
-  //     } catch (err) {
-  //       setError('Failed to load product details');
-  //       setLoading(false);
-  //       console.error(err);
-  //     }
-  //   }
-
-  //   loadProduct();
-  // }, [productId]);
-
-  useEffect(() => {
-    if (!slug) return;
-    setLoading(true);
-    fetchProductBySlug(slug)
-      .then((data) => {
-        setProduct(data);
-        setError(null);
-      })
-      .catch((err) => {
-        setError("Failed to load product details");
-        console.error(err);
-      })
-      .finally(() => setLoading(false));
-  }, [slug]);
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-  if (!product) return <div>Product not found</div>;
-
+export default function ProductDetail({ product }: ProductDetailProps) {
   // Get primary image or first available
   const primaryImage =
     product.images.find((img) => img.isPrimary) || product.images[0];
