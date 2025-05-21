@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { AddCartItemDto } from './dto/add-cart-item.dto';
 
 @Injectable()
 export class CartsService {
@@ -48,5 +49,27 @@ export class CartsService {
 
   async remove(id: number): Promise<void> {
     await this.cartsRepo.delete(id);
+  }
+
+  async addItemToCart(cartId: number, dto: AddCartItemDto): Promise<Cart> {
+    const cart = await this.findOne(cartId);
+    const { productId, variantId, quantity = 1 } = dto;
+
+    const existing = cart.items.find(
+      (i) =>
+        i.product.id === productId &&
+        (i.variant?.id ?? null) === (variantId ?? null),
+    );
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      const item = {
+        product: { id: productId },
+        variant: variantId ? { id: variantId } : undefined,
+        quantity,
+      };
+      cart.items.push(item as any);
+    }
+    return this.cartsRepo.save(cart);
   }
 }
