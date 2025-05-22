@@ -1,7 +1,8 @@
 // src/components/ProductList.tsx
 import Link from "next/link";
 import { ProductAPI } from "@/services/product-api";
-import { addToCartAction } from "@/actions/cartActions";
+// import { addToCartAction } from "@/actions/cartActions";
+import { AddToCartButton } from "./AddToCartButton";
 
 interface ProductListProps {
   products: ProductAPI[];
@@ -31,20 +32,7 @@ export default function ProductList({ products }: ProductListProps) {
               View Details
             </Link>
 
-            <form
-              action={addToCartAction}
-              className="flex-1"
-              suppressHydrationWarning
-            >
-              <input type="hidden" name="productId" value={product.id} />
-              <input type="hidden" name="quantity" value="1" />
-              <button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-              >
-                Add to Cart
-              </button>
-            </form>
+            <AddToCartButton productId={product.id} quantity={1} />
           </div>
         </article>
       ))}

@@ -1,46 +1,48 @@
+// src/services/cart-api.ts
 import { API_ROOT } from "@/config/api";
 
-export async function addItemToCart(
-  productId: number,
-  quantity: number = 1
-): Promise<any> {
-  const url = `${API_ROOT}/carts/items`;
+export interface ProductAPI {
+  id: number;
+  name: string;
+  slug: string;
+  price: number;
+}
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, quantity }),
-    cache: "no-store",
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to add item to cart");
-  }
-
-  return response.json();
+export interface CartItemAPI {
+  id: number;
+  quantity: number;
+  product: ProductAPI;
 }
 
 export interface CartAPI {
   id: number;
-  items: Array<{
-    id: number;
-    quantity: number;
-    product: { id: number; name: string; price: number; slug: string };
-    variant?: { id: number; name: string; price: number };
-  }>;
+  items: CartItemAPI[];
 }
 
 export async function getCart(): Promise<CartAPI> {
-  const url = `${API_ROOT}/carts/items`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    cache: "no-store",
+  const res = await fetch(`${API_ROOT}/carts/items`, {
     credentials: "include",
+    cache: "no-store",
   });
-  if (!response.ok) {
-    throw new Error("Failed to fetch cart");
+  if (!res.ok) {
+    throw new Error(`Failed to fetch cart: ${res.status}`);
   }
-  return response.json();
+  return res.json();
+}
+
+export async function addItemToCart(
+  productId: number,
+  quantity = 1
+): Promise<CartAPI> {
+  const res = await fetch(`${API_ROOT}/carts/items`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    cache: "no-store",
+    body: JSON.stringify({ productId, quantity }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to add item to cart: ${res.status}`);
+  }
+  return res.json();
 }

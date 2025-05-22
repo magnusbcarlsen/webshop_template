@@ -14,13 +14,25 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  // 2) allow CORS from your frontend
+  // 2) allow CORS from your frontend - Updated to match nginx proxy
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000', // Direct frontend access
+      'http://localhost', // Nginx proxy access
+      'http://frontend:3000', // Docker internal network
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-Cart-ID', // Allow our custom header
+    ],
   });
 
-  await app.listen(process.env.PORT || 3001);
+  await app.listen(process.env.PORT || 3001, '0.0.0.0'); // Listen on all interfaces
 }
 bootstrap();

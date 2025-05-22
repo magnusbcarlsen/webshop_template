@@ -1,24 +1,32 @@
+// src/actions/cartActions.ts
 "use server";
-import { addItemToCart } from "@/services/cart-api";
-import { revalidatePath } from "next/cache";
 
-/**
- * Server Action: Handles adding a product to the cart.
- * Reads productId and quantity from FormData.
- * Calls backend service and revalidates /products.
- */
+import { cookies } from "next/headers";
+import { API_ROOT } from "@/config/api";
+
 export async function addToCartAction(formData: FormData) {
-  const productId = formData.get("productId");
-  const quantityRaw = formData.get("quantity");
-  if (typeof productId !== "string") {
-    throw new Error("productId must be a string");
-  }
-  const quantity =
-    quantityRaw && typeof quantityRaw === "string"
-      ? parseInt(quantityRaw, 10)
-      : 1;
+  const productId = Number(formData.get("productId"));
+  const quantity = Number(formData.get("quantity"));
 
-  await addItemToCart(Number(productId), quantity);
-  // revalidate the product list or cart UI
-  revalidatePath("/products");
+  // build a Cookie header from the incoming request’s cookies
+  const cookieStore = cookies();
+  const cookieHeader = (await cookieStore)
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+
+  const res = await fetch(`${API_ROOT}/carts/items`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    },
+    body: JSON.stringify({ productId, quantity }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to add item to cart: ${res.status}`);
+  }
+  // no need to return anything unless you want to re-render on success
 }

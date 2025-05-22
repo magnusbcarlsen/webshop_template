@@ -33,10 +33,29 @@ export class CartsService {
     });
   }
 
+  async findBySession(sessionId: string): Promise<Cart> {
+    const cart = await this.cartsRepo.findOne({
+      where: { sessionId },
+      relations: ['items', 'items.product', 'items.variant'],
+    });
+    if (!cart) throw new NotFoundException('Cart not found');
+    return cart;
+  }
+
+  async createEmpty(): Promise<Cart> {
+    const cart = this.cartsRepo.create({ items: [] });
+    return this.cartsRepo.save(cart);
+  }
+
   async findOne(id: number): Promise<Cart> {
     const cart = await this.cartsRepo.findOne({
       where: { id },
-      relations: ['items', 'items.product', 'items.variant'],
+      relations: {
+        items: {
+          product: true,
+          variant: true,
+        },
+      },
     });
     if (!cart) throw new NotFoundException(`Cart ${id} not found`);
     return cart;
