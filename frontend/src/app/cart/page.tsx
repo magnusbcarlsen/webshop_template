@@ -11,7 +11,7 @@ export default function CartPage() {
   return (
     <>
       <Navbar />
-      <ClientCart />;
+      <ClientCart />
     </>
   );
 }

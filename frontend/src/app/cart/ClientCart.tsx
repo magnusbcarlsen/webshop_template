@@ -3,7 +3,7 @@
 // src/app/cart/ClientCart.tsx
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { getCart, CartAPI } from "@/services/cart-api";
+import { getCart, CartAPI, removeItemFromCart } from "@/services/cart-api";
 
 /**
  * Client Component: Displays the current cart contents.
@@ -41,6 +41,22 @@ export default function ClientCart() {
 
     loadCart();
   }, []);
+
+  async function handleDeleteitem(id: number) {
+    try {
+      // await removeItemFromCart(id);
+      // await getCart();
+      const updated = await removeItemFromCart(id);
+      setCart(updated);
+    } catch (err) {
+      console.error("Failed to remove item from cart:", err);
+      setError(
+        `Failed to remove item from cart: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    }
+  }
 
   if (loading) {
     return <div className="max-w-4xl mx-auto p-4">Loading your cart...</div>;
@@ -87,6 +103,12 @@ export default function ClientCart() {
                   ${(item.quantity * item.product.price).toFixed(2)}
                 </p>
               </div>
+              <button
+                onClick={() => handleDeleteitem(item.id)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
             </div>
           ))}
 

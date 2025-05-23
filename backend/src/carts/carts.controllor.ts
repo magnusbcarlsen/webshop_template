@@ -124,8 +124,17 @@ export class CartsController {
     return this.cartsService.update(id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.cartsService.remove(id);
+  @Delete('items/:itemId')
+  async removeItem(
+    @Param('itemId', ParseIntPipe) itemId: number,
+    @Req() req: Request,
+  ): Promise<Cart> {
+    console.log(
+      `DELETE /api/carts/items/${itemId} (sessionId cookie:`,
+      req.cookies.sessionId,
+      ')',
+    );
+    const updatedCart = await this.cartsService.removeItem(itemId);
+    return updatedCart;
   }
 }

@@ -46,3 +46,15 @@ export async function addItemToCart(
   }
   return res.json();
 }
+
+export async function removeItemFromCart(itemId: number): Promise<CartAPI> {
+  const res = await fetch(`${API_ROOT}/carts/items/${itemId}`, {
+    method: "DELETE",
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to remove product from cart: ${res.status}`);
+  }
+  return res.json(); // updated cart so your UI can re-render
+}
