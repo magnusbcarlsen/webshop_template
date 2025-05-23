@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AdminController } from './admin/admin.controller';
 import { OrdersModule } from './orders/orders.module';
 import { CategoriesModule } from './categories/categories.module';
+import { CartsModule } from './carts/carts.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CategoriesModule } from './categories/categories.module';
     AuthModule,
     OrdersModule,
     CategoriesModule,
+    CartsModule,
   ],
   controllers: [AdminController], // ← add this line
 })

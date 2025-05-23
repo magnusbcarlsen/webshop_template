@@ -213,6 +213,7 @@ CREATE TABLE orders (
   created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
                                    ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
   FOREIGN KEY (user_id)
     REFERENCES users(user_id)
     ON DELETE SET NULL

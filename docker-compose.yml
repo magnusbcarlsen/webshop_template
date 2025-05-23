@@ -52,6 +52,7 @@ services:
       - .env
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - BACKEND_URL=${BACKEND_URL}
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=100

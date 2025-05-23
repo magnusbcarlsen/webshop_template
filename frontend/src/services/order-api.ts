@@ -1,7 +1,7 @@
 // frontend/src/services/order-api.ts
 
 // Root for API calls: either explicit NEXT_PUBLIC_API_URL or proxy via /api
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+import { API_ROOT } from "@/config/api";
 
 /**
  * One item in an order
@@ -20,7 +20,13 @@ export type OrderItemAPI = {
  */
 export type OrderStatusHistoryAPI = {
   id: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+  status:
+    | "pending"
+    | "processing"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
   comment: string | null;
   createdBy: number | null;
   createdAt: string;
@@ -48,6 +54,7 @@ export type OrderAPI = {
   updatedAt: string;
   items: OrderItemAPI[];
   statusHistory: OrderStatusHistoryAPI[];
+  deletedAt: string | null;
 };
 
 /**
@@ -66,7 +73,6 @@ export type CreateOrderPayload = {
  * Payload to update an order (matches UpdateOrderDto)
  */
 export type UpdateOrderPayload = Partial<CreateOrderPayload> & {
-  // if you add status/comments in your UpdateOrderDto later, add them here:
   status?: OrderStatusHistoryAPI["status"];
   comment?: string;
 };
@@ -74,18 +80,18 @@ export type UpdateOrderPayload = Partial<CreateOrderPayload> & {
 /**
  * Fetch all orders
  */
-export async function fetchOrders(): Promise<OrderAPI[]> {
-  const res = await fetch(`${API_ROOT}/orders`);
+export async function fetchOrders(
+  withDeleted: boolean = false
+): Promise<OrderAPI[]> {
+  const query = withDeleted ? "?withDeleted=true" : "";
+  const res = await fetch(`${API_ROOT}/orders${query}`);
   if (!res.ok) throw new Error(`Fetch orders failed: ${res.status}`);
   return res.json();
 }
-
 /**
  * Fetch a single order by ID
  */
-export async function fetchOrderById(
-  id: number | string
-): Promise<OrderAPI> {
+export async function fetchOrderById(id: number | string): Promise<OrderAPI> {
   const res = await fetch(`${API_ROOT}/orders/${id}`);
   if (!res.ok) throw new Error(`Fetch order ${id} failed: ${res.status}`);
   return res.json();
@@ -123,11 +129,34 @@ export async function updateOrder(
 }
 
 /**
- * Delete an order by ID
+ * Soft-delete an order by ID
  */
 export async function deleteOrder(id: number): Promise<void> {
   const res = await fetch(`${API_ROOT}/orders/${id}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error(`Delete order ${id} failed: ${res.status}`);
+}
+
+/**
+ * Restore a soft-deleted order
+ */
+export async function restoreOrder(id: number): Promise<void> {
+  const res = await fetch(`${API_ROOT}/orders/${id}/restore`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Restore order ${id} failed: ${res.status}`);
+}
+
+/**
+ * Mark an order as delivered
+ */
+export async function completeOrder(id: number): Promise<OrderAPI> {
+  const res = await fetch(`${API_ROOT}/orders/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "delivered" }),
+  });
+  if (!res.ok) throw new Error(`Complete order ${id} failed: ${res.status}`);
+  return res.json();
 }

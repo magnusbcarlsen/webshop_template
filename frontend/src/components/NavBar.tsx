@@ -131,24 +131,25 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label="View cart"
-            onClick={() => {
-              /* handle cart */
-            }}
-            onKeyDown={keyToggle(() => {
-              /* handle cart */
-            })}
-            className="relative focus:outline-none cursor-pointer"
-          >
-            <ShoppingCart className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              4
-            </span>
-          </div>
+          <Link href="/cart">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="View cart"
+              onClick={() => {
+                /* handle cart */
+              }}
+              onKeyDown={keyToggle(() => {
+                /* handle cart */
+              })}
+              className="relative focus:outline-none cursor-pointer"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                4
+              </span>
+            </div>
+          </Link>
         </div>
       </div>
 

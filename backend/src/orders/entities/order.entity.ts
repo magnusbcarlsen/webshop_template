@@ -8,6 +8,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
 import { OrderStatusHistory, OrderStatus } from './order-status-history.entity';
@@ -104,6 +105,10 @@ export class Order extends BaseEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  // <-- Enable soft deletes -->
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[];
