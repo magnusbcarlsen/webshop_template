@@ -3,7 +3,7 @@
 // src/app/cart/ClientCart.tsx
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { getCart, CartAPI, removeItemFromCart } from "@/services/cart-api";
+import { CartAPI, removeItemFromCart } from "@/services/cart-api";
 
 /**
  * Client Component: Displays the current cart contents.

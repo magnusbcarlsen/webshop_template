@@ -8,10 +8,16 @@ import { AdminController } from './admin/admin.controller';
 import { OrdersModule } from './orders/orders.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CartsModule } from './carts/carts.module';
+import { S3Module } from './S3Client/s3.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    MulterModule.register({
+      dest: './uploads', // This won't be used since we're using memory storage
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -32,6 +38,8 @@ import { CartsModule } from './carts/carts.module';
     OrdersModule,
     CategoriesModule,
     CartsModule,
+    S3Module,
+    StorageModule, // Ensure this is imported if you have a StorageModule
   ],
   controllers: [AdminController], // ← add this line
 })

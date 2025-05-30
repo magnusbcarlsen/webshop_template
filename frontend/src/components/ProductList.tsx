@@ -19,7 +19,13 @@ export default function ProductList({ products }: ProductListProps) {
           <div>
             <h2 className="text-lg font-semibold">{product.name}</h2>
             <p className="text-sm text-gray-500">
-              {product.category?.name ?? "Uncategorized"}
+              {product.categories.length > 0 ? product.categories[0].name : "Uncategorized"}
+            </p>
+            <p>
+              Categories:{" "}
+              {product.categories.length > 0
+                ? product.categories.map((c) => c.name).join(" • ")
+                : "—"}
             </p>
             <p className="mt-2 font-bold">${product.price}</p>
           </div>

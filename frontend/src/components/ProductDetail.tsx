@@ -1,5 +1,7 @@
 // src/components/ProductDetail.tsx
 import { ProductAPI } from "@/services/product-api";
+import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
+import Image from "next/image";
 
 interface ProductDetailProps {
   product: ProductAPI;
@@ -8,7 +10,7 @@ interface ProductDetailProps {
 export default function ProductDetail({ product }: ProductDetailProps) {
   // Get primary image or first available
   const primaryImage =
-    product.images.find((img) => img.isPrimary) || product.images[0];
+    product.images?.find((img) => img.isPrimary) || product.images?.[0];
 
   return (
     <div className="product-detail">
@@ -16,15 +18,21 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          {product.images && product.images.length > 0 ? (
-            <img
-              src={primaryImage?.imageUrl}
-              alt={primaryImage?.altText || product.name}
-              className="w-full rounded"
-            />
+          {product.images && product.images.length > 0 && primaryImage ? (
+            <div className="relative w-full h-96">
+              <Image
+                src={normalizeImageUrl(primaryImage.imageUrl)}
+                alt={primaryImage.altText || product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover rounded"
+                priority
+                unoptimized
+              />
+            </div>
           ) : (
-            <div className="bg-gray-200 rounded w-full h-64 flex items-center justify-center">
-              No image available
+            <div className="bg-gray-200 rounded w-full h-96 flex items-center justify-center">
+              <span className="text-gray-500">No image available</span>
             </div>
           )}
 
@@ -33,12 +41,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               {product.images
                 .filter((img) => !img.isPrimary)
                 .map((image) => (
-                  <img
-                    key={image.id}
-                    src={image.imageUrl}
-                    alt={image.altText || `${product.name} view`}
-                    className="w-full h-20 object-cover rounded"
-                  />
+                  <div key={image.id} className="relative w-full h-20">
+                    <Image
+                      src={normalizeImageUrl(image.imageUrl)}
+                      alt={image.altText || `${product.name} view`}
+                      fill
+                      sizes="(max-width: 768px) 25vw, 12.5vw"
+                      className="object-cover rounded"
+                    />
+                  </div>
                 ))}
             </div>
           )}
@@ -46,7 +57,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
         <div>
           <p className="text-gray-600 mb-2">
-            Category: {product.category?.name || "Uncategorized"}
+            Category:{" "}
+            {product.categories && product.categories.length > 0
+              ? product.categories[0].name
+              : "Uncategorized"}
           </p>
           <p className="text-xl font-bold mb-4">${product.price}</p>
           {product.salePrice && (

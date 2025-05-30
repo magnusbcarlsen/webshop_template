@@ -24,7 +24,7 @@ export const metadata = {
 const fallbackProducts: ProductAPI[] = [
   {
     id: 1,
-    category: { id: 1, name: "Portrætter" },
+    categories: [{ id: 1, name: "Portrætter" }],
     name: "Example Product",
     slug: "example-product",
     description: "This is a fallback product for testing",

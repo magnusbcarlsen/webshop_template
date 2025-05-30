@@ -1,74 +1,220 @@
 import {
-  ConflictException,
   Injectable,
+  Inject,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository, QueryFailedError, In } from 'typeorm';
 import { Product } from './entities/product.entity';
+import { ProductImage } from './entities/product-image.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  CreateBucketCommand,
+} from '@aws-sdk/client-s3';
+import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
+import { Category } from '@/categories/entities/category.entity';
+import { ConfigService } from '@nestjs/config';
+
+// Proper multer type imports
+import { Express } from 'express';
+import 'multer';
+
+async function ensureBucketExists(s3Client: S3Client, bucketName: string) {
+  try {
+    await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
+    console.log(`Bucket ${bucketName} created successfully`);
+  } catch (error) {
+    if (error.name !== 'BucketAlreadyOwnedByYou') {
+      console.error('Error creating bucket:', error);
+    }
+  }
+}
 
 @Injectable()
 export class ProductsService {
+  private readonly allowedMimeTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+  ];
+  private readonly maxFileSize = 5 * 1024 * 1024; // 5MB
+
   constructor(
     @InjectRepository(Product)
-    private productsRepository: Repository<Product>,
+    private readonly productsRepository: Repository<Product>,
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
+    @Inject('S3')
+    private readonly s3Client: S3Client,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Validates and uploads a file to S3/Spaces, returning a browser-accessible URL
+   */
+  async uploadImage(file: Express.Multer.File): Promise<string> {
+    // Validate file
+    if (!this.allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Invalid file type. Only JPEG, PNG, and WebP are allowed.',
+      );
+    }
+
+    if (file.size > this.maxFileSize) {
+      throw new BadRequestException('File too large. Maximum size is 5MB.');
+    }
+
+    const bucket = this.configService.get<string>('do_spaces_bucket')!;
+    const extension = path.extname(file.originalname);
+    const filename = `${uuidv4()}${extension}`;
+
+    // Don't add extra path prefix - just use the filename
+    const key = filename;
+
+    // Ensure bucket exists (optional)
+    await ensureBucketExists(this.s3Client, bucket);
+
+    try {
+      await this.s3Client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: file.buffer,
+          ACL: 'public-read',
+          ContentType: file.mimetype,
+          CacheControl: 'max-age=31536000', // 1 year cache
+        }),
+      );
+    } catch (err) {
+      console.error('S3 Upload Error:', err);
+      throw new InternalServerErrorException('Failed to upload image');
+    }
+
+    // Build the correct URL format
+    const apiHost =
+      this.configService.get<string>('MINIO_API_HOST') || 'localhost';
+    const apiPort = this.configService.get<string>('MINIO_API_PORT') || '9000';
+
+    // Return the correct MinIO URL format - no double bucket name
+    return `http://${apiHost}:${apiPort}/${bucket}/${key}`;
+  }
+
+  /**
+   * Deletes an image from S3/Spaces
+   */
+  async deleteImage(imageUrl: string): Promise<void> {
+    try {
+      const bucket = this.configService.get<string>('do_spaces_bucket')!;
+
+      // Parse key from URL
+      const url = new URL(imageUrl);
+      // For URL like http://localhost:9000/products/filename.jpg
+      // Extract just the filename (last part of the path)
+      const pathParts = url.pathname
+        .split('/')
+        .filter((part) => part.length > 0);
+
+      // Get the filename (last part after removing bucket name if present)
+      const key = pathParts[pathParts.length - 1];
+
+      console.log(
+        `Deleting image: bucket=${bucket}, key=${key}, original_url=${imageUrl}`,
+      );
+
+      await this.s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        }),
+      );
+    } catch (err) {
+      console.error('S3 Delete Error:', err);
+      // Swallow errors here, non-critical
+    }
+  }
 
   async findAll(): Promise<Product[]> {
     return this.productsRepository.find({
       where: { isActive: true },
-      relations: ['images', 'variants', 'category'],
+      relations: ['images', 'variants', 'categories'],
+      order: { createdAt: 'DESC' },
     });
   }
 
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
       where: { id, isActive: true },
-      relations: ['images', 'variants', 'category'],
+      relations: ['images', 'variants', 'categories'],
     });
-
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-
     return product;
   }
 
   async findBySlug(slug: string): Promise<Product> {
     const product = await this.productsRepository.findOne({
       where: { slug, isActive: true },
-      relations: ['images', 'variants', 'category'],
+      relations: ['images', 'variants', 'categories'],
     });
-
     if (!product) {
       throw new NotFoundException(`Product with slug ${slug} not found`);
     }
-
     return product;
   }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const product = this.productsRepository.create(createProductDto);
+    const { images, categoryIds, ...data } = createProductDto;
+
+    const product = this.productsRepository.create(data);
+
+    if (categoryIds?.length) {
+      const cats = await this.categoryRepository.findBy({
+        id: In(categoryIds),
+      });
+      product.categories = cats;
+    }
+
     try {
-      return await this.productsRepository.save(product);
+      const savedProduct = await this.productsRepository.save(product);
+
+      if (images && images.length > 0) {
+        const imageEntities = images.map((url, index) =>
+          this.productImageRepository.create({
+            imageUrl: url,
+            product: savedProduct,
+            sortOrder: index,
+            isPrimary: index === 0,
+          }),
+        );
+
+        await this.productImageRepository.save(imageEntities);
+        savedProduct.images = imageEntities;
+      }
+
+      return savedProduct;
     } catch (err: unknown) {
       if (err instanceof QueryFailedError) {
-        // narrow driverError into a typed object
-        const driverErr = err.driverError as {
-          code: string;
-          sqlMessage: string;
-        };
+        const driverErr = (err as any).driverError;
         if (
           driverErr.code === 'ER_DUP_ENTRY' &&
           driverErr.sqlMessage.includes('products.slug')
         ) {
-          throw new ConflictException('Name must be unique');
+          throw new ConflictException('Slug must be unique');
         }
       }
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException('Failed to create product');
     }
   }
 
@@ -76,29 +222,84 @@ export class ProductsService {
     id: number,
     updateProductDto: UpdateProductDto,
   ): Promise<Product> {
+    const { images, categoryIds, ...data } = updateProductDto;
     const product = await this.findOne(id);
-    const merged = this.productsRepository.merge(product, updateProductDto);
+
+    Object.assign(product, data);
+
+    if (categoryIds) {
+      const cats = await this.categoryRepository.findBy({
+        id: In(categoryIds),
+      });
+      product.categories = cats;
+    }
     try {
-      return await this.productsRepository.save(merged);
+      const savedProduct = await this.productsRepository.save(product);
+
+      if (images && images.length > 0) {
+        const existingImages = await this.productImageRepository.find({
+          where: { productId: id },
+        });
+
+        existingImages.forEach((img) => {
+          this.deleteImage(img.imageUrl).catch((err) =>
+            console.error('Failed to delete old image:', err),
+          );
+        });
+
+        await this.productImageRepository.delete({ productId: id });
+
+        const imageEntities = images.map((url, index) =>
+          this.productImageRepository.create({
+            imageUrl: url,
+            product: savedProduct,
+            sortOrder: index,
+            isPrimary: index === 0,
+          }),
+        );
+
+        await this.productImageRepository.save(imageEntities);
+        savedProduct.images = imageEntities;
+      }
+
+      return savedProduct;
     } catch (err: unknown) {
       if (err instanceof QueryFailedError) {
-        const driverErr = err.driverError as {
-          code: string;
-          sqlMessage: string;
-        };
+        const driverErr = (err as any).driverError;
         if (
           driverErr.code === 'ER_DUP_ENTRY' &&
           driverErr.sqlMessage.includes('products.slug')
         ) {
-          throw new ConflictException('Name must be unique');
+          throw new ConflictException('Slug must be unique');
         }
       }
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException('Failed to update product');
     }
   }
 
   async remove(id: number): Promise<void> {
     const product = await this.findOne(id);
+
+    const images = await this.productImageRepository.find({
+      where: { productId: id },
+    });
+
     await this.productsRepository.remove(product);
+
+    images.forEach((img) => {
+      this.deleteImage(img.imageUrl).catch((err) =>
+        console.error('Failed to delete image during product removal:', err),
+      );
+    });
+  }
+
+  async deleteProductImage(productId: number, imageId: number): Promise<void> {
+    const image = await this.productImageRepository.findOne({
+      where: { id: imageId, product: { id: productId } },
+    });
+    if (!image) throw new NotFoundException('Image not found');
+
+    await this.productImageRepository.remove(image);
+    await this.deleteImage(image.imageUrl);
   }
 }

@@ -6,13 +6,13 @@
   --foreground: #171717;
 
   /* Color Scheme */
-  --color-primary: #d75615;      /* Deep Blue */
-  --color-secondary: #64748b;    /* Slate Gray */
-  --color-accent: #eb763b;       /* Vibrant Red */
+  --color-primary: #d75615; /* Deep Blue */
+  --color-secondary: #64748b; /* Slate Gray */
+  --color-accent: #eb763b; /* Vibrant Red */
 
   /* Typography */
-  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-mono: 'Courier New', Courier, monospace;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
 
   /* Font Sizes */
   --h1-size: 2.5rem;
@@ -101,5 +101,4 @@ button {
 button:hover {
   background-color: var(--color-accent);
   transform: scale(1.05);
-  
 }

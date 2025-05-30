@@ -1,0 +1,74 @@
+services:
+  db:
+    env_file:
+      - .env.local
+
+  backend:
+    # Don't build from Dockerfile, use node image directly
+    image: node:20-alpine
+    working_dir: /app
+    mem_limit: 2g
+    command: >
+      sh -c "
+      npm ci &&
+      npx nest start --watch
+      "
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - NODE_OPTIONS=--max-old-space-size=1024
+      - do_spaces_endpoint=http://minio:9000
+      - do_spaces_region=us-east-1
+      - do_spaces_bucket=products
+      - do_spaces_key=minioadmin
+      - do_spaces_secret=minioadmin123
+    depends_on:
+      - minio
+      - createbuckets
+
+  frontend:
+    env_file:
+      - .env.local
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - app-net
+
+  # MinIO client to create bucket
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO to be ready...';
+      sleep 5;
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin123;
+      /usr/bin/mc mb myminio/products --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/products;
+      /usr/bin/mc ls myminio/products;
+      echo 'Bucket setup complete';
+      exit 0;
+      "
+    networks:
+      - app-net
+
+volumes:
+  mysql_data:
+  minio_data:
+# reuse the same network
+networks:
+  app-net:
+    driver: bridge
