@@ -32,14 +32,24 @@ export class CartsService {
 
   findAll(): Promise<Cart[]> {
     return this.cartsRepo.find({
-      relations: ['items', 'items.product', 'items.variant'],
+      relations: [
+        'items',
+        'items.product',
+        'items.product.images',
+        'items.variant',
+      ],
     });
   }
 
   async findBySession(sessionId: string): Promise<Cart> {
     const cart = await this.cartsRepo.findOne({
       where: { sessionId },
-      relations: ['items', 'items.product', 'items.variant'],
+      relations: [
+        'items',
+        'items.product',
+        'items.product.images',
+        'items.variant',
+      ],
     });
     if (!cart) throw new NotFoundException('Cart not found');
     return cart;
@@ -55,7 +65,9 @@ export class CartsService {
       where: { id },
       relations: {
         items: {
-          product: true,
+          product: {
+            images: true,
+          },
           variant: true,
         },
       },
