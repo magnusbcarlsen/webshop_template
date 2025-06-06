@@ -1,4 +1,4 @@
-export function slugify(input: string, p0: { lower: boolean; }) {
+export function slugify(input: string) {
   return input
     .toLowerCase()
     .trim()

@@ -11,6 +11,7 @@ import { CartsModule } from './carts/carts.module';
 import { S3Module } from './S3Client/s3.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { StorageModule } from './storage/storage.module';
+import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { StorageModule } from './storage/storage.module';
     CategoriesModule,
     CartsModule,
     S3Module,
-    StorageModule, // Ensure this is imported if you have a StorageModule
+    StorageModule,
+    CheckoutModule,
   ],
   controllers: [AdminController], // ← add this line
 })

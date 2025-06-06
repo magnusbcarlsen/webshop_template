@@ -32,7 +32,7 @@ services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=5000
+      - CHOKIDAR_INTERVAL=1000
       - WATCHPACK_POLLING=true
     env_file:
       - .env.local

@@ -3,6 +3,7 @@ import React, { useState, useEffect, KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, Search, ShoppingCart, X } from "lucide-react";
+import Image from "next/image";
 
 const navItems = ["Home", "Shop", "About", "Contact"];
 
@@ -62,8 +63,19 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 bg-[var(--background)] text-[var(--foreground)] z-50">
+    <header className="fixed top-0 left-0 w-full bg-transparent text-[var(--foreground)] z-50">
       <div className="flex items-center px-4 py-2">
+        {/* <div className="hidden md:block absolute left-4 top-1/2  z-50">
+          <Link href="/" className="block">
+            <Image
+              src="/bergstrøm_art_logo.png"
+              alt="WebShop Logo"
+              width={150}
+              height={150}
+              className="h-20 w-auto object-contain"
+            />
+          </Link>
+        </div> */}
         <div
           role="button"
           tabIndex={0}
@@ -75,12 +87,13 @@ export default function Navbar() {
           <Menu className="w-6 h-6" />
         </div>
 
-        <Link
-          href="/"
-          className="hidden md:block font-bold text-lg hover:text-[var(--secondaryColor)]"
-        >
-          WebShop
-        </Link>
+        <div className="-ml-2">
+          <Link href="/" className="flex items-center overflow-visible">
+            <h1 className="text-2xl font-bold hover:text-[var(--secondaryColor)] transition-colors">
+              Bergstrøm Art
+            </h1>
+          </Link>
+        </div>
 
         <div className="flex items-center ml-auto gap-4 w-full md:w-auto">
           <nav className="hidden md:flex gap-4">
@@ -161,7 +174,20 @@ export default function Navbar() {
           />
           <div className="fixed top-0 left-0 h-full w-64 bg-[var(--background)] text-[var(--foreground)] p-4 z-50 transform transition-transform duration-300">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-lg">WebShop</h2>
+              <div>
+                <Link
+                  href="/"
+                  className="font-bold text-lg hover:text-[var(--secondaryColor)]"
+                >
+                  <Image
+                    src="/bergstrøm_art_logo.png"
+                    alt="WebShop Logo"
+                    width={40}
+                    height={40}
+                    className="inline-block mr-2"
+                  />
+                </Link>
+              </div>
               <div
                 role="button"
                 tabIndex={0}

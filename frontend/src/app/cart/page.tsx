@@ -1,6 +1,5 @@
 // src/app/cart/page.tsx
 
-import Navbar from "@/components/NavBar";
 import ClientCart from "./ClientCart";
 
 /**
@@ -9,9 +8,8 @@ import ClientCart from "./ClientCart";
  */
 export default function CartPage() {
   return (
-    <>
-      <Navbar />
+  
       <ClientCart />
-    </>
+  
   );
 }

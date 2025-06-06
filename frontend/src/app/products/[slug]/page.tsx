@@ -1,8 +1,7 @@
 // src/app/product/[slug]/page.tsx
 import { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "@/components/NavBar";
-import ProductDetail from "@/components/ProductDetail";
+import ProductDetail from "@/components/products/ProductDetail";
 import { fetchProductBySlug, ProductAPI } from "@/services/product-api";
 
 // Incremental Static Regeneration: revalidate this page every 60 seconds
@@ -112,7 +111,6 @@ export default async function ProductDetailsPage({
 
   return (
     <div>
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <Link href="/products" className="text-blue-500 mb-4 inline-block">
           &larr; Back to Products
