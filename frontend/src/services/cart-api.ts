@@ -1,12 +1,13 @@
 // src/services/cart-api.ts
 import { API_ROOT } from "@/config/api";
+import { ProductAPI } from "./product-api";
 
-export interface ProductAPI {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-}
+// export interface ProductAPI {
+//   id: number;
+//   name: string;
+//   slug: string;
+//   price: number;
+// }
 
 export interface CartItemAPI {
   id: number;

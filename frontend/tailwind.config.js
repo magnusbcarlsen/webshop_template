@@ -9,7 +9,15 @@ export const content = [
 ];
 
 export const theme = {
-  extend: {},
+  extend: {
+    colors: {
+      primary: {
+        500: "var(--color-primary)", // uses your --color-primary
+        DEFAULT: "var(--color-primary)",
+        // same as 500
+      },
+    },
+  },
 };
 
 export const darkMode = "class";
@@ -29,7 +37,7 @@ export const plugins = [
       },
       dark: {
         colors: {
-          primary: { 500: "var(--color-primary)" },
+          primary: "#d75615",
           secondary: { 500: "var(--color-secondary)" },
           accent: { 500: "var(--color-accent)" },
         },

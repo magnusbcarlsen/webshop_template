@@ -1,227 +1,119 @@
 "use client";
-import React, { useState, useEffect, KeyboardEvent } from "react";
+
+import {
+  useDisclosure,
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  Button,
+} from "@heroui/react";
+import { motion } from "framer-motion";
+import { ShoppingCartIcon } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Menu, Search, ShoppingCart, X } from "lucide-react";
-import Image from "next/image";
 
-const navItems = ["Home", "Shop", "About", "Contact"];
+const Path = (props) => (
+  <motion.path
+    fill="transparent"
+    strokeWidth="3"
+    stroke="hsl(0, 0%, 18%)"
+    strokeLinecap="round"
+    {...props}
+  />
+);
 
-function keyToggle(toggle: () => void) {
-  return (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggle();
-    }
-  };
-}
+const MenuToggle = ({ toggle }) => (
+  <Button
+    variant="light"
+    onPress={toggle}
+    className="cursor-pointer relative z-20 border-none bg-transparent p-0 hover:bg-transparent"
+    style={{ color: "var(--color-primary)" }}
+  >
+    <svg width="23" height="23" viewBox="0 0 23 23">
+      <Path
+        variants={{
+          closed: { d: "M 2 2.5 L 20 2.5" },
+          open: { d: "M 3 16.5 L 17 2.5" },
+        }}
+      />
+      <Path
+        d="M 2 9.423 L 20 9.423"
+        variants={{ closed: { opacity: 1 }, open: { opacity: 0 } }}
+        transition={{ duration: 0.1 }}
+      />
+      <Path
+        variants={{
+          closed: { d: "M 2 16.346 L 20 16.346" },
+          open: { d: "M 3 2.5 L 17 16.346" },
+        }}
+      />
+    </svg>
+  </Button>
+);
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const router = useRouter();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch(`${apiUrl}/auth/me`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setIsLoggedIn(data.authenticated === true);
-      } catch {
-        setIsLoggedIn(false);
-      } finally {
-        setLoaded(true);
-      }
-    }
-    checkAuth();
-  }, [apiUrl]);
-
-  const toggleMobile = () => setMobileOpen((open) => !open);
-  const toggleSearch = () => setSearchOpen((open) => !open);
-
-  const handleLogout = async () => {
-    try {
-      const res = await fetch(`${apiUrl}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        setIsLoggedIn(false);
-        router.push("/");
-      } else {
-        console.error("Logout failed with status:", res.status);
-      }
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+    onOpen();
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-transparent text-[var(--foreground)] z-50">
-      <div className="flex items-center px-4 py-2">
-        {/* <div className="hidden md:block absolute left-4 top-1/2  z-50">
-          <Link href="/" className="block">
-            <Image
-              src="/bergstrøm_art_logo.png"
-              alt="WebShop Logo"
-              width={150}
-              height={150}
-              className="h-20 w-auto object-contain"
+    <nav className="fixed top-0 left-0 w-full z-50 bg-transparent flex justify-between items-center px-3 py-4">
+      <Link href="/" className="flex items-center gap-2">
+        {/* <img
+          src="/logo.png"
+          alt="Bergstrøm Art Logo"
+          className="h-8 w-8 rounded-full"
+        /> */}
+        <h1 className="text-xl text-[var(--color-primary)] font-bold">
+          Bergstrøm Art
+        </h1>
+      </Link>
+      <div className="flex items-center gap-4">
+        <Link href="/cart" className="text-lg">
+          <motion.div
+            className="relative cursor-pointer"
+            whileHover={{ scale: 1.1 }}
+          >
+            <ShoppingCartIcon
+              className="text-[var(--color-primary)]"
+              size={24}
             />
-          </Link>
-        </div> */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Open menu"
-          onClick={toggleMobile}
-          onKeyDown={keyToggle(toggleMobile)}
-          className="md:hidden mr-2 focus:outline-none cursor-pointer"
-        >
-          <Menu className="w-6 h-6" />
-        </div>
-
-        <div className="-ml-2">
-          <Link href="/" className="flex items-center overflow-visible">
-            <h1 className="text-2xl font-bold hover:text-[var(--secondaryColor)] transition-colors">
-              Bergstrøm Art
-            </h1>
-          </Link>
-        </div>
-
-        <div className="flex items-center ml-auto gap-4 w-full md:w-auto">
-          <nav className="hidden md:flex gap-4">
-            {navItems.map((item) => (
-              <Link
-                key={item}
-                href={`/${item.toLowerCase()}`}
-                className="text-[var(--foreground)] font-medium hover:text-[var(--secondaryColor)] transition-colors"
-              >
-                {item}
-              </Link>
-            ))}
-            {loaded && isLoggedIn && (
-              <button
-                onClick={handleLogout}
-                className="font-medium hover:text-[var(--secondaryColor)] transition-colors"
-              >
-                Logout
-              </button>
-            )}
-          </nav>
-
-          <div className="relative flex items-center">
-            {!searchOpen ? (
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Open search"
-                onClick={toggleSearch}
-                onKeyDown={keyToggle(toggleSearch)}
-                className="focus:outline-none cursor-pointer"
-              >
-                <Search className="w-6 h-6 text-[var(--foreground)]" />
-              </div>
-            ) : (
-              <div className="relative rounded-md bg-[var(--foreground)] bg-opacity-10 hover:bg-opacity-20 transition-colors ml-0 w-full sm:ml-2 sm:w-auto">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="w-5 h-5 text-[var(--foreground)]" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search…"
-                  aria-label="search"
-                  autoFocus
-                  onBlur={toggleSearch}
-                  className="block w-full md:w-20 focus:md:w-40 transition-all duration-200 bg-transparent py-1 pl-10 pr-3 text-current placeholder:text-[var(--foreground)] placeholder:opacity-50 focus:outline-none"
-                />
-              </div>
-            )}
-          </div>
-          <Link href="/cart">
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="View cart"
-              onClick={() => {
-                /* handle cart */
-              }}
-              onKeyDown={keyToggle(() => {
-                /* handle cart */
-              })}
-              className="relative focus:outline-none cursor-pointer"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                4
-              </span>
+            <div className="absolute right-0 top-full mt-2 bg-white shadow-md p-2 rounded hidden group-hover:block">
+              <p>Your cart items will appear here.</p>
             </div>
-          </Link>
-        </div>
+          </motion.div>
+        </Link>
+        <motion.div initial={false} animate={menuOpen ? "open" : "closed"}>
+          <MenuToggle toggle={toggleMenu} />
+        </motion.div>
       </div>
 
-      {mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={toggleMobile}
-          />
-          <div className="fixed top-0 left-0 h-full w-64 bg-[var(--background)] text-[var(--foreground)] p-4 z-50 transform transition-transform duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <Link
-                  href="/"
-                  className="font-bold text-lg hover:text-[var(--secondaryColor)]"
-                >
-                  <Image
-                    src="/bergstrøm_art_logo.png"
-                    alt="WebShop Logo"
-                    width={40}
-                    height={40}
-                    className="inline-block mr-2"
-                  />
-                </Link>
-              </div>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Close menu"
-                onClick={toggleMobile}
-                onKeyDown={keyToggle(toggleMobile)}
-                className="focus:outline-none cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </div>
-            </div>
-            <nav className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item}
-                  href={`/${item.toLowerCase()}`}
-                  onClick={toggleMobile}
-                  className="py-2 px-2 rounded hover:bg-[var(--foreground)] hover:bg-opacity-10 transition-colors font-medium"
-                >
-                  {item}
-                </Link>
-              ))}
-              {loaded && isLoggedIn && (
-                <button
-                  onClick={handleLogout}
-                  className="py-2 px-2 rounded font-medium hover:bg-[var(--foreground)] hover:bg-opacity-10 transition-colors text-left"
-                >
-                  Logout
-                </button>
-              )}
-            </nav>
-          </div>
-        </>
-      )}
-    </header>
+      <Drawer isOpen={isOpen} onOpenChange={onOpenChange} placement="right">
+        <DrawerContent>
+          <DrawerHeader>Bergstrøm Art Menu</DrawerHeader>
+          <DrawerBody>
+            <ul className="space-y-4">
+              <li>
+                <Link href="/">Home</Link>
+              </li>
+              <li>
+                <Link href="/about">About</Link>
+              </li>
+              <li>
+                <Link href="/contact">Contact</Link>
+              </li>
+              <li>
+                <Link href="/bestilling">Bestillngs maleri</Link>
+              </li>
+            </ul>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    </nav>
   );
 }

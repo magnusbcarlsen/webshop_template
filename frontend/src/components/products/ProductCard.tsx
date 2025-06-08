@@ -26,7 +26,6 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card
-      shadow="sm"
       className="
         bg-[var(--background)]
         

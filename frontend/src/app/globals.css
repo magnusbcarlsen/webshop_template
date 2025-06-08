@@ -32,6 +32,8 @@
   --btn-radius: 0.5rem;
   --btn-font-size: 0.5rem;
   --btn-font-weight: 400;
+
+  --heroui-background: transparent !important;
 }
 
 @media (prefers-color-scheme: dark) {

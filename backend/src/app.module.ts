@@ -15,7 +15,10 @@ import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '../../.env.bergstroem',
+    }),
     MulterModule.register({
       dest: './uploads', // This won't be used since we're using memory storage
     }),

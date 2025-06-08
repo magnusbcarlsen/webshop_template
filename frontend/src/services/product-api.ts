@@ -2,6 +2,7 @@
 
 import { API_ROOT } from "@/config/api";
 
+
 export type CategoryAPI = {
   id: number;
   parentCategoryId: number | null;
