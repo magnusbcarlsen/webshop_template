@@ -35,7 +35,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="mt-16 flex h-screen overflow-hidden">
       {/* Sidebar Container */}
       <aside
         className={`flex-none h-full bg-[var(--color-secondary)] transition-all duration-300 ease-in-out ${
