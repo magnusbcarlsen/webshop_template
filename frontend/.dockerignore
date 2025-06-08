@@ -1,0 +1,14 @@
+# frontend/.dockerignore
+
+node_modules
+.next
+out
+
+Dockerfile*
+docker-compose*.yml
+
+.env*
+.vscode/
+.DS_Store
+npm-debug.log*
+yarn-error.log*

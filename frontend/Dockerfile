@@ -1,36 +1,66 @@
-FROM node:18-alpine
+# # Multi-stage build for production
+# FROM node:18-alpine AS deps
+# WORKDIR /app
+# COPY package*.json ./
+# RUN npm ci --only=production
 
-WORKDIR /app
+# FROM node:18-alpine AS builder
+# WORKDIR /app
+# COPY package*.json ./
+# RUN npm ci
+# COPY . .
+# ENV NODE_OPTIONS=--max-old-space-size=2048
+# ENV NODE_ENV=production
+# RUN npm run build
 
-# only copy package manifest & install
-COPY package*.json ./
-RUN npm ci
-
-ENV NODE_ENV=development
-ENV WATCHPACK_POLLING=true
-ENV CHOKEIDAR_USEPOLLING=true
-
-# bind‑mount will supply the rest of your code
-EXPOSE 3000
-
-# start in dev mode (fast‑refresh/HMR)
-CMD ["npm", "run", "dev"]
-
-# FROM node:18-alpine
-
+# FROM node:18-alpine AS runner
 # WORKDIR /app
 
-# # Copy package files and install dependencies
-# COPY package*.json ./
-# RUN npm install
+# ENV NODE_ENV=production
+# ENV NODE_OPTIONS=--max-old-space-size=1024
 
-# # Copy the rest of the source files
-# COPY . .
+# RUN addgroup --system --gid 1001 nodejs
+# RUN adduser --system --uid 1001 nextjs
 
-# # Build Next.js for production (creates the .next folder)
-# RUN npm run build
+# COPY --from=builder /app/public ./public
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+
 
 # EXPOSE 3000
 
-# CMD ["npm", "start"]
+# ENV PORT 3000
+# ENV HOSTNAME "0.0.0.0"
 
+# CMD ["node", "server.js"]
+
+# frontend/Dockerfile
+# syntax=docker/dockerfile:1.4
+
+######### 1: deps stage #########
+FROM node:18-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+######### 2: build stage #########
+FROM deps AS builder
+WORKDIR /app
+COPY . .
+RUN npm run build
+
+######### 3: runner stage #########
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+# only prod deps
+COPY package*.json ./
+RUN npm ci --omit=dev
+# copy next build outputs
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.js ./next.config.js
+EXPOSE 3000
+CMD ["npm", "run", "start"]

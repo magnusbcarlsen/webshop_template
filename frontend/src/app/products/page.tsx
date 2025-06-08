@@ -1,5 +1,7 @@
-import Navbar from "@/components/NavBar";
-import ProductList from "@/components/ProductList";
+// products/page.tsx
+
+import ProductList from "@/components/products/ProductList";
+import { fallbackProducts } from "@/data/fallbackProduct ";
 import { fetchProducts, ProductAPI } from "@/services/product-api";
 
 // Incremental Static Regeneration: revalidate this page every 60 seconds
@@ -20,29 +22,6 @@ export const metadata = {
     "Liste af alle malerier og portrætter til salg på webshoppen. Opdateres hvert minut for at vise de nyeste produkter.",
 };
 
-// Fallback products in case the API is unavailable
-const fallbackProducts: ProductAPI[] = [
-  {
-    id: 1,
-    category: { id: 1, name: "Portrætter" },
-    name: "Example Product",
-    slug: "example-product",
-    description: "This is a fallback product for testing",
-    price: 1200,
-    salePrice: null,
-    stockQuantity: 10,
-    sku: "EX-123",
-    weight: null,
-    dimensions: null,
-    isFeatured: true,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    images: [],
-    variants: [],
-  },
-];
-
 export default async function ProductsPage() {
   let products: ProductAPI[] = [];
   let error = false;
@@ -59,7 +38,6 @@ export default async function ProductsPage() {
 
   return (
     <div>
-      <Navbar />
       <section className="p-8">
         <h1 className="text-2xl font-bold mb-4">Vores Produkter</h1>
         {error && (

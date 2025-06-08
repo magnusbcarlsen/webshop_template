@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, KeyboardEvent } from "react";
 import AdminProducts from "../../components/adminComponents/AdminProducts";
-import Navbar from "@/components/NavBar";
 import AdminOrders from "../../components/adminComponents/AdminOrders";
 
 // Placeholder views; replace with your actual components or import them
@@ -102,7 +101,7 @@ export default function AdminPage() {
       {/* Main content area */}
       <main className="flex-1 relative bg-[var(--background)] overflow-auto">
         {/* Open Icon when closed */}
-        <Navbar />
+
         {!isOpen && (
           <div
             role="button"

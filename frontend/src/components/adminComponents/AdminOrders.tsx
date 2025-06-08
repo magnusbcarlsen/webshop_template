@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   fetchOrders,
   deleteOrder,
@@ -9,30 +9,46 @@ import {
   OrderAPI,
 } from "@/services/order-api";
 
+type OrderStatus = OrderAPI["status"];
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<OrderAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderAPI | null>(null);
-  const [newStatus, setNewStatus] = useState<
-    | "pending"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-    | "refunded"
-  >("");
+  const [newStatus, setNewStatus] = useState<OrderStatus | "">("pending");
   const [statusComment, setStatusComment] = useState<string>("");
 
   useEffect(() => {
-    loadOrders();
+    let isActive = true;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const data = await fetchOrders(showDeleted);
+        if (!isActive) return;
+        setOrders(data);
+        setError(null);
+      } catch {
+        if (!isActive) return;
+        setError("Failed to load orders");
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      // cancel any pending state updates if unmounted
+      isActive = false;
+    };
   }, [showDeleted]);
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      // pass your toggle straight through:
       const data = await fetchOrders(showDeleted);
       setOrders(data);
       setError(null);
@@ -41,7 +57,11 @@ export default function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [showDeleted]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   const handleSoftDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this order?")) return;
@@ -95,7 +115,7 @@ export default function AdminOrders() {
     if (!selectedOrder) return;
     try {
       await updateOrder(selectedOrder.id, {
-        status: newStatus,
+        status: newStatus || "pending",
         comment: statusComment,
       });
       closeDetail();
@@ -344,7 +364,17 @@ export default function AdminOrders() {
               <label className="block mb-1 font-medium">Update Status</label>
               <select
                 value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
+                onChange={(e) =>
+                  setNewStatus(
+                    e.target.value as
+                      | "pending"
+                      | "processing"
+                      | "shipped"
+                      | "delivered"
+                      | "cancelled"
+                      | "refunded"
+                  )
+                }
                 className="w-full mb-2 p-2 border rounded"
               >
                 {[

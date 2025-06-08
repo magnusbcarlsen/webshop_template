@@ -1,5 +1,4 @@
 "use client";
-import Navbar from "@/components/NavBar";
 import { useRouter } from "next/navigation";
 import { FormEvent } from "react";
 
@@ -21,18 +20,6 @@ export default function LoginPage() {
       body: JSON.stringify({ email, password }),
     });
 
-    // const response = await fetch(
-    //   `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-    //   {
-    //     method: "POST",
-    //     credentials: "include",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({ email, password }),
-    //   }
-    // );
-
     if (response.ok) {
       const { role } = await response.json();
 
@@ -47,20 +34,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div>
-      <Navbar />
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <input type="email" name="email" required placeholder="Email" />
-        <input
-          type="password"
-          name="password"
-          required
-          placeholder="Password"
-        />
-        <button type="submit">Login</button>
-        <div></div>
-      </form>
-    </div>
+    
+      <div>
+        <h1>Login</h1>
+        <form onSubmit={handleSubmit}>
+          <input type="email" name="email" required placeholder="Email" />
+          <input
+            type="password"
+            name="password"
+            required
+            placeholder="Password"
+          />
+          <button type="submit">Login</button>
+          <div></div>
+        </form>
+      </div>
+  
   );
 }

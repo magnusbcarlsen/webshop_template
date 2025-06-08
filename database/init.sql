@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS product_variants;
 DROP TABLE IF EXISTS product_attributes;
 DROP TABLE IF EXISTS attribute_values;
 DROP TABLE IF EXISTS attributes;
+DROP TABLE IF EXISTS product_categories;
 DROP TABLE IF EXISTS product_images;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
@@ -83,7 +84,6 @@ CREATE TABLE categories (
 -- Products table
 CREATE TABLE products (
     product_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    category_id INT UNSIGNED,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
@@ -96,8 +96,7 @@ CREATE TABLE products (
     is_featured BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Product images
@@ -111,6 +110,14 @@ CREATE TABLE product_images (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS product_categories (
+  product_id   INT UNSIGNED NOT NULL,
+  category_id  INT UNSIGNED NOT NULL,
+  PRIMARY KEY (product_id, category_id),
+  FOREIGN KEY (product_id)   REFERENCES products(product_id)   ON DELETE CASCADE,
+  FOREIGN KEY (category_id)  REFERENCES categories(category_id) ON DELETE CASCADE
 );
 
 -- Product attributes
@@ -317,7 +324,8 @@ CREATE TABLE wishlist_items (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_pc_product   ON product_categories(product_id);
+CREATE INDEX idx_pc_category  ON product_categories(category_id);
 CREATE INDEX idx_products_is_active ON products(is_active);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_orders_user ON orders(user_id);
@@ -377,17 +385,30 @@ INSERT INTO categories (parent_category_id, name, slug, description, image_url, 
 (4, 'Cookware', 'cookware', 'Pots, pans and cooking utensils', '/images/categories/cookware.jpg', true),
 (4, 'Appliances', 'appliances', 'Kitchen appliances', '/images/categories/appliances.jpg', true);
 
--- Products
-INSERT INTO products (category_id, name, slug, description, price, sale_price, stock_quantity, sku, weight, dimensions, is_featured, is_active) VALUES 
-(5, 'Premium Smartphone X', 'premium-smartphone-x', 'The latest high-end smartphone with amazing features', 999.99, NULL, 50, 'PHN-X-001', 0.18, '160x75x8mm', true, true),
-(6, 'Business Laptop Pro', 'business-laptop-pro', 'Professional laptop for business users', 1299.99, 1199.99, 25, 'LPT-PRO-001', 2.10, '320x220x15mm', true, true),
-(7, 'Classic Denim Jeans', 'classic-denim-jeans', 'Comfortable men''s jeans for everyday wear', 59.99, NULL, 100, 'MEN-JN-001', 0.80, NULL, false, true),
-(8, 'Summer Floral Dress', 'summer-floral-dress', 'Beautiful floral pattern dress for summer', 79.99, 69.99, 30, 'WMN-DRS-001', 0.30, NULL, true, true),
-(9, 'The Mystery of the Ancient Ruins', 'mystery-ancient-ruins', 'Thrilling mystery novel set in ancient archaeological sites', 24.99, NULL, 200, 'BK-FIC-001', 0.50, '210x148x20mm', false, true),
-(10, 'Cooking Techniques: The Complete Guide', 'cooking-techniques-guide', 'Learn professional cooking techniques at home', 34.99, 29.99, 75, 'BK-NFI-001', 0.90, '250x190x25mm', false, true),
-(11, 'Professional Chef Pan Set', 'chef-pan-set', 'Set of 3 professional-grade frying pans', 149.99, NULL, 15, 'KIT-PAN-001', 3.50, NULL, true, true),
-(12, 'Smart Coffee Maker', 'smart-coffee-maker', 'Wi-Fi enabled coffee maker with smartphone control', 129.99, 119.99, 40, 'APP-COF-001', 2.80, '250x200x350mm', false, true);
+INSERT INTO products
+  (name, slug, description, price, sale_price, stock_quantity, sku, weight, dimensions, is_featured, is_active)
+VALUES
+  ('Premium Smartphone X', 'premium-smartphone-x', 'The latest high-end smartphone with amazing features', 999.99, NULL, 50, 'PHN-X-001', 0.18, '160x75x8mm', true, true),
+  ('Business Laptop Pro', 'business-laptop-pro', 'Professional laptop for business users', 1299.99, 1199.99, 25, 'LPT-PRO-001', 2.10, '320x220x15mm', true, true),
+  ('Classic Denim Jeans', 'classic-denim-jeans', 'Comfortable men''s jeans for everyday wear', 59.99, NULL, 100, 'MEN-JN-001', 0.80, NULL, false, true),
+  ('Summer Floral Dress', 'summer-floral-dress', 'Beautiful floral pattern dress for summer', 79.99, 69.99, 30, 'WMN-DRS-001', 0.30, NULL, true, true),
+  ('The Mystery of the Ancient Ruins', 'mystery-ancient-ruins', 'Thrilling mystery novel set in ancient archaeological sites', 24.99, NULL, 200, 'BK-FIC-001', 0.50, '210x148x20mm', false, true),
+  ('Cooking Techniques: The Complete Guide', 'cooking-techniques-guide', 'Learn professional cooking techniques at home', 34.99, 29.99, 75, 'BK-NFI-001', 0.90, '250x190x25mm', false, true),
+  ('Professional Chef Pan Set', 'chef-pan-set', 'Set of 3 professional-grade frying pans', 149.99, NULL, 15, 'KIT-PAN-001', 3.50, NULL, true, true),
+  ('Smart Coffee Maker', 'smart-coffee-maker', 'Wi-Fi enabled coffee maker with smartphone control', 129.99, 1199.99, 40, 'APP-COF-001', 2.80, '250x200x350mm', false, true);
 
+
+-- Migrate existing product→category links into product_categories
+INSERT INTO product_categories (product_id, category_id) VALUES
+  (1, 5),  -- Premium Smartphone X       → Smartphones
+  (2, 6),  -- Business Laptop Pro        → Laptops
+  (3, 7),  -- Classic Denim Jeans        → Men
+  (4, 8),  -- Summer Floral Dress        → Women
+  (5, 9),  -- The Mystery of the Ruins   → Fiction
+  (6, 10), -- Cooking Techniques Guide   → Non-Fiction
+  (7, 11), -- Professional Chef Pan Set  → Cookware
+  (8, 12); -- Smart Coffee Maker         → Appliances
+  
 -- Product images
 INSERT INTO product_images (product_id, image_url, alt_text, is_primary, sort_order) VALUES 
 (1, '/images/products/smartphone-x-1.jpg', 'Premium Smartphone X - Front View', true, 1),

@@ -3,52 +3,201 @@ import {
   Get,
   Post,
   Body,
+  Patch,
   Param,
-  Put,
   Delete,
-  UsePipes,
-  ValidationPipe,
+  UseInterceptors,
+  UploadedFiles,
+  ParseIntPipe,
+  HttpStatus,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
-import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import 'multer';
+import type { Express } from 'express';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Post()
+  @UseInterceptors(FilesInterceptor('images', 5))
+  async create(
+    @Body() createProductDto: CreateProductDto,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ })
+        .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          fileIsRequired: false,
+        }),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    console.log('Received create request:', {
+      body: createProductDto,
+      files: files?.length || 0,
+    });
+
+    // Parse categoryIds if it's a string (from FormData)
+    if (typeof createProductDto.categoryIds === 'string') {
+      try {
+        createProductDto.categoryIds = JSON.parse(
+          createProductDto.categoryIds,
+        ) as number[];
+      } catch (error) {
+        console.error('Failed to parse categoryIds:', error);
+        createProductDto.categoryIds = [];
+      }
+    }
+
+    // Convert string numbers to actual numbers (FormData converts everything to strings)
+    if (typeof createProductDto.price === 'string') {
+      createProductDto.price = parseFloat(createProductDto.price);
+    }
+    if (typeof createProductDto.stockQuantity === 'string') {
+      createProductDto.stockQuantity = parseInt(
+        createProductDto.stockQuantity,
+        10,
+      );
+    }
+    if (typeof createProductDto.salePrice === 'string') {
+      createProductDto.salePrice =
+        parseFloat(createProductDto.salePrice) || undefined;
+    }
+
+    // Handle boolean fields from FormData (they come as strings)
+    if (typeof createProductDto.isFeatured === 'string') {
+      createProductDto.isFeatured = createProductDto.isFeatured === 'true';
+    }
+    if (typeof createProductDto.isActive === 'string') {
+      createProductDto.isActive = createProductDto.isActive === 'true';
+    }
+
+    // Upload images if provided
+    if (files && files.length) {
+      const urls = await Promise.all(
+        files.map((f) => this.productsService.uploadImage(f)),
+      );
+      createProductDto.images = urls;
+    }
+
+    console.log('Processed create data:', createProductDto);
+
+    const result = await this.productsService.create(createProductDto);
+    console.log('Create result:', result);
+
+    return result;
+  }
+
   @Get()
-  async findAll(): Promise<Product[]> {
-    return this.productsService.findAll();
+  async findAll() {
+    const result = await this.productsService.findAll();
+    console.log('FindAll result count:', result.length);
+    return result;
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Product> {
-    return this.productsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.findOne(id);
   }
 
   @Get('slug/:slug')
-  async findBySlug(@Param('slug') slug: string): Promise<Product> {
+  findBySlug(@Param('slug') slug: string) {
     return this.productsService.findBySlug(slug);
   }
 
-  @Post()
-  @UsePipes(ValidationPipe)
-  async create(@Body() createProductDto: CreateProductDto): Promise<Product> {
-    return this.productsService.create(createProductDto);
+  @Patch(':id')
+  @UseInterceptors(FilesInterceptor('images', 5))
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProductDto: UpdateProductDto,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ })
+        .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          fileIsRequired: false,
+        }),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    console.log('Received update request:', {
+      id,
+      body: updateProductDto,
+      files: files?.length || 0,
+    });
+
+    // Parse categoryIds if it's a string (from FormData)
+    if (typeof updateProductDto.categoryIds === 'string') {
+      try {
+        updateProductDto.categoryIds = JSON.parse(
+          updateProductDto.categoryIds,
+        ) as number[];
+      } catch (error) {
+        console.error('Failed to parse categoryIds:', error);
+        updateProductDto.categoryIds = [];
+      }
+    }
+
+    // Convert string numbers to actual numbers (FormData converts everything to strings)
+    if (typeof updateProductDto.price === 'string') {
+      updateProductDto.price = parseFloat(updateProductDto.price);
+    }
+    if (typeof updateProductDto.stockQuantity === 'string') {
+      updateProductDto.stockQuantity = parseInt(
+        updateProductDto.stockQuantity,
+        10,
+      );
+    }
+    if (typeof updateProductDto.salePrice === 'string') {
+      updateProductDto.salePrice =
+        parseFloat(updateProductDto.salePrice) || undefined;
+    }
+
+    // Handle boolean fields from FormData (they come as strings)
+    if (typeof updateProductDto.isFeatured === 'string') {
+      updateProductDto.isFeatured = updateProductDto.isFeatured === 'true';
+    }
+    if (typeof updateProductDto.isActive === 'string') {
+      updateProductDto.isActive = updateProductDto.isActive === 'true';
+    }
+
+    // Upload images if provided
+    if (files && files.length) {
+      const urls = await Promise.all(
+        files.map((file) => this.productsService.uploadImage(file)),
+      );
+      updateProductDto.images = urls;
+    }
+
+    console.log('Processed update data:', updateProductDto);
+
+    const result = await this.productsService.update(id, updateProductDto);
+    console.log('Update result:', result);
+
+    return result;
   }
 
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateProductDto: UpdateProductDto,
-  ): Promise<Product> {
-    return this.productsService.update(+id, updateProductDto);
+  // Delete a single image from a product
+  @Delete(':id/images/:imageId')
+  async deleteImage(
+    @Param('id', ParseIntPipe) productId: number,
+    @Param('imageId', ParseIntPipe) imageId: number,
+  ) {
+    return await this.productsService.deleteProductImage(productId, imageId);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.productsService.remove(+id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    console.log('Deleting product:', id);
+    const result = await this.productsService.remove(id);
+    console.log('Delete completed');
+    return result;
   }
 }

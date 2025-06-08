@@ -3,6 +3,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  app.use(helmet());
 
   // 2) allow CORS from your frontend - Updated to match nginx proxy
   app.enableCors({

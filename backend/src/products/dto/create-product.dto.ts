@@ -1,3 +1,5 @@
+import { IsArray, IsInt, IsOptional, Min } from 'class-validator';
+
 export class CreateProductDto {
   name: string;
   slug: string;
@@ -10,5 +12,11 @@ export class CreateProductDto {
   dimensions?: string;
   isFeatured?: boolean;
   isActive?: boolean;
-  categoryId?: number;
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  @Min(1, { each: true })
+  categoryIds?: number[];
+  @IsOptional()
+  images?: string[]; // Array of image URLs or paths
 }

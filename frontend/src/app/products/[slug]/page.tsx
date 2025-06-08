@@ -1,8 +1,7 @@
 // src/app/product/[slug]/page.tsx
 import { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "@/components/NavBar";
-import ProductDetail from "@/components/ProductDetail";
+import ProductDetail from "@/components/products/ProductDetail";
 import { fetchProductBySlug, ProductAPI } from "@/services/product-api";
 
 // Incremental Static Regeneration: revalidate this page every 60 seconds
@@ -11,7 +10,7 @@ export const revalidate = 60;
 // Define a fallback product in case the API is unavailable
 const fallbackProduct: ProductAPI = {
   id: 1,
-  category: { id: 1, name: "Portrætter" },
+  categories: [{ id: 1, name: "Portrætter" }],
   name: "Product Not Found",
   slug: "not-found",
   description: "This product could not be loaded",
@@ -33,15 +32,16 @@ const fallbackProduct: ProductAPI = {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  const resolvedParams = await params;
   let product: ProductAPI | null = null;
 
   try {
-    product = await fetchProductBySlug(params.slug);
+    product = await fetchProductBySlug(resolvedParams.slug);
   } catch (error) {
     console.error(
-      `Error fetching product metadata for slug: ${params.slug}`,
+      `Error fetching product metadata for slug: ${resolvedParams.slug}`,
       error
     );
     // Continue with default metadata if product fetch fails
@@ -60,7 +60,7 @@ export async function generateMetadata({
       product.description || `View details and purchase ${product.name}`,
     keywords: [
       product.name,
-      product.category?.name || "art",
+      product.categories?.length > 0 ? product.categories[0].name : "art",
       "Bergstrøm Art",
       "portræt",
       "maleri",
@@ -80,16 +80,26 @@ export async function generateMetadata({
 
 export default async function ProductDetailsPage({
   params,
-}: {
-  params: { slug: string };
-}) {
+  searchParams,
+}: Readonly<{
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[]>>;
+}>) {
+  const resolvedParams = await params;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const resolvedSearchParams = await searchParams;
+
   let product: ProductAPI | null = null;
   let error = false;
 
   try {
-    product = await fetchProductBySlug(params.slug);
+    product = await fetchProductBySlug(resolvedParams.slug);
   } catch (err) {
-    console.error(`Error fetching product with slug: ${params.slug}`, err);
+    console.error(
+      `Error fetching product with slug: ${resolvedParams.slug}`,
+      err
+    );
     error = true;
   }
 
@@ -101,7 +111,6 @@ export default async function ProductDetailsPage({
 
   return (
     <div>
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <Link href="/products" className="text-blue-500 mb-4 inline-block">
           &larr; Back to Products
