@@ -47,7 +47,7 @@ export default async function Home() {
           style={{ backgroundImage: "url('/Dina_Bergstrøm_art_kontakt.jpg')" }}
         ></div>
 
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center text-center text-white px-4">
+        <div className="inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center text-center text-white px-4">
           <h1 className="text-4xl md:text-6xl font-bold text-[var(--background)]">
             Portrætter og malerier
           </h1>
