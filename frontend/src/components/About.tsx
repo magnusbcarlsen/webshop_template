@@ -14,7 +14,7 @@ export default function About() {
       </div>
       <div className="w-full lg:w-1/2 h-auto lg:h-screen flex flex-col justify-center items-center bg-[var(--background)] text-[var(--foreground)] py-16">
         <div className="mb-4 text-center border-b-2 border-current border-solid border-b-[var(--foreground)] w-[60%]">
-          <h1 className="text-9xl font-bold pb-6">ABOUT</h1>
+          <h1 className="text-5xl font-bold pb-6">ABOUT</h1>
         </div>
         <div className="text-left w-[80%]  lg:w-[60%] max-w-3xl mb-2">
           <p className="mb-4">

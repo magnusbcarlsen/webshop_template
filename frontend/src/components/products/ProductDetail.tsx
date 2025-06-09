@@ -1,97 +1,249 @@
 // src/components/ProductDetail.tsx
+"use client";
 import { ProductAPI } from "@/services/product-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
-import Image from "next/image";
+import NextImage from "next/image";
+import { useState, useEffect } from "react";
+import { AddToCartButton } from "./AddToCartButton";
+import { Button } from "@heroui/react";
 
 interface ProductDetailProps {
   product: ProductAPI;
 }
 
 export default function ProductDetail({ product }: ProductDetailProps) {
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [imageError, setImageError] = useState(false);
+  const [imageChecked, setImageChecked] = useState(false);
+
+  const FALLBACK_SRC = "/NoImageAvailable.png";
+
   // Get primary image or first available
   const primaryImage =
     product.images?.find((img) => img.isPrimary) || product.images?.[0];
 
-  return (
-    <div className="product-detail">
-      <h1 className="text-2xl font-bold mb-4">{product.name}</h1>
+  const allImages = product.images || [];
+  const currentImage = allImages[selectedImage] || primaryImage;
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          {product.images && product.images.length > 0 && primaryImage ? (
-            <div className="relative w-full h-96">
-              <Image
-                src={normalizeImageUrl(primaryImage.imageUrl)}
-                alt={primaryImage.altText || product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover rounded"
-                priority
-                unoptimized
-              />
-            </div>
-          ) : (
-            <div className="bg-gray-200 rounded w-full h-96 flex items-center justify-center">
-              <span className="text-gray-500">No image available</span>
-            </div>
+  // Normalize or fallback for current image
+  const imageSrc = currentImage
+    ? normalizeImageUrl(currentImage.imageUrl)
+    : FALLBACK_SRC;
+  const altText = currentImage
+    ? currentImage.altText || product.name
+    : `${product.name} (no image)`;
+
+  const displayImageSrc = imageError ? FALLBACK_SRC : imageSrc;
+
+  // Force check image availability on mount and when selectedImage changes
+  useEffect(() => {
+    if (!currentImage) return;
+
+    setImageChecked(false);
+    setImageError(false);
+
+    const img = new window.Image();
+    img.onload = () => {
+      setImageError(false);
+      setImageChecked(true);
+    };
+    img.onerror = () => {
+      setImageError(true);
+      setImageChecked(true);
+    };
+    img.src = imageSrc;
+  }, [imageSrc, currentImage]);
+
+  // Carousel navigation functions
+  const nextImage = () => {
+    if (allImages.length > 1) {
+      setSelectedImage((prev) => (prev + 1) % allImages.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (allImages.length > 1) {
+      setSelectedImage(
+        (prev) => (prev - 1 + allImages.length) % allImages.length
+      );
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        prevImage();
+      } else if (e.key === "ArrowRight") {
+        nextImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [allImages.length]);
+
+  return (
+    <div className="flex flex-col lg:flex-row h-screen">
+      {/* Left Column: Product Images */}
+      <div className="w-full lg:w-[60vw] h-[50vh] lg:h-screen bg-[var(--background)] text-[var(--foreground)] flex flex-col justify-center items-center p-8 lg:p-12 relative">
+        {/* Main Product Image with Carousel Controls */}
+        <div className="relative w-full max-w-2xl h-[70%] mb-6 group">
+          <div className="relative w-full h-full bg-gray-100 rounded-lg overflow-hidden">
+            <NextImage
+              src={displayImageSrc}
+              alt={altText}
+              fill
+              className="object-contain"
+              priority
+              unoptimized
+              onError={(e) => {
+                console.error("Next/Image failed to load:", displayImageSrc);
+                e.currentTarget.src = FALLBACK_SRC;
+              }}
+            />
+          </div>
+
+          {/* Carousel Navigation Arrows */}
+          {allImages.length > 1 && (
+            <>
+              <Button
+                isIconOnly
+                variant="ghost"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                onPress={prevImage}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </Button>
+              <Button
+                isIconOnly
+                variant="ghost"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                onPress={nextImage}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Button>
+            </>
           )}
 
-          {product.images && product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2 mt-4">
-              {product.images
-                .filter((img) => !img.isPrimary)
-                .map((image) => (
-                  <div key={image.id} className="relative w-full h-20">
-                    <Image
-                      src={normalizeImageUrl(image.imageUrl)}
-                      alt={image.altText || `${product.name} view`}
-                      fill
-                      sizes="(max-width: 768px) 25vw, 12.5vw"
-                      className="object-cover rounded"
-                    />
-                  </div>
-                ))}
+          {/* Image Counter */}
+          {allImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+              {selectedImage + 1} / {allImages.length}
             </div>
           )}
         </div>
 
-        <div>
-          <p className="text-gray-600 mb-2">
-            Category:{" "}
-            {product.categories && product.categories.length > 0
-              ? product.categories[0].name
-              : "Uncategorized"}
-          </p>
-          <p className="text-xl font-bold mb-4">${product.price}</p>
-          {product.salePrice && (
-            <p className="text-red-500 mb-4">Sale: ${product.salePrice}</p>
-          )}
-          <p className="mb-4">{product.description}</p>
+        {/* Thumbnail Images */}
+        {allImages.length > 1 && (
+          <div className="flex space-x-4 overflow-x-auto max-w-full pb-2">
+            {allImages.map((image, index) => {
+              const thumbSrc = normalizeImageUrl(image.imageUrl);
+              return (
+                <button
+                  key={image.id}
+                  onClick={() => setSelectedImage(index)}
+                  className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImage === index
+                      ? "border-[var(--foreground)] opacity-100"
+                      : "border-gray-300 hover:border-gray-400 opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <NextImage
+                    src={thumbSrc}
+                    alt={image.altText || `${product.name} view ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    onError={(e) => {
+                      e.currentTarget.src = FALLBACK_SRC;
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-          {product.variants && product.variants.length > 0 && (
-            <div className="mb-4">
-              <h3 className="font-bold mb-2">Options:</h3>
-              <div className="space-y-2">
-                {product.variants.map((variant) => (
-                  <div key={variant.id}>
-                    <span className="font-medium">Variant {variant.id}:</span> $
-                    {variant.price}
-                    {variant.stockQuantity > 0 ? (
-                      <span className="text-green-500 ml-2">
-                        In Stock ({variant.stockQuantity})
-                      </span>
-                    ) : (
-                      <span className="text-red-500 ml-2">Out of Stock</span>
-                    )}
-                  </div>
-                ))}
+      {/* Right Column: Product Information */}
+      <div className="w-full lg:w-[40vw] h-auto lg:h-screen bg-gray-100 flex flex-col justify-center items-center p-8 lg:p-12">
+        <div className="w-[80%] max-w-lg space-y-8">
+          {/* Product Category */}
+          {product.categories && product.categories.length > 0 && (
+            <div className="text-sm font-medium text-gray-600 uppercase tracking-wide text-left">
+              {product.categories[0].name}
+            </div>
+          )}
+
+          {/* Product Name with underline styling like About page */}
+          <div className="text-left border-b-2 border-current border-solid border-b-[var(--foreground)] w-full">
+            <h1 className="text-4xl lg:text-6xl font-bold pb-6 leading-tight">
+              {product.name}
+            </h1>
+          </div>
+
+          {/* Product Description */}
+          {product.description && (
+            <div className="text-left space-y-4">
+              <p className="leading-relaxed">{product.description}</p>
+            </div>
+          )}
+
+          {/* Dimensions */}
+          {product.dimensions && (
+            <div className="text-left">
+              <div className="inline-block p-4 bg-white/60 rounded-lg">
+                <div className="font-semibold text-sm uppercase tracking-wide mb-1">
+                  Dimensions
+                </div>
+                <div className="text-gray-700">{product.dimensions}</div>
               </div>
             </div>
           )}
 
-          <button className="bg-[var(--primary-color)] text-white px-4 py-2 rounded">
-            Add to Cart
-          </button>
+          {/* Price */}
+          <div className="text-left space-y-2">
+            <div className="text-3xl lg:text-4xl font-bold">
+              DKK {product.salePrice || product.price}
+              {product.salePrice && (
+                <span className="text-xl text-gray-400 line-through ml-3">
+                  DKK {product.price}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Add to Cart Button */}
+          <div className="pt-4">
+            <AddToCartButton productId={product.id} quantity={1} />
+          </div>
         </div>
       </div>
     </div>

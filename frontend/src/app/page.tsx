@@ -42,24 +42,26 @@ export default async function Home() {
   return (
     <>
       <section className="relative h-[70vh] w-full overflow-hidden">
-        <div
-          className="absolute inset-0 bg-fixed bg-center bg-cover"
-          style={{ backgroundImage: "url('/Dina_Bergstrøm_art_kontakt.jpg')" }}
-        ></div>
-
-        <div className="inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center text-center text-white px-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-[var(--background)]">
+        {/* Text overlay */}
+        <div className="absolute inset-0 z-10 bg-black bg-opacity-30 flex flex-col items-center justify-center text-center  px-4">
+          <h1 className="!text-white text-4xl md:text-6xl font-bold">
             Portrætter og malerier
           </h1>
-          <p className="text-xl md:text-2xl mt-4 text-[var(--background)]">
+          <p className="!text-white text-xl md:text-2xl mt-4">
             af Bergstrøm art
           </p>
         </div>
+
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-fixed bg-bottom bg-cover"
+          style={{ backgroundImage: "url('/HeroImageBergstroemArt.png')" }}
+        ></div>
       </section>
 
       <div>
         <section className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">Malerier og portrætter</h2>
+          <h2 className="text-2xl font-bold m-10">Malerier og portrætter</h2>
           {error && (
             <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm text-center">
               Der opstod en fejl ved indlæsning af data. Viser eksempeldata i
