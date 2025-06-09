@@ -111,11 +111,7 @@ export default async function ProductDetailsPage({
 
   return (
     <div>
-      <div className="container mx-auto px-4 py-8">
-        <Link href="/products" className="text-blue-500 mb-4 inline-block">
-          &larr; Back to Products
-        </Link>
-
+      <div className="">
         {error && (
           <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm">
             Der opstod en fejl ved indlæsning af produktet. Produktet kunne ikke

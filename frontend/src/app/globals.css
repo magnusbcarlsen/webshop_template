@@ -8,7 +8,7 @@
 :root {
   /* Base Theme */
   --background: #0a0a0a;
-  --foreground: #ededed;
+  --foreground: #eeeeee;
 
   /* Color Scheme */
   --color-primary: #d75615;
@@ -18,7 +18,7 @@
   /* Typography */
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: "Courier New", Courier, monospace;
-  --font-h1: "Arizonia", cursive;
+  --font-h1: "Helvetica Neue";
 
   /* Font Sizes */
   --h1-size: 2rem;
@@ -38,9 +38,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ededed;
+    --background: #eeeeee;
     --foreground: #0a0a0a;
   }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Global Body */

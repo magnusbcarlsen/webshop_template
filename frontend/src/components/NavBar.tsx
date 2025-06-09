@@ -79,10 +79,7 @@ export default function Navbar() {
             className="relative cursor-pointer"
             whileHover={{ scale: 1.1 }}
           >
-            <ShoppingCartIcon
-              className="text-[var(--color-primary)]"
-              size={24}
-            />
+            <ShoppingCartIcon className="" size={24} />
             <div className="absolute right-0 top-full mt-2 bg-white shadow-md p-2 rounded hidden group-hover:block">
               <p>Your cart items will appear here.</p>
             </div>
@@ -93,7 +90,7 @@ export default function Navbar() {
         </motion.div>
       </div>
 
-      <Drawer isOpen={isOpen} onOpenChange={onOpenChange} placement="right">
+        <Drawer isOpen={isOpen} onOpenChange={onOpenChange} placement="right">
         <DrawerContent>
           <DrawerHeader>Bergstrøm Art Menu</DrawerHeader>
           <DrawerBody>

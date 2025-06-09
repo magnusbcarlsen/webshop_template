@@ -28,10 +28,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="light h-full">
-      <body className={` antialiased h-full flex flex-col`}>
+      <body className={`h-full flex flex-col`}>
         <Providers>
           <Navbar />
-          <main className="">{children}</main>
+          <main>{children}</main>
         </Providers>
       </body>
     </html>
