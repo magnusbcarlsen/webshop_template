@@ -1,6 +1,17 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Textarea,
+  Chip,
+} from "@heroui/react";
+import {
   fetchOrders,
   deleteOrder,
   restoreOrder,
@@ -41,7 +52,6 @@ export default function AdminOrders() {
     load();
 
     return () => {
-      // cancel any pending state updates if unmounted
       isActive = false;
     };
   }, [showDeleted]);
@@ -69,7 +79,7 @@ export default function AdminOrders() {
       await deleteOrder(id);
       loadOrders();
     } catch {
-      alert("Failed to delete order");
+      setError("Failed to delete order");
     }
   };
 
@@ -78,7 +88,7 @@ export default function AdminOrders() {
       await restoreOrder(id);
       loadOrders();
     } catch {
-      alert("Failed to restore order");
+      setError("Failed to restore order");
     }
   };
 
@@ -88,18 +98,17 @@ export default function AdminOrders() {
       await completeOrder(id);
       loadOrders();
     } catch {
-      alert("Failed to complete order");
+      setError("Failed to complete order");
     }
   };
 
   const handleRevertComplete = async (id: number) => {
     if (!confirm("Revert this completed order back to processing?")) return;
     try {
-      // revert without comment to match backend UpdateOrderDto
       await updateOrder(id, { status: "processing" });
       loadOrders();
     } catch {
-      alert("Failed to revert order");
+      setError("Failed to revert order");
     }
   };
 
@@ -121,15 +130,40 @@ export default function AdminOrders() {
       closeDetail();
       loadOrders();
     } catch {
-      alert("Failed to update status");
+      setError("Failed to update status");
     }
   };
 
-  if (loading)
-    return <p className="text-[var(--foreground-muted)]">Loading…</p>;
-  if (error) return <p className="text-[var(--color-error)]">{error}</p>;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "shipped":
+        return "bg-blue-100 text-blue-800";
+      case "processing":
+        return "bg-yellow-100 text-yellow-800";
+      case "pending":
+        return "bg-gray-100 text-gray-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "refunded":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
-  // partition orders
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
   const activeOrders = orders.filter((o) => o.status !== "delivered");
   const completedOrders = orders.filter(
     (o) => o.status === "delivered" && !o.deletedAt
@@ -137,283 +171,564 @@ export default function AdminOrders() {
 
   return (
     <div className="p-8 space-y-8">
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Orders</h1>
+            <p className="text-gray-600">
+              Manage customer orders and fulfillment
+            </p>
+          </div>
+          <Button
+            onPress={() => setShowDeleted((prev) => !prev)}
+            color="primary"
+            size="lg"
+            className="mt-4 lg:mt-0 bg-black text-white font-semibold px-6"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            {showDeleted ? "Hide Deleted" : "Show Deleted"}
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg mr-4">
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Active Orders
+                </h3>
+                <p className="text-3xl font-bold text-blue-600">
+                  {activeOrders.length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg mr-4">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Completed Orders
+                </h3>
+                <p className="text-3xl font-bold text-green-600">
+                  {completedOrders.length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 text-red-500 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-red-700">{error}</span>
+          </div>
+        </div>
+      )}
+
       {/* Active Orders */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            Active Orders
-          </h1>
-          <button
-            className="px-4 py-2 rounded shadow text-sm font-medium focus:outline-none hover:bg-[var(--color-accent)] bg-[var(--color-primary)] text-[var(--background)]"
-            onClick={() => setShowDeleted((prev) => !prev)}
-          >
-            {showDeleted ? "Hide Deleted" : "Show Deleted"}
-          </button>
-        </div>
-        <p className="text-[var(--foreground-muted)] mb-4">
-          Total: {activeOrders.length}
-          {showDeleted && " (including deleted)"}
-        </p>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-[var(--background)] shadow rounded-lg">
-            <thead>
-              <tr className="bg-[var(--color-secondary)] text-left">
-                {[
-                  "ID",
-                  "Customer",
-                  "Items",
-                  "Total",
-                  "Status",
-                  "Created",
-                  "Actions",
-                ].map((h) => (
-                  <th key={h} className="px-6 py-3">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {activeOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className={`border-t hover:bg-[var(--color-accent)] transition-colors ${
-                    order.deletedAt ? "opacity-50 line-through" : ""
-                  }`}
-                >
-                  <td className="px-6 py-4">{order.id}</td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-[var(--foreground)]">
-                      {order.guestName}
-                    </div>
-                    <div className="text-sm text-[var(--foreground-muted)]">
-                      {order.guestEmail}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {order.items.length} item{order.items.length !== 1 && "s"}
-                  </td>
-                  <td className="px-6 py-4">${order.totalAmount}</td>
-                  <td className="px-6 py-4 capitalize">{order.status}</td>
-                  <td className="px-6 py-4 text-sm text-[var(--foreground-muted)]">
-                    {new Date(order.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 space-x-2">
-                    <button
-                      onClick={() => openDetail(order)}
-                      className="px-2 py-1 text-sm rounded focus:outline-none hover:bg-[var(--color-secondary)] bg-[var(--color-primary)] text-[var(--background)]"
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Active Orders</h2>
+        {activeOrders.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+            <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No active orders
+            </h3>
+            <p className="text-gray-600">
+              Active orders will appear here when customers place them
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    {[
+                      "ID",
+                      "Customer",
+                      "Items",
+                      "Total",
+                      "Status",
+                      "Created",
+                      "Actions",
+                    ].map((header) => (
+                      <th
+                        key={header}
+                        className="px-6 py-4 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider"
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {activeOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className={`hover:bg-gray-50 transition-colors ${
+                        order.deletedAt ? "opacity-50" : ""
+                      }`}
                     >
-                      View
-                    </button>
-                    {order.status != "delivered" && (
-                      <button
-                        onClick={() => handleComplete(order.id)}
-                        className="px-2 py-1 text-sm rounded focus:outline-none hover:bg-[var(--color-secondary)] bg-[var(--color-primary)] text-[var(--background)]"
-                      >
-                        Complete
-                      </button>
-                    )}
-                    {!order.deletedAt ? (
-                      <button
-                        onClick={() => handleSoftDelete(order.id)}
-                        className="px-2 py-1 text-sm rounded focus:outline-none hover:bg-[var(--color-error)] bg-[var(--color-secondary)] text-[var(--background)]"
-                      >
-                        Delete
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleRestore(order.id)}
-                        className="px-2 py-1 text-sm rounded focus:outline-none hover:bg-[var(--color-accent)] bg-[var(--color-primary)] text-[var(--background)]"
-                      >
-                        Restore
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      <td className="px-6 py-4 text-sm text-gray-900 font-mono">
+                        #{order.id}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">
+                          {order.guestName}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {order.guestEmail}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {order.items.length} item
+                        {order.items.length !== 1 && "s"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-lg font-semibold text-gray-900">
+                          DKK {order.totalAmount}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="primary"
+                            onPress={() => openDetail(order)}
+                          >
+                            View
+                          </Button>
+                          {order.status !== "delivered" && (
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              color="success"
+                              onPress={() => handleComplete(order.id)}
+                            >
+                              Complete
+                            </Button>
+                          )}
+                          {!order.deletedAt ? (
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              color="danger"
+                              onPress={() => handleSoftDelete(order.id)}
+                            >
+                              Delete
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              color="warning"
+                              onPress={() => handleRestore(order.id)}
+                            >
+                              Restore
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Completed Orders Section */}
       <div>
-        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
           Completed Orders
         </h2>
-        {completedOrders.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-[var(--background)] shadow rounded-lg">
-              <thead>
-                <tr className="bg-[var(--color-secondary)] text-left">
-                  {[
-                    "ID",
-                    "Customer",
-                    "Items",
-                    "Total",
-                    "Completed At",
-                    "Actions",
-                  ].map((h) => (
-                    <th key={h} className="px-6 py-3">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {completedOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-t hover:bg-[var(--color-accent)] transition-colors"
-                  >
-                    <td className="px-6 py-4">{order.id}</td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-[var(--foreground)]">
-                        {order.guestName}
-                      </div>
-                      <div className="text-sm text-[var(--foreground-muted)]">
-                        {order.guestEmail}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {order.items.length} item{order.items.length !== 1 && "s"}
-                    </td>
-                    <td className="px-6 py-4">${order.totalAmount}</td>
-                    <td className="px-6 py-4 text-sm text-[var(--foreground-muted)]">
-                      {new Date(order.updatedAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 space-x-2">
-                      <button
-                        onClick={() => openDetail(order)}
-                        className="px-2 py-1 text-sm rounded focus:outline-none hover:bg-[var(--color-secondary)] bg-[var(--color-primary)] text-[var(--background)]"
-                      >
-                        View
-                      </button>
-                      {/* Revert Complete */}
-                      <button
-                        onClick={() => handleRevertComplete(order.id)}
-                        className="px-2 py-1 text-sm rounded focus:outline-none hover:bg-[var(--color-secondary)] bg-[var(--color-accent)] text-[var(--background)]"
-                      >
-                        Revert
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {completedOrders.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+            <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No completed orders
+            </h3>
+            <p className="text-gray-600">
+              Completed orders will appear here after delivery
+            </p>
           </div>
         ) : (
-          <p className="text-[var(--foreground-muted)]">No completed orders.</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    {[
+                      "ID",
+                      "Customer",
+                      "Items",
+                      "Total",
+                      "Completed At",
+                      "Actions",
+                    ].map((header) => (
+                      <th
+                        key={header}
+                        className="px-6 py-4 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider"
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {completedOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-900 font-mono">
+                        #{order.id}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">
+                          {order.guestName}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {order.guestEmail}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {order.items.length} item
+                        {order.items.length !== 1 && "s"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-lg font-semibold text-gray-900">
+                          ${order.totalAmount}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(order.updatedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="primary"
+                            onPress={() => openDetail(order)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="warning"
+                            onPress={() => handleRevertComplete(order.id)}
+                          >
+                            Revert
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 
       {/* Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-[var(--background)] rounded-lg shadow-lg w-3/4 max-w-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">
-              Order #{selectedOrder.id} Details
-            </h2>
-            <div className="space-y-2 mb-4">
-              <p>
-                <strong>Customer:</strong> {selectedOrder.guestName} (
-                {selectedOrder.guestEmail})
-              </p>
-              <p>
-                <strong>Shipping:</strong> {selectedOrder.shippingAddress}
-              </p>
-              <p>
-                <strong>Billing:</strong> {selectedOrder.billingAddress}
-              </p>
-              <p>
-                <strong>Payment:</strong> {selectedOrder.paymentMethod || "N/A"}
-              </p>
-              <p>
-                <strong>Tracking #:</strong>{" "}
-                {selectedOrder.trackingNumber || "N/A"}
-              </p>
-              <p>
-                <strong>Notes:</strong> {selectedOrder.notes || "—"}
-              </p>
-            </div>
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">Items</h3>
-              <ul className="list-disc list-inside">
-                {selectedOrder.items.map((i) => (
-                  <li key={i.id}>
-                    {i.quantity} × {i.product?.name ?? i.variant?.sku ?? "N/A"}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">Status History</h3>
-              <ul className="list-none space-y-1">
-                {selectedOrder.statusHistory.map((h) => (
-                  <li
-                    key={h.id}
-                    className="text-sm text-[var(--foreground-muted)]"
-                  >
-                    {new Date(h.createdAt).toLocaleString()}: {h.status}
-                    {h.comment ? ` — ${h.comment}` : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1 font-medium">Update Status</label>
-              <select
-                value={newStatus}
-                onChange={(e) =>
-                  setNewStatus(
-                    e.target.value as
-                      | "pending"
-                      | "processing"
-                      | "shipped"
-                      | "delivered"
-                      | "cancelled"
-                      | "refunded"
-                  )
-                }
-                className="w-full mb-2 p-2 border rounded"
-              >
-                {[
-                  "pending",
-                  "processing",
-                  "shipped",
-                  "delivered",
-                  "cancelled",
-                  "refunded",
-                ].map((s) => (
-                  <option key={s} value={s}>
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                value={statusComment}
-                onChange={(e) => setStatusComment(e.target.value)}
-                placeholder="Comment (optional)"
-                className="w-full p-2 border rounded"
-                rows={3}
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={closeDetail}
-                className="px-4 py-2 rounded shadow focus:outline-none hover:bg-[var(--color-accent)] bg-[var(--color-secondary)] text-[var(--background)]"
-              >
+        <Modal
+          isOpen={!!selectedOrder}
+          onClose={closeDetail}
+          size="3xl"
+          scrollBehavior="inside"
+        >
+          <ModalContent>
+            <ModalHeader>
+              <h2 className="text-xl font-bold">
+                Order #{selectedOrder.id} Details
+              </h2>
+            </ModalHeader>
+            <ModalBody className="space-y-6">
+              {/* Customer Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Customer Information
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      <p>
+                        <strong>Name:</strong> {selectedOrder.guestName}
+                      </p>
+                      <p>
+                        <strong>Email:</strong> {selectedOrder.guestEmail}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Shipping Address
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p>{selectedOrder.shippingAddress}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Order Details
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      <p>
+                        <strong>Payment:</strong>{" "}
+                        {selectedOrder.paymentMethod || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Tracking #:</strong>{" "}
+                        {selectedOrder.trackingNumber || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Total:</strong>{" "}
+                        <span className="text-lg font-semibold">
+                          ${selectedOrder.totalAmount}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Billing Address
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p>{selectedOrder.billingAddress}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedOrder.notes && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p>{selectedOrder.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Items */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Order Items
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="space-y-2">
+                    {selectedOrder.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
+                      >
+                        <span>
+                          {item.quantity} ×{" "}
+                          {item.product?.name ?? item.variant?.sku ?? "N/A"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status History */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Status History
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="space-y-2">
+                    {selectedOrder.statusHistory.map((history) => (
+                      <div
+                        key={history.id}
+                        className="flex justify-between items-start py-2 border-b border-gray-200 last:border-b-0"
+                      >
+                        <div>
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(
+                              history.status
+                            )}`}
+                          >
+                            {history.status}
+                          </span>
+                          {history.comment && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {history.comment}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(history.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Update Status */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900">Update Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      New Status
+                    </label>
+                    <select
+                      value={newStatus}
+                      onChange={(e) =>
+                        setNewStatus(e.target.value as OrderStatus)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {[
+                        "pending",
+                        "processing",
+                        "shipped",
+                        "delivered",
+                        "cancelled",
+                        "refunded",
+                      ].map((status) => (
+                        <option key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <Textarea
+                  label="Comment (Optional)"
+                  value={statusComment}
+                  onValueChange={setStatusComment}
+                  placeholder="Add a comment about this status change..."
+                  variant="bordered"
+                  minRows={3}
+                />
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="flat" onPress={closeDetail}>
                 Cancel
-              </button>
-              <button
-                onClick={handleUpdateStatus}
-                className="px-4 py-2 rounded shadow focus:outline-none hover:bg-[var(--color-secondary)] bg-[var(--color-primary)] text-[var(--background)]"
+              </Button>
+              <Button
+                color="primary"
+                onPress={handleUpdateStatus}
+                className="bg-black text-white"
               >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+                Update Status
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
     </div>
   );
