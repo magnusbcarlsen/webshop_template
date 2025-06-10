@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { Metadata } from "next";
 // import ClientLayoutWrapper from "./ClientLayoutWrapper";
 import Navbar from "@/components/NavBar";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Portrætter lavet af Bergstrøm Art",
@@ -47,6 +48,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <main>{children}</main>
+          <Footer />
         </Providers>
       </body>
     </html>
