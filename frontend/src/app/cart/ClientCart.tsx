@@ -160,7 +160,7 @@ export default function ClientCart() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                         <div className="flex items-center space-x-8">
                           <div className="text-lg font-semibold">
-                            ${item.product.price}
+                            DKK{item.product.price}
                           </div>
                           <div className="text-lg">Qty: {item.quantity}</div>
                         </div>
@@ -190,7 +190,7 @@ export default function ClientCart() {
       </div>
 
       {/* Right Column: Checkout Section */}
-      <div className="mb-4 mt-4 w-full lg:w-[30vw] h-auto lg:h-screen bg-gray-100 flex flex-col justify-center items-center relative">
+      <div className="mb-4 w-full lg:w-[30vw] h-auto lg:h-screen bg-gray-100 flex flex-col justify-center items-center relative">
         <div className="w-[80%] max-w-md space-y-8">
           {/* Cart Summary – always shown */}
           {cart && (
@@ -201,7 +201,7 @@ export default function ClientCart() {
                   <div className="flex justify-between items-center text-lg">
                     <span>Subtotal</span>
                     <span className="font-bold">
-                      $
+                      DKK
                       {cart.items.length > 0
                         ? cart.items
                             .reduce(
@@ -241,7 +241,7 @@ export default function ClientCart() {
                     color="primary"
                     size="lg"
                     fullWidth
-                    className="bg-black text-white hover:bg-gray-800 py-4 text-lg font-semibold"
+                    className="py-4 text-lg font-semibold"
                     onPress={() => {
                       window.location.href = "/checkout";
                     }}
