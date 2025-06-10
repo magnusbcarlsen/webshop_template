@@ -2,7 +2,6 @@
 
 import { API_ROOT } from "@/config/api";
 
-
 export type CategoryAPI = {
   id: number;
   parentCategoryId: number | null;
@@ -58,13 +57,28 @@ export type ProductAPI = {
   }[];
 };
 
-/**
- * CATEGORIES
- */
-export async function fetchCategories(): Promise<CategoryAPI[]> {
-  const res = await fetch(`${API_ROOT}/categories`);
-  if (!res.ok) throw new Error(`Fetch categories failed: ${res.status}`);
+// frontend/src/services/product-api.ts
+
+// ─── UTILITIES ─────────────────────────────────────────────────────
+async function handleResponse<T = unknown>(res: Response): Promise<T> {
+  if (res.status === 401 || res.status === 403) {
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
+    const errPayload = await res.json().catch(() => null);
+    const msg = errPayload?.message || `Request failed: ${res.status}`;
+    throw new Error(msg);
+  }
   return res.json();
+}
+
+// ─── CATEGORIES ────────────────────────────────────────────────────
+export async function fetchCategories(): Promise<CategoryAPI[]> {
+  const res = await fetch(`${API_ROOT}/categories`, {
+    cache: "no-store",
+  });
+  return handleResponse(res);
 }
 
 export async function createCategory(
@@ -72,46 +86,36 @@ export async function createCategory(
 ): Promise<CategoryAPI> {
   const res = await fetch(`${API_ROOT}/categories`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Create category failed: ${res.status}`);
-  return res.json();
+  return handleResponse(res);
 }
 
-/**
- * PRODUCTS
- * Fetch all products
- */
+// ─── PRODUCTS (PUBLIC) ─────────────────────────────────────────────
 export async function fetchProducts(): Promise<ProductAPI[]> {
-  const res = await fetch(`${API_ROOT}/products`);
-  if (!res.ok) throw new Error(`Fetch products failed: ${res.status}`);
-  return res.json();
+  const res = await fetch(`${API_ROOT}/products`, { cache: "no-store" });
+  return handleResponse(res);
 }
 
-/**
- * Fetch a single product by numeric ID
- */
 export async function fetchProductById(
   id: number | string
 ): Promise<ProductAPI> {
-  const res = await fetch(`${API_ROOT}/products/${id}`);
-  if (!res.ok) throw new Error(`Fetch product by ID failed: ${res.status}`);
-  return res.json();
+  const res = await fetch(`${API_ROOT}/products/${id}`, {
+    cache: "no-store",
+  });
+  return handleResponse(res);
 }
 
-/**
- * Fetch a single product by slug
- */
 export async function fetchProductBySlug(slug: string): Promise<ProductAPI> {
-  const res = await fetch(`${API_ROOT}/products/slug/${slug}`);
-  if (!res.ok) throw new Error(`Fetch product by slug failed: ${res.status}`);
-  return res.json();
+  const res = await fetch(`${API_ROOT}/products/slug/${slug}`, {
+    cache: "no-store",
+  });
+  return handleResponse(res);
 }
 
-/**
- * Create a new product
- */
+// ─── PRODUCTS (ADMIN) ──────────────────────────────────────────────
 export async function createProduct(
   payload:
     | FormData
@@ -121,31 +125,17 @@ export async function createProduct(
       > & { categoryIds: number[] })
 ): Promise<ProductAPI> {
   const isForm = payload instanceof FormData;
-
   const res = await fetch(`${API_ROOT}/products`, {
     method: "POST",
+    credentials: "include",
     headers: isForm ? undefined : { "Content-Type": "application/json" },
     body: isForm ? payload : JSON.stringify(payload),
   });
-
-  const body = await res.json();
-  if (!res.ok) {
-    if (res.status === 409 || body.message?.toLowerCase().includes("unique")) {
-      throw new Error(body.message || "Name already exists");
-    }
-    throw new Error(`Create product failed: ${res.status}`);
-  }
-
-  return body;
+  return handleResponse(res);
 }
-
-/**
- * Update an existing product
- */
 
 export async function updateProduct(
   id: number,
-  // Allow either FormData (for file uploads) or a POJO with categoryIds:number[]
   payload:
     | FormData
     | (Partial<
@@ -160,31 +150,20 @@ export async function updateProduct(
         >
       > & { categoryIds: number[] })
 ): Promise<ProductAPI> {
-  // Detect whether we're sending FormData or JSON
   const isForm = payload instanceof FormData;
-
   const res = await fetch(`${API_ROOT}/products/${id}`, {
     method: "PATCH",
+    credentials: "include",
     headers: isForm ? undefined : { "Content-Type": "application/json" },
     body: isForm ? payload : JSON.stringify(payload),
   });
-
-  const body = await res.json();
-  if (!res.ok) {
-    if (res.status === 409 || body.message?.toLowerCase().includes("unique")) {
-      throw new Error(body.message || "Name already exists");
-    }
-    throw new Error(`Edit product failed: ${res.status}`);
-  }
-
-  return body;
+  return handleResponse(res);
 }
 
-/**
- * Delete a product by ID
- */
-
 export async function deleteProduct(id: number): Promise<void> {
-  const res = await fetch(`${API_ROOT}/products/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error(`Delete product failed: ${res.status}`);
+  const res = await fetch(`${API_ROOT}/products/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  await handleResponse(res);
 }
