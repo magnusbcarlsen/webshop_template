@@ -77,86 +77,98 @@ export type UpdateOrderPayload = Partial<CreateOrderPayload> & {
   comment?: string;
 };
 
-/**
- * Fetch all orders
- */
-export async function fetchOrders(
-  withDeleted: boolean = false
-): Promise<OrderAPI[]> {
-  const query = withDeleted ? "?withDeleted=true" : "";
-  const res = await fetch(`${API_ROOT}/orders${query}`);
-  if (!res.ok) throw new Error(`Fetch orders failed: ${res.status}`);
-  return res.json();
-}
-/**
- * Fetch a single order by ID
- */
-export async function fetchOrderById(id: number | string): Promise<OrderAPI> {
-  const res = await fetch(`${API_ROOT}/orders/${id}`);
-  if (!res.ok) throw new Error(`Fetch order ${id} failed: ${res.status}`);
+// ─── UTIL ───────────────────────────────────────────────────────────
+async function handleResponse<T = unknown>(res: Response): Promise<T> {
+  if (res.status === 401 || res.status === 403) {
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message || `Request failed: ${res.status}`);
+  }
   return res.json();
 }
 
-/**
- * Create a new order
- */
+// ─── GUEST FLOWS ────────────────────────────────────────────────────
+
+/** Place a new guest order (tied to sessionId cookie) */
 export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<OrderAPI> {
   const res = await fetch(`${API_ROOT}/orders`, {
     method: "POST",
+    credentials: "include", // ← send sessionId cookie
     headers: { "Content-Type": "application/json" },
+    cache: "no-store",
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Create order failed: ${res.status}`);
-  return res.json();
+  return handleResponse(res);
 }
 
-/**
- * Update an existing order
- */
+/** Fetch your own guest order by ID */
+export async function fetchOrderById(id: number | string): Promise<OrderAPI> {
+  const res = await fetch(`${API_ROOT}/orders/${id}`, {
+    credentials: "include", // ← send sessionId cookie
+    cache: "no-store",
+  });
+  return handleResponse(res);
+}
+
+// ─── ADMIN FLOWS ────────────────────────────────────────────────────
+
+/** List all orders (admin only) */
+export async function fetchOrders(
+  withDeleted: boolean = false
+): Promise<OrderAPI[]> {
+  const query = withDeleted ? "?withDeleted=true" : "";
+  const res = await fetch(`${API_ROOT}/orders${query}`, {
+    method: "GET",
+    credentials: "include", // ← send JWT cookie
+    cache: "no-store",
+  });
+  return handleResponse(res);
+}
+
+/** Update an existing order (admin only) */
 export async function updateOrder(
   id: number,
   payload: UpdateOrderPayload
 ): Promise<OrderAPI> {
   const res = await fetch(`${API_ROOT}/orders/${id}`, {
     method: "PATCH",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`Update order ${id} failed: ${res.status}`);
-  return res.json();
+  return handleResponse(res);
 }
 
-/**
- * Soft-delete an order by ID
- */
+/** Soft-delete an order (admin only) */
 export async function deleteOrder(id: number): Promise<void> {
   const res = await fetch(`${API_ROOT}/orders/${id}`, {
     method: "DELETE",
+    credentials: "include",
   });
-  if (!res.ok) throw new Error(`Delete order ${id} failed: ${res.status}`);
+  await handleResponse(res);
 }
 
-/**
- * Restore a soft-deleted order
- */
+/** Restore a soft-deleted order (admin only) */
 export async function restoreOrder(id: number): Promise<void> {
   const res = await fetch(`${API_ROOT}/orders/${id}/restore`, {
     method: "POST",
+    credentials: "include",
   });
-  if (!res.ok) throw new Error(`Restore order ${id} failed: ${res.status}`);
+  await handleResponse(res);
 }
 
-/**
- * Mark an order as delivered
- */
+/** Mark as delivered (admin only) */
 export async function completeOrder(id: number): Promise<OrderAPI> {
   const res = await fetch(`${API_ROOT}/orders/${id}`, {
     method: "PATCH",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status: "delivered" }),
   });
-  if (!res.ok) throw new Error(`Complete order ${id} failed: ${res.status}`);
-  return res.json();
+  return handleResponse(res);
 }

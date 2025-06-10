@@ -13,7 +13,6 @@ import {
 import { OrderItem } from './order-item.entity';
 import { OrderStatusHistory, OrderStatus } from './order-status-history.entity';
 import { User } from '@/users/entities/user.entity';
-// import { User } from '../../users/entities/user.entity'; // uncomment when you add Users
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -34,6 +33,10 @@ export class Order extends BaseEntity {
 
   @Column({ name: 'guest_email', type: 'varchar', length: 320 })
   guestEmail: string;
+
+  // — track session for guest orders
+  @Column({ name: 'session_id', type: 'varchar', length: 36 })
+  sessionId: string;
 
   @Column({
     type: 'enum',
