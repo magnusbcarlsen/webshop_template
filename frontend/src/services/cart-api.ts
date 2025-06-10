@@ -1,18 +1,11 @@
-// src/services/cart-api.ts
 import { API_ROOT } from "@/config/api";
 import { ProductAPI } from "./product-api";
-
-// export interface ProductAPI {
-//   id: number;
-//   name: string;
-//   slug: string;
-//   price: number;
-// }
 
 export interface CartItemAPI {
   id: number;
   quantity: number;
   product: ProductAPI;
+  variant?: { id: number }; // optional if variants are used
 }
 
 export interface CartAPI {
@@ -20,42 +13,54 @@ export interface CartAPI {
   items: CartItemAPI[];
 }
 
+async function handleCartResponse(res: Response): Promise<CartAPI> {
+  if (res.status === 401 || res.status === 403) {
+    // Optional: redirect or trigger login modal
+    if (typeof window !== "undefined") {
+      window.location.href = "/login"; // or toast message
+    }
+    throw new Error("Unauthorized access to cart.");
+  }
+
+  if (!res.ok) {
+    throw new Error(`Cart request failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export async function getCart(): Promise<CartAPI> {
   const res = await fetch(`${API_ROOT}/carts/items`, {
-    credentials: "include",
+    method: "GET",
+    credentials: "include", // 🔐 sends sessionId cookie
     cache: "no-store",
   });
-  if (!res.ok) {
-    throw new Error(`Failed to fetch cart: ${res.status}`);
-  }
-  return res.json();
+
+  return handleCartResponse(res);
 }
 
 export async function addItemToCart(
   productId: number,
-  quantity = 1
+  quantity = 1,
+  variantId?: number
 ): Promise<CartAPI> {
   const res = await fetch(`${API_ROOT}/carts/items`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
+    credentials: "include", // 🔐 ensures cookie is included
     cache: "no-store",
-    body: JSON.stringify({ productId, quantity }),
+    body: JSON.stringify({ productId, quantity, variantId }),
   });
-  if (!res.ok) {
-    throw new Error(`Failed to add item to cart: ${res.status}`);
-  }
-  return res.json();
+
+  return handleCartResponse(res);
 }
 
 export async function removeItemFromCart(itemId: number): Promise<CartAPI> {
   const res = await fetch(`${API_ROOT}/carts/items/${itemId}`, {
     method: "DELETE",
-    credentials: "include",
+    credentials: "include", // 🔐 ensures session security
     cache: "no-store",
   });
-  if (!res.ok) {
-    throw new Error(`Failed to remove product from cart: ${res.status}`);
-  }
-  return res.json(); // updated cart so your UI can re-render
+
+  return handleCartResponse(res);
 }
