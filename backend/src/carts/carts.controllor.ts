@@ -9,6 +9,8 @@ import {
   ParseIntPipe,
   Req,
   Res,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { CartsService } from './carts.service';
@@ -21,44 +23,46 @@ import { AddCartItemDto } from './dto/add-cart-item.dto';
 export class CartsController {
   constructor(private readonly cartsService: CartsService) {}
 
+  // PRIVATE HELPER: get or create a cart based on session cookie
+  private async getOrCreateCartFromSession(
+    req: Request,
+    res?: Response,
+  ): Promise<Cart> {
+    let sessionId = req.cookies?.sessionId;
+    let cart: Cart | undefined;
+
+    if (sessionId) {
+      try {
+        cart = await this.cartsService.findBySession(sessionId);
+      } catch (e) {
+        console.warn(`Invalid sessionId ${sessionId}, resetting`, e);
+        sessionId = undefined;
+      }
+    }
+
+    if (!sessionId || !cart) {
+      cart = await this.cartsService.createEmpty();
+      sessionId = cart.sessionId;
+      if (res) {
+        res.cookie('sessionId', sessionId, {
+          httpOnly: true,
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        });
+      }
+    }
+
+    return cart;
+  }
+
   @Get('items')
   async getCart(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<Cart> {
-    const cookies = req.cookies as Record<string, string | undefined>;
-    let sessionId = cookies.sessionId;
-
-    console.log('Incoming sessionId:', sessionId);
-
-    let cart!: Cart;
-    if (sessionId) {
-      try {
-        cart = await this.cartsService.findBySession(sessionId);
-      } catch (e) {
-        console.warn(`Invalid sessionId ${sessionId}, creating a new cart`, e);
-        // Log the specific error and reset the session
-        if (e instanceof Error) {
-          console.error(`Error details: ${e.message}`);
-        }
-        sessionId = undefined;
-      }
-    }
-
-    if (!sessionId) {
-      cart = await this.cartsService.createEmpty();
-      sessionId = cart.sessionId;
-      console.log('Created new sessionId:', sessionId);
-      res.cookie('sessionId', sessionId, {
-        httpOnly: true,
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-      });
-    }
-
-    return cart;
+    return this.getOrCreateCartFromSession(req, res);
   }
 
   @Post('items')
@@ -67,74 +71,184 @@ export class CartsController {
     @Res({ passthrough: true }) res: Response,
     @Body() dto: AddCartItemDto,
   ): Promise<Cart> {
-    const cookies = req.cookies as Record<string, string | undefined>;
-    let sessionId = cookies.sessionId;
-
-    console.log('Adding item; incoming sessionId:', sessionId);
-
-    let cart!: Cart;
-    if (sessionId) {
-      try {
-        cart = await this.cartsService.findBySession(sessionId);
-      } catch {
-        console.warn(`Invalid sessionId ${sessionId}, creating a new cart`);
-        sessionId = undefined;
-      }
-    }
-
-    if (!sessionId) {
-      cart = await this.cartsService.createEmpty();
-      sessionId = cart.sessionId;
-      console.log('Created new sessionId for add:', sessionId);
-      res.cookie('sessionId', sessionId, {
-        httpOnly: true,
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-      });
-    }
-
-    // now add by numeric ID under the hood:
-    const updated = await this.cartsService.addItemToCart(cart.id, dto);
-    console.log(`Cart ${cart.id} now has ${updated.items.length} items`);
-    return updated;
-  }
-
-  @Post()
-  create(@Body() dto: CreateCartDto): Promise<Cart> {
-    return this.cartsService.create(dto);
-  }
-
-  @Get()
-  findAll(): Promise<Cart[]> {
-    return this.cartsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Cart> {
-    return this.cartsService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateCartDto,
-  ): Promise<Cart> {
-    return this.cartsService.update(id, dto);
+    const cart = await this.getOrCreateCartFromSession(req, res);
+    return this.cartsService.addItemToCart(cart.id, dto);
   }
 
   @Delete('items/:itemId')
   async removeItem(
     @Param('itemId', ParseIntPipe) itemId: number,
     @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<Cart> {
-    console.log(
-      `DELETE /api/carts/items/${itemId} (sessionId cookie:`,
-      req.cookies.sessionId,
-      ')',
-    );
-    const updatedCart = await this.cartsService.removeItem(itemId);
-    return updatedCart;
+    const sessionId = req.cookies?.sessionId as string | undefined;
+    if (!sessionId) {
+      throw new ForbiddenException('No sessionId cookie found');
+    }
+
+    return this.cartsService.removeItemFromCart(sessionId, itemId);
+  }
+
+  // 🔐 BLOCK unsafe raw access to all carts or specific cart IDs
+
+  @Post()
+  create(): never {
+    throw new ForbiddenException('Use /carts/items instead');
+  }
+
+  @Get()
+  findAll(): never {
+    throw new ForbiddenException('Not allowed');
+  }
+
+  @Get(':id')
+  findOne(): never {
+    throw new ForbiddenException('Not allowed');
+  }
+
+  @Patch(':id')
+  update(): never {
+    throw new ForbiddenException('Not allowed');
   }
 }
+
+// import {
+//   Controller,
+//   Post,
+//   Get,
+//   Patch,
+//   Delete,
+//   Body,
+//   Param,
+//   ParseIntPipe,
+//   Req,
+//   Res,
+// } from '@nestjs/common';
+// import { Request, Response } from 'express';
+// import { CartsService } from './carts.service';
+// import { CreateCartDto } from './dto/create-cart.dto';
+// import { UpdateCartDto } from './dto/update-cart.dto';
+// import { Cart } from './entities/cart.entity';
+// import { AddCartItemDto } from './dto/add-cart-item.dto';
+
+// @Controller('carts')
+// export class CartsController {
+//   constructor(private readonly cartsService: CartsService) {}
+
+//   @Get('items')
+//   async getCart(
+//     @Req() req: Request,
+//     @Res({ passthrough: true }) res: Response,
+//   ): Promise<Cart> {
+//     const cookies = req.cookies as Record<string, string | undefined>;
+//     let sessionId = cookies.sessionId;
+
+//     console.log('Incoming sessionId:', sessionId);
+
+//     let cart!: Cart;
+//     if (sessionId) {
+//       try {
+//         cart = await this.cartsService.findBySession(sessionId);
+//       } catch (e) {
+//         console.warn(`Invalid sessionId ${sessionId}, creating a new cart`, e);
+//         // Log the specific error and reset the session
+//         if (e instanceof Error) {
+//           console.error(`Error details: ${e.message}`);
+//         }
+//         sessionId = undefined;
+//       }
+//     }
+
+//     if (!sessionId) {
+//       cart = await this.cartsService.createEmpty();
+//       sessionId = cart.sessionId;
+//       console.log('Created new sessionId:', sessionId);
+//       res.cookie('sessionId', sessionId, {
+//         httpOnly: true,
+//         path: '/',
+//         sameSite: 'lax',
+//         secure: process.env.NODE_ENV === 'production',
+//         maxAge: 1000 * 60 * 60 * 24 * 7,
+//       });
+//     }
+
+//     return cart;
+//   }
+
+//   @Post('items')
+//   async addItem(
+//     @Req() req: Request,
+//     @Res({ passthrough: true }) res: Response,
+//     @Body() dto: AddCartItemDto,
+//   ): Promise<Cart> {
+//     const cookies = req.cookies as Record<string, string | undefined>;
+//     let sessionId = cookies.sessionId;
+
+//     console.log('Adding item; incoming sessionId:', sessionId);
+
+//     let cart!: Cart;
+//     if (sessionId) {
+//       try {
+//         cart = await this.cartsService.findBySession(sessionId);
+//       } catch {
+//         console.warn(`Invalid sessionId ${sessionId}, creating a new cart`);
+//         sessionId = undefined;
+//       }
+//     }
+
+//     if (!sessionId) {
+//       cart = await this.cartsService.createEmpty();
+//       sessionId = cart.sessionId;
+//       console.log('Created new sessionId for add:', sessionId);
+//       res.cookie('sessionId', sessionId, {
+//         httpOnly: true,
+//         path: '/',
+//         sameSite: 'lax',
+//         secure: process.env.NODE_ENV === 'production',
+//         maxAge: 1000 * 60 * 60 * 24 * 7,
+//       });
+//     }
+
+//     // now add by numeric ID under the hood:
+//     const updated = await this.cartsService.addItemToCart(cart.id, dto);
+//     console.log(`Cart ${cart.id} now has ${updated.items.length} items`);
+//     return updated;
+//   }
+
+//   @Post()
+//   create(@Body() dto: CreateCartDto): Promise<Cart> {
+//     return this.cartsService.create(dto);
+//   }
+
+//   @Get()
+//   findAll(): Promise<Cart[]> {
+//     return this.cartsService.findAll();
+//   }
+
+//   @Get(':id')
+//   findOne(@Param('id', ParseIntPipe) id: number): Promise<Cart> {
+//     return this.cartsService.findOne(id);
+//   }
+
+//   @Patch(':id')
+//   update(
+//     @Param('id', ParseIntPipe) id: number,
+//     @Body() dto: UpdateCartDto,
+//   ): Promise<Cart> {
+//     return this.cartsService.update(id, dto);
+//   }
+
+//   @Delete('items/:itemId')
+//   async removeItem(
+//     @Param('itemId', ParseIntPipe) itemId: number,
+//     @Req() req: Request,
+//   ): Promise<Cart> {
+//     console.log(
+//       `DELETE /api/carts/items/${itemId} (sessionId cookie:`,
+//       req.cookies.sessionId,
+//       ')',
+//     );
+//     const updatedCart = await this.cartsService.removeItem(itemId);
+//     return updatedCart;
+//   }
+// }
