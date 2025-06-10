@@ -9,13 +9,13 @@ import {
   ParseIntPipe,
   Req,
   Res,
-  NotFoundException,
+  // NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { CartsService } from './carts.service';
-import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+// import { CreateCartDto } from './dto/create-cart.dto';
+// import { UpdateCartDto } from './dto/update-cart.dto';
 import { Cart } from './entities/cart.entity';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 
@@ -28,7 +28,7 @@ export class CartsController {
     req: Request,
     res?: Response,
   ): Promise<Cart> {
-    let sessionId = req.cookies?.sessionId;
+    let sessionId = req.cookies?.sessionId as string | undefined;
     let cart: Cart | undefined;
 
     if (sessionId) {

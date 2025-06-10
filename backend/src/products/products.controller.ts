@@ -1,3 +1,5 @@
+//products.controller.ts
+
 import {
   Controller,
   Get,
@@ -11,8 +13,12 @@ import {
   ParseIntPipe,
   HttpStatus,
   ParseFilePipeBuilder,
+  UseGuards,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // ← new
+import { RolesGuard } from '../auth/roles.guard'; // ← new
+import { Roles } from '../auth/roles.decorator';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -24,6 +30,8 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard) // ← new
+  @Roles('ADMIN') // ← new
   @UseInterceptors(FilesInterceptor('images', 5))
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -94,11 +102,15 @@ export class ProductsController {
     return result;
   }
 
+  // @Get()
+  // async findAll() {
+  //   const result = await this.productsService.findAll();
+  //   console.log('FindAll result count:', result.length);
+  //   return result;
+  // }
   @Get()
-  async findAll() {
-    const result = await this.productsService.findAll();
-    console.log('FindAll result count:', result.length);
-    return result;
+  findAll() {
+    return this.productsService.findAll();
   }
 
   @Get(':id')
@@ -112,6 +124,8 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard) // ← new
+  @Roles('ADMIN') // ← new
   @UseInterceptors(FilesInterceptor('images', 5))
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -186,6 +200,8 @@ export class ProductsController {
 
   // Delete a single image from a product
   @Delete(':id/images/:imageId')
+  @UseGuards(JwtAuthGuard, RolesGuard) // ← new
+  @Roles('ADMIN') // ← new
   async deleteImage(
     @Param('id', ParseIntPipe) productId: number,
     @Param('imageId', ParseIntPipe) imageId: number,
@@ -194,6 +210,8 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard) // ← new
+  @Roles('ADMIN') // ← new
   async remove(@Param('id', ParseIntPipe) id: number) {
     console.log('Deleting product:', id);
     const result = await this.productsService.remove(id);

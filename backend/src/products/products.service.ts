@@ -1,3 +1,5 @@
+// products.service.ts
+
 import {
   Injectable,
   Inject,
@@ -6,6 +8,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, In } from 'typeorm';
 import { Product } from './entities/product.entity';
