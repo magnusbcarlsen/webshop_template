@@ -4,9 +4,20 @@ import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(
+    '/api/auth/login',
+    rateLimit({
+      windowMs: 60 * 1000, // 1 minute
+      max: 5, // limit each IP to 5 requests per window
+      message: 'Too many login attempts, please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
 
   app.use(cookieParser());
 

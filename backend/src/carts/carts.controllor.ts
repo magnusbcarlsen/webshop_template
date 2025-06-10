@@ -47,7 +47,7 @@ export class CartsController {
         res.cookie('sessionId', sessionId, {
           httpOnly: true,
           path: '/',
-          sameSite: 'lax',
+          sameSite: 'strict',
           secure: process.env.NODE_ENV === 'production',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         });
