@@ -200,6 +200,7 @@ CREATE TABLE orders (
   guest_name        VARCHAR(320)    NOT NULL,
   guest_email       VARCHAR(150)    NOT NULL,
   session_id        VARCHAR(255)    NULL,
+  stripe_session_id VARCHAR(255) NULL,
   status            ENUM(
                       'pending',
                       'processing',
