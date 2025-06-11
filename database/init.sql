@@ -387,122 +387,82 @@ INSERT INTO categories (parent_category_id, name, slug, description, image_url, 
 (4, 'Cookware', 'cookware', 'Pots, pans and cooking utensils', '/images/categories/cookware.jpg', true),
 (4, 'Appliances', 'appliances', 'Kitchen appliances', '/images/categories/appliances.jpg', true);
 
-INSERT INTO products
-  (name, slug, description, price, sale_price, stock_quantity, sku, weight, dimensions, is_featured, is_active)
-VALUES
-  ('Premium Smartphone X', 'premium-smartphone-x', 'The latest high-end smartphone with amazing features', 999.99, NULL, 50, 'PHN-X-001', 0.18, '160x75x8mm', true, true),
-  ('Business Laptop Pro', 'business-laptop-pro', 'Professional laptop for business users', 1299.99, 1199.99, 25, 'LPT-PRO-001', 2.10, '320x220x15mm', true, true),
-  ('Classic Denim Jeans', 'classic-denim-jeans', 'Comfortable men''s jeans for everyday wear', 59.99, NULL, 100, 'MEN-JN-001', 0.80, NULL, false, true),
-  ('Summer Floral Dress', 'summer-floral-dress', 'Beautiful floral pattern dress for summer', 79.99, 69.99, 30, 'WMN-DRS-001', 0.30, NULL, true, true),
-  ('The Mystery of the Ancient Ruins', 'mystery-ancient-ruins', 'Thrilling mystery novel set in ancient archaeological sites', 24.99, NULL, 200, 'BK-FIC-001', 0.50, '210x148x20mm', false, true),
-  ('Cooking Techniques: The Complete Guide', 'cooking-techniques-guide', 'Learn professional cooking techniques at home', 34.99, 29.99, 75, 'BK-NFI-001', 0.90, '250x190x25mm', false, true),
-  ('Professional Chef Pan Set', 'chef-pan-set', 'Set of 3 professional-grade frying pans', 149.99, NULL, 15, 'KIT-PAN-001', 3.50, NULL, true, true),
-  ('Smart Coffee Maker', 'smart-coffee-maker', 'Wi-Fi enabled coffee maker with smartphone control', 129.99, 1199.99, 40, 'APP-COF-001', 2.80, '250x200x350mm', false, true);
 
-
--- Migrate existing product→category links into product_categories
-INSERT INTO product_categories (product_id, category_id) VALUES
-  (1, 5),  -- Premium Smartphone X       → Smartphones
-  (2, 6),  -- Business Laptop Pro        → Laptops
-  (3, 7),  -- Classic Denim Jeans        → Men
-  (4, 8),  -- Summer Floral Dress        → Women
-  (5, 9),  -- The Mystery of the Ruins   → Fiction
-  (6, 10), -- Cooking Techniques Guide   → Non-Fiction
-  (7, 11), -- Professional Chef Pan Set  → Cookware
-  (8, 12); -- Smart Coffee Maker         → Appliances
-  
--- Product images
-INSERT INTO product_images (product_id, image_url, alt_text, is_primary, sort_order) VALUES 
-(1, '/images/products/smartphone-x-1.jpg', 'Premium Smartphone X - Front View', true, 1),
-(1, '/images/products/smartphone-x-2.jpg', 'Premium Smartphone X - Back View', false, 2),
-(1, '/images/products/smartphone-x-3.jpg', 'Premium Smartphone X - Side View', false, 3),
-(2, '/images/products/laptop-pro-1.jpg', 'Business Laptop Pro - Open', true, 1),
-(2, '/images/products/laptop-pro-2.jpg', 'Business Laptop Pro - Closed', false, 2),
-(3, '/images/products/jeans-1.jpg', 'Classic Denim Jeans - Front', true, 1),
-(3, '/images/products/jeans-2.jpg', 'Classic Denim Jeans - Back', false, 2),
-(4, '/images/products/dress-1.jpg', 'Summer Floral Dress - Model', true, 1),
-(4, '/images/products/dress-2.jpg', 'Summer Floral Dress - Detail', false, 2),
-(5, '/images/products/book-mystery-1.jpg', 'Mystery Book Cover', true, 1),
-(6, '/images/products/book-cooking-1.jpg', 'Cooking Book Cover', true, 1),
-(7, '/images/products/pan-set-1.jpg', 'Chef Pan Set - Complete', true, 1),
-(7, '/images/products/pan-set-2.jpg', 'Chef Pan Set - Individual Pans', false, 2),
-(8, '/images/products/coffee-maker-1.jpg', 'Smart Coffee Maker - Front', true, 1),
-(8, '/images/products/coffee-maker-2.jpg', 'Smart Coffee Maker - In Use', false, 2);
 
 -- Attributes
-INSERT INTO attributes (name) VALUES 
-('Color'),
-('Size'),
-('Material'),
-('Storage'),
-('RAM');
+-- INSERT INTO attributes (name) VALUES 
+-- ('Color'),
+-- ('Size'),
+-- ('Material'),
+-- ('Storage'),
+-- ('RAM');
 
--- Attribute values
-INSERT INTO attribute_values (attribute_id, value) VALUES 
-(1, 'Black'),
-(1, 'White'),
-(1, 'Blue'),
-(1, 'Red'),
-(2, 'S'),
-(2, 'M'),
-(2, 'L'),
-(2, 'XL'),
-(3, 'Cotton'),
-(3, 'Polyester'),
-(3, 'Denim'),
-(3, 'Stainless Steel'),
-(4, '128GB'),
-(4, '256GB'),
-(4, '512GB'),
-(5, '8GB'),
-(5, '16GB'),
-(5, '32GB');
+-- -- Attribute values
+-- INSERT INTO attribute_values (attribute_id, value) VALUES 
+-- (1, 'Black'),
+-- (1, 'White'),
+-- (1, 'Blue'),
+-- (1, 'Red'),
+-- (2, 'S'),
+-- (2, 'M'),
+-- (2, 'L'),
+-- (2, 'XL'),
+-- (3, 'Cotton'),
+-- (3, 'Polyester'),
+-- (3, 'Denim'),
+-- (3, 'Stainless Steel'),
+-- (4, '128GB'),
+-- (4, '256GB'),
+-- (4, '512GB'),
+-- (5, '8GB'),
+-- (5, '16GB'),
+-- (5, '32GB');
 
 -- Product attributes
-INSERT INTO product_attributes (product_id, attribute_value_id) VALUES 
-(1, 1), -- Smartphone - Black
-(1, 13), -- Smartphone - 128GB
-(1, 16), -- Smartphone - 8GB RAM
-(2, 1), -- Laptop - Black
-(2, 15), -- Laptop - 512GB
-(2, 18), -- Laptop - 32GB RAM
-(3, 11), -- Jeans - Denim
-(4, 3), -- Dress - Blue
-(4, 9), -- Dress - Cotton
-(7, 12), -- Pan Set - Stainless Steel
-(8, 1); -- Coffee Maker - Black
+-- INSERT INTO product_attributes (product_id, attribute_value_id) VALUES 
+-- (1, 1), -- Smartphone - Black
+-- (1, 13), -- Smartphone - 128GB
+-- (1, 16), -- Smartphone - 8GB RAM
+-- (2, 1), -- Laptop - Black
+-- (2, 15), -- Laptop - 512GB
+-- (2, 18), -- Laptop - 32GB RAM
+-- (3, 11), -- Jeans - Denim
+-- (4, 3), -- Dress - Blue
+-- (4, 9), -- Dress - Cotton
+-- (7, 12), -- Pan Set - Stainless Steel
+-- (8, 1); -- Coffee Maker - Black
 
 -- Product variants
-INSERT INTO product_variants (product_id, sku, price, sale_price, stock_quantity, is_active) VALUES 
-(1, 'PHN-X-001-BLK-128', 999.99, NULL, 30, true),
-(1, 'PHN-X-001-WHT-128', 999.99, NULL, 20, true),
-(1, 'PHN-X-001-BLK-256', 1099.99, NULL, 15, true),
-(1, 'PHN-X-001-WHT-256', 1099.99, NULL, 10, true),
-(3, 'MEN-JN-001-S', 59.99, NULL, 25, true),
-(3, 'MEN-JN-001-M', 59.99, NULL, 30, true),
-(3, 'MEN-JN-001-L', 59.99, NULL, 35, true),
-(3, 'MEN-JN-001-XL', 59.99, NULL, 10, true),
-(4, 'WMN-DRS-001-S', 79.99, 69.99, 5, true),
-(4, 'WMN-DRS-001-M', 79.99, 69.99, 15, true),
-(4, 'WMN-DRS-001-L', 79.99, 69.99, 10, true);
+-- INSERT INTO product_variants (product_id, sku, price, sale_price, stock_quantity, is_active) VALUES 
+-- (1, 'PHN-X-001-BLK-128', 999.99, NULL, 30, true),
+-- (1, 'PHN-X-001-WHT-128', 999.99, NULL, 20, true),
+-- (1, 'PHN-X-001-BLK-256', 1099.99, NULL, 15, true),
+-- (1, 'PHN-X-001-WHT-256', 1099.99, NULL, 10, true),
+-- (3, 'MEN-JN-001-S', 59.99, NULL, 25, true),
+-- (3, 'MEN-JN-001-M', 59.99, NULL, 30, true),
+-- (3, 'MEN-JN-001-L', 59.99, NULL, 35, true),
+-- (3, 'MEN-JN-001-XL', 59.99, NULL, 10, true),
+-- (4, 'WMN-DRS-001-S', 79.99, 69.99, 5, true),
+-- (4, 'WMN-DRS-001-M', 79.99, 69.99, 15, true),
+-- (4, 'WMN-DRS-001-L', 79.99, 69.99, 10, true);
 
 -- Variant attributes
-INSERT INTO variant_attributes (variant_id, attribute_value_id) VALUES 
-(1, 1), -- Black smartphone
-(1, 13), -- 128GB storage
-(2, 2), -- White smartphone
-(2, 13), -- 128GB storage
-(3, 1), -- Black smartphone
-(3, 14), -- 256GB storage
-(4, 2), -- White smartphone
-(4, 14), -- 256GB storage
-(5, 5), -- S size jeans
-(6, 6), -- M size jeans
-(7, 7), -- L size jeans
-(8, 8), -- XL size jeans
-(9, 5), -- S size dress
-(10, 6), -- M size dress
-(11, 7); -- L size dress
+-- INSERT INTO variant_attributes (variant_id, attribute_value_id) VALUES 
+-- (1, 1), -- Black smartphone
+-- (1, 13), -- 128GB storage
+-- (2, 2), -- White smartphone
+-- (2, 13), -- 128GB storage
+-- (3, 1), -- Black smartphone
+-- (3, 14), -- 256GB storage
+-- (4, 2), -- White smartphone
+-- (4, 14), -- 256GB storage
+-- (5, 5), -- S size jeans
+-- (6, 6), -- M size jeans
+-- (7, 7), -- L size jeans
+-- (8, 8), -- XL size jeans
+-- (9, 5), -- S size dress
+-- (10, 6), -- M size dress
+-- (11, 7); -- L size dress
 
 -- Carts
 INSERT INTO carts (user_id, session_id) VALUES 
@@ -512,13 +472,13 @@ INSERT INTO carts (user_id, session_id) VALUES
 (NULL, 'guest_session_67890');
 
 -- Cart items
-INSERT INTO cart_items (cart_id, product_id, variant_id, quantity) VALUES 
-(1, 1, 1, 1), -- John added a black 128GB smartphone
-(1, 7, NULL, 2), -- John added 2 pan sets
-(2, 4, 10, 1), -- Jane added a medium dress
-(2, 6, NULL, 1), -- Jane added a cooking book
-(3, 8, NULL, 1), -- Guest added a coffee maker
-(4, 5, NULL, 2); -- Another guest added 2 mystery books
+-- INSERT INTO cart_items (cart_id, product_id, variant_id, quantity) VALUES 
+-- (1, 1, 1, 1), -- John added a black 128GB smartphone
+-- (1, 7, NULL, 2), -- John added 2 pan sets
+-- (2, 4, 10, 1), -- Jane added a medium dress
+-- (2, 6, NULL, 1), -- Jane added a cooking book
+-- (3, 8, NULL, 1), -- Guest added a coffee maker
+-- (4, 5, NULL, 2); -- Another guest added 2 mystery books
 
 -- Orders
 -- Orders

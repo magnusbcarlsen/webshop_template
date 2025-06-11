@@ -11,7 +11,7 @@ import {
 
 export default function ModernFooter() {
   return (
-    <footer className="bg-white border-t border-gray-100">
+    <footer className="mt-5 bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
           {/* Brand Section */}

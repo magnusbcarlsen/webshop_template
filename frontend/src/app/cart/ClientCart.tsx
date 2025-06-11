@@ -77,8 +77,11 @@ export default function ClientCart() {
       <div className="w-full lg:w-[70vw] h-auto lg:h-screen overflow-y-scroll scrollbar-none bg-[var(--background)] text-[var(--foreground)]">
         <div className="p-8 lg:p-12">
           {/* Page Title */}
-          <div className="mb-12 mt-6 text-left border-b-2 border-current border-solid border-b-[var(--foreground)] w-[60%] mx-auto">
-            <h1 className="text-6xl lg:text-8xl font-bold pb-6">YOUR CART</h1>
+          <div
+            className="mb-6 mt-6 text-left border-b-2 border-current border-b-[var(--foreground)]
+                w-full sm:max-w-lg md:max-w-md lg:max-w-sm"
+          >
+            <h1 className="font-bold pb-6">YOUR CART</h1>
           </div>
 
           {/* Error Message */}
@@ -160,14 +163,15 @@ export default function ClientCart() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                         <div className="flex items-center space-x-8">
                           <div className="text-lg font-semibold">
-                            ${item.product.price}
+                            DKK{item.product.price}
                           </div>
                           <div className="text-lg">Qty: {item.quantity}</div>
                         </div>
 
                         <div className="flex items-center space-x-6">
                           <div className="text-xl font-bold">
-                            ${(item.quantity * item.product.price).toFixed(2)}
+                            DKK{" "}
+                            {(item.quantity * item.product.price).toFixed(2)}
                           </div>
                           <Button
                             size="sm"
@@ -190,7 +194,7 @@ export default function ClientCart() {
       </div>
 
       {/* Right Column: Checkout Section */}
-      <div className="mb-4 mt-4 w-full lg:w-[30vw] h-auto lg:h-screen bg-gray-100 flex flex-col justify-center items-center relative">
+      <div className="mb-4 w-full lg:w-[30vw] h-auto lg:h-screen bg-gray-100 flex flex-col justify-center items-center relative">
         <div className="w-[80%] max-w-md space-y-8">
           {/* Cart Summary – always shown */}
           {cart && (
@@ -201,7 +205,7 @@ export default function ClientCart() {
                   <div className="flex justify-between items-center text-lg">
                     <span>Subtotal</span>
                     <span className="font-bold">
-                      $
+                      DKK
                       {cart.items.length > 0
                         ? cart.items
                             .reduce(
@@ -239,9 +243,9 @@ export default function ClientCart() {
                   <Button
                     variant="solid"
                     color="primary"
+                    className="!text-white !hover:text-white"
                     size="lg"
                     fullWidth
-                    className="bg-black text-white hover:bg-gray-800 py-4 text-lg font-semibold"
                     onPress={() => {
                       window.location.href = "/checkout";
                     }}

@@ -77,7 +77,7 @@ export class Product extends BaseEntity {
 
   @ManyToMany(() => AttributeValue, (attr) => attr.products)
   @JoinTable({
-    name: 'product_attribute',
+    name: 'product_attributes',
     joinColumn: { name: 'product_id', referencedColumnName: 'id' },
     inverseJoinColumn: {
       name: 'attribute_value_id',
