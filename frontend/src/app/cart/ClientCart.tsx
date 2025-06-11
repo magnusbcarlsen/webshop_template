@@ -77,8 +77,11 @@ export default function ClientCart() {
       <div className="w-full lg:w-[70vw] h-auto lg:h-screen overflow-y-scroll scrollbar-none bg-[var(--background)] text-[var(--foreground)]">
         <div className="p-8 lg:p-12">
           {/* Page Title */}
-          <div className="mb-12 mt-6 text-left border-b-2 border-current border-solid border-b-[var(--foreground)] w-[60%] mx-auto">
-            <h1 className="text-6xl lg:text-8xl font-bold pb-6">YOUR CART</h1>
+          <div
+            className="mb-6 mt-6 text-left border-b-2 border-current border-b-[var(--foreground)]
+                w-full sm:max-w-lg md:max-w-md lg:max-w-sm"
+          >
+            <h1 className="font-bold pb-6">YOUR CART</h1>
           </div>
 
           {/* Error Message */}
@@ -167,7 +170,8 @@ export default function ClientCart() {
 
                         <div className="flex items-center space-x-6">
                           <div className="text-xl font-bold">
-                            ${(item.quantity * item.product.price).toFixed(2)}
+                            DKK{" "}
+                            {(item.quantity * item.product.price).toFixed(2)}
                           </div>
                           <Button
                             size="sm"
@@ -239,9 +243,9 @@ export default function ClientCart() {
                   <Button
                     variant="solid"
                     color="primary"
+                    className="!text-white !hover:text-white"
                     size="lg"
                     fullWidth
-                    className="py-4 text-lg font-semibold"
                     onPress={() => {
                       window.location.href = "/checkout";
                     }}

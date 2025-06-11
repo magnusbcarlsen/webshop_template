@@ -7,9 +7,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Input,
   Textarea,
-  Chip,
 } from "@heroui/react";
 import {
   fetchOrders,

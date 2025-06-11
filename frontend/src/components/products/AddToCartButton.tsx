@@ -51,11 +51,11 @@ export function AddToCartButton({ productId, quantity = 1, className }: Props) {
 
   return (
     <Button
-      variant="ghost"
       color="primary"
+      variant="ghost"
       onPress={onPress}
+      className={`${className} hover:text-white`}
       disabled={isPending}
-      className={className}
     >
       {isPending ? "Tilføjer…" : "Tilføj til kurv"}
     </Button>
