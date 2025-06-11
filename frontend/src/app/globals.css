@@ -3,8 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Arizonia&display=swap");
-
 :root {
   /* Base Theme */
   --background: #0a0a0a;
@@ -16,9 +14,10 @@
   --color-accent: #eb763b;
 
   /* Typography */
-  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Courier New", Courier, monospace;
-  --font-h1: "Helvetica Neue";
+  /* --font-h1: "inter"; */
 
   /* Font Sizes */
   --h1-size: 2rem;
@@ -28,10 +27,10 @@
   --p-size: 1rem;
 
   /* Button Styling */
-  --btn-padding: 0.75rem 1.5rem;
+  /* --btn-padding: 0.75rem 1.5rem;
   --btn-radius: 0.5rem;
   --btn-font-size: 0.5rem;
-  --btn-font-weight: 400;
+  --btn-font-weight: 400; */
 
   --heroui-background: transparent !important;
 }
@@ -61,7 +60,7 @@ body {
 
 /* Typography */
 h1 {
-  font-family: var(--font-h1);
+  font-family: var(--font-sans);
   font-size: var(--h1-size);
   font-weight: 400;
   font-style: normal;
@@ -91,19 +90,4 @@ p {
   font-weight: 400;
   line-height: 1.6;
   color: var(--foreground);
-}
-
-button {
-  background-color: var(--color-backgground);
-  color: var(--foreground);
-  padding: var(--btn-padding);
-  border-radius: var(--btn-radius);
-  border: solid 1px var(--color-primary);
-  cursor: pointer;
-  transition: background-colsor 0.3s ease, transform 0.2s ease;
-}
-
-button:hover {
-  background-color: var(--color-primary);
-  transform: scale(1.05);
 }

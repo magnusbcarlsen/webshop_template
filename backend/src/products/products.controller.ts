@@ -210,12 +210,14 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard) // ← new
-  @Roles('ADMIN') // ← new
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   async remove(@Param('id', ParseIntPipe) id: number) {
     console.log('Deleting product:', id);
-    const result = await this.productsService.remove(id);
+    await this.productsService.remove(id);
     console.log('Delete completed');
-    return result;
+
+    // Return a success response instead of void
+    return { success: true, message: 'Product deleted successfully' };
   }
 }

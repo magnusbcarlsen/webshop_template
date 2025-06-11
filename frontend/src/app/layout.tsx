@@ -6,6 +6,13 @@ import { Metadata } from "next";
 // import ClientLayoutWrapper from "./ClientLayoutWrapper";
 import Navbar from "@/components/NavBar";
 import Footer from "@/components/footer";
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "600", "800"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: "Portrætter lavet af Bergstrøm Art",
@@ -43,8 +50,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="light h-full">
-      <body className={`h-full flex flex-col`}>
+    <html lang="da" className={`${inter.variable} h-full`}>
+      <body className={`light h-full flex flex-col`}>
         <Providers>
           <Navbar />
           <main>{children}</main>
