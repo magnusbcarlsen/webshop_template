@@ -199,6 +199,9 @@ export default function AdminProducts() {
         isFeatured: false,
         isActive: true,
         categoryIds: form.selectedCategories.map((c) => c.id),
+        // STRIPE //
+        unitAmount: Math.round(form.price * 100), 
+        currency: "DKK",
       };
 
       let payload: typeof productData | FormData = productData;

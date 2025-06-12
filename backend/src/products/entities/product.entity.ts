@@ -85,4 +85,10 @@ export class Product extends BaseEntity {
     },
   })
   attributes: AttributeValue[];
+
+  @Column({ name: 'stripe_product_id', length: 255, unique: true })
+  stripeProductId: string;
+
+  @Column({ name: 'stripe_price_id', length: 255, unique: true })
+  stripePriceId: string;
 }

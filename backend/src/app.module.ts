@@ -12,6 +12,7 @@ import { S3Module } from './S3Client/s3.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { StorageModule } from './storage/storage.module';
 import { CheckoutModule } from './checkout/checkout.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CheckoutModule } from './checkout/checkout.module';
         synchronize: false, // or false in prod
       }),
     }),
+    StripeModule,
     ProductsModule,
     UsersModule,
     AuthModule,

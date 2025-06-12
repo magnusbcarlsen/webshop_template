@@ -51,7 +51,7 @@ export class ProductsController {
       files: files?.length || 0,
     });
 
-    // Parse categoryIds if it's a string (from FormData)
+    // Parse categoryIds if it's a string  (from FormData)
     if (typeof createProductDto.categoryIds === 'string') {
       try {
         createProductDto.categoryIds = JSON.parse(
@@ -102,12 +102,6 @@ export class ProductsController {
     return result;
   }
 
-  // @Get()
-  // async findAll() {
-  //   const result = await this.productsService.findAll();
-  //   console.log('FindAll result count:', result.length);
-  //   return result;
-  // }
   @Get()
   findAll() {
     return this.productsService.findAll();

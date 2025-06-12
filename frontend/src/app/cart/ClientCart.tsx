@@ -165,7 +165,7 @@ export default function ClientCart() {
                           <div className="text-lg font-semibold">
                             DKK{item.product.price}
                           </div>
-                          <div className="text-lg">Qty: {item.quantity}</div>
+                          {/* <div className="text-lg">Qty: {item.quantity}</div> */}
                         </div>
 
                         <div className="flex items-center space-x-6">
@@ -239,7 +239,7 @@ export default function ClientCart() {
                       </span>
                     </Checkbox>
                   </div>
-
+                  
                   <Button
                     variant="solid"
                     color="primary"

@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,9 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.use(helmet());
+
+  app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use(bodyParser.json());
 
   // 2) allow CORS from your frontend - Updated to match nginx proxy
   app.enableCors({
