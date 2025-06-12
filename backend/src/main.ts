@@ -6,9 +6,12 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
+import { json, raw } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use('/api/stripe/webhook', raw({ type: 'application/json' }));
   app.use(
     '/api/auth/login',
     rateLimit({

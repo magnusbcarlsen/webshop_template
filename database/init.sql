@@ -240,6 +240,7 @@ CREATE TABLE order_items (
   variant_id      INT UNSIGNED               NULL,
   quantity        INT                        NOT NULL,
   unit_price      DECIMAL(10,2)              NOT NULL CHECK (unit_price >= 0),
+  stripe_price_id VARCHAR(255) NULL,
   subtotal        DECIMAL(12,2)              NOT NULL CHECK (subtotal >= 0),
   FOREIGN KEY (order_id)
     REFERENCES orders(order_id)
@@ -589,30 +590,30 @@ INSERT INTO orders (
 
 
 -- Order items
-INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, subtotal) VALUES 
-(1, 1, 1, 1, 999.99, 999.99), -- John ordered a black 128GB smartphone
-(2, 5, NULL, 1, 24.99, 24.99), -- Jane ordered a mystery book
-(2, 6, NULL, 1, 34.99, 34.99), -- Jane ordered a cooking book
-(2, 4, 10, 1, 69.99, 69.99), -- Jane ordered a medium dress
-(3, 7, NULL, 2, 149.99, 299.98), -- John ordered 2 pan sets
-(3, 8, NULL, 1, 119.99, 119.99), -- John ordered a coffee maker
-(4, 8, NULL, 1, 119.99, 119.99), -- Bob ordered a coffee maker
-(5, 5, NULL, 1, 24.99, 24.99); -- Jane ordered a mystery book but cancelled
+-- INSERT INTO order_items (order_id, product_id, variant_id, quantity, unit_price, subtotal) VALUES 
+-- (1, 1, 1, 1, 999.99, 999.99), -- John ordered a black 128GB smartphone
+-- (2, 5, NULL, 1, 24.99, 24.99), -- Jane ordered a mystery book
+-- (2, 6, NULL, 1, 34.99, 34.99), -- Jane ordered a cooking book
+-- (2, 4, 10, 1, 69.99, 69.99), -- Jane ordered a medium dress
+-- (3, 7, NULL, 2, 149.99, 299.98), -- John ordered 2 pan sets
+-- (3, 8, NULL, 1, 119.99, 119.99), -- John ordered a coffee maker
+-- (4, 8, NULL, 1, 119.99, 119.99), -- Bob ordered a coffee maker
+-- (5, 5, NULL, 1, 24.99, 24.99); -- Jane ordered a mystery book but cancelled
 
 -- Order status history
-INSERT INTO order_status_history (order_id, status, comment, created_by) VALUES 
-(1, 'pending', 'Order received', 1),
-(1, 'processing', 'Payment confirmed', 1),
-(1, 'shipped', 'Order shipped via Express Delivery', 1),
-(1, 'delivered', 'Order delivered and signed for', 1),
-(2, 'pending', 'Order received', 1),
-(2, 'processing', 'Payment confirmed', 1),
-(2, 'shipped', 'Order shipped via Standard Delivery', 1),
-(3, 'pending', 'Order received', 1),
-(3, 'processing', 'Payment confirmed', 1),
-(4, 'pending', 'Awaiting payment confirmation', 1),
-(5, 'pending', 'Order received', 1),
-(5, 'cancelled', 'Cancelled by customer', 3);
+-- INSERT INTO order_status_history (order_id, status, comment, created_by) VALUES 
+-- (1, 'pending', 'Order received', 1),
+-- (1, 'processing', 'Payment confirmed', 1),
+-- (1, 'shipped', 'Order shipped via Express Delivery', 1),
+-- (1, 'delivered', 'Order delivered and signed for', 1),
+-- (2, 'pending', 'Order received', 1),
+-- (2, 'processing', 'Payment confirmed', 1),
+-- (2, 'shipped', 'Order shipped via Standard Delivery', 1),
+-- (3, 'pending', 'Order received', 1),
+-- (3, 'processing', 'Payment confirmed', 1),
+-- (4, 'pending', 'Awaiting payment confirmation', 1),
+-- (5, 'pending', 'Order received', 1),
+-- (5, 'cancelled', 'Cancelled by customer', 3);
 
 -- Discounts
 INSERT INTO discounts (code, type, value, minimum_order_amount, is_active, start_date, end_date, usage_limit, used_count) VALUES 
@@ -622,14 +623,14 @@ INSERT INTO discounts (code, type, value, minimum_order_amount, is_active, start
 ('FLASH25', 'percentage', 25.00, 200.00, false, '2025-03-10 00:00:00', '2025-03-12 23:59:59', 100, 100);
 
 -- Reviews
-INSERT INTO reviews (product_id, user_id, rating, title, comment, is_approved) VALUES 
-(1, 2, 5, 'Amazing Phone!', 'This is the best smartphone I have ever owned. The camera quality is superb and battery life is excellent.', true),
-(1, 3, 4, 'Great but expensive', 'Love the features but wish it was a bit more affordable.', true),
-(2, 5, 5, 'Perfect for work', 'This laptop has greatly improved my productivity. Fast and reliable.', true),
-(4, 2, 3, 'Nice but sizing issues', 'The dress looks beautiful but runs small. Had to return for a larger size.', true),
-(7, 3, 5, 'Professional quality', 'These pans are exactly what I needed for my kitchen. Food cooks evenly and cleaning is easy.', true),
-(8, 5, 2, 'App is buggy', 'The coffee maker works well but the app constantly disconnects from my phone.', true),
-(5, 2, 4, 'Gripping story', 'Couldn\'t put this book down! Exciting from start to finish.', false);
+-- INSERT INTO reviews (product_id, user_id, rating, title, comment, is_approved) VALUES 
+-- (1, 2, 5, 'Amazing Phone!', 'This is the best smartphone I have ever owned. The camera quality is superb and battery life is excellent.', true),
+-- (1, 3, 4, 'Great but expensive', 'Love the features but wish it was a bit more affordable.', true),
+-- (2, 5, 5, 'Perfect for work', 'This laptop has greatly improved my productivity. Fast and reliable.', true),
+-- (4, 2, 3, 'Nice but sizing issues', 'The dress looks beautiful but runs small. Had to return for a larger size.', true),
+-- (7, 3, 5, 'Professional quality', 'These pans are exactly what I needed for my kitchen. Food cooks evenly and cleaning is easy.', true),
+-- (8, 5, 2, 'App is buggy', 'The coffee maker works well but the app constantly disconnects from my phone.', true),
+-- (5, 2, 4, 'Gripping story', 'Couldn\'t put this book down! Exciting from start to finish.', false);
 
 -- Wishlists
 INSERT INTO wishlists (user_id, name) VALUES 
@@ -639,12 +640,12 @@ INSERT INTO wishlists (user_id, name) VALUES
 (5, 'Kitchen Upgrades');
 
 -- Wishlist items
-INSERT INTO wishlist_items (wishlist_id, product_id) VALUES 
-(1, 8), -- John's Birthday Wishlist - Coffee Maker
-(1, 2), -- John's Birthday Wishlist - Laptop
-(2, 7), -- John's Christmas Ideas - Pan Set
-(3, 1), -- Jane's Tech Gadgets - Smartphone
-(3, 2), -- Jane's Tech Gadgets - Laptop
-(3, 8), -- Jane's Tech Gadgets - Coffee Maker
-(4, 7), -- Bob's Kitchen Upgrades - Pan Set
-(4, 8); -- Bob's Kitchen Upgrades - Coffee Maker
+-- INSERT INTO wishlist_items (wishlist_id, product_id) VALUES 
+-- (1, 8), -- John's Birthday Wishlist - Coffee Maker
+-- (1, 2), -- John's Birthday Wishlist - Laptop
+-- (2, 7), -- John's Christmas Ideas - Pan Set
+-- (3, 1), -- Jane's Tech Gadgets - Smartphone
+-- (3, 2), -- Jane's Tech Gadgets - Laptop
+-- (3, 8), -- Jane's Tech Gadgets - Coffee Maker
+-- (4, 7), -- Bob's Kitchen Upgrades - Pan Set
+-- (4, 8); -- Bob's Kitchen Upgrades - Coffee Maker

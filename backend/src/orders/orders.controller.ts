@@ -1,5 +1,4 @@
-// src/orders/orders.controller.ts
-
+// backend/src/orders/orders.controller.ts
 import {
   Controller,
   Get,
@@ -26,7 +25,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller('orders')
+@Controller('orders') // NO /api prefix - nginx handles this
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -37,8 +36,26 @@ export class OrdersController {
     @Res({ passthrough: true }) res: Response,
     @Body() dto: CreateOrderDto,
   ): Promise<Order> {
-    // same pattern as carts: uses/sets sessionId cookie
     return this.ordersService.createFromSession(req, res, dto);
+  }
+
+  // ─── ADMIN: List ALL orders (moved before :id route) ──────────────
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async findAllAdmin(
+    @Query('withDeleted', new DefaultValuePipe(false), ParseBoolPipe)
+    withDeleted: boolean,
+  ): Promise<Order[]> {
+    return this.ordersService.findAll(withDeleted);
+  }
+
+  // ─── ADMIN: Get any order by ID (admin access) ───────────────────
+  @Get('admin/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async findOneAdmin(@Param('id', ParseIntPipe) id: number): Promise<Order> {
+    return this.ordersService.findOne(id);
   }
 
   // ─── GUEST: View your own order by sessionId ────────────────────
@@ -52,17 +69,6 @@ export class OrdersController {
       throw new ForbiddenException('No sessionId cookie found');
     }
     return this.ordersService.findBySessionSecure(id, sessionId);
-  }
-
-  // ─── ADMIN: List ALL orders ───────────────────────────────────────
-  @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
-  async findAll(
-    @Query('withDeleted', new DefaultValuePipe(false), ParseBoolPipe)
-    withDeleted: boolean,
-  ): Promise<Order[]> {
-    return this.ordersService.findAll(withDeleted);
   }
 
   // ─── ADMIN: Update any order ─────────────────────────────────────

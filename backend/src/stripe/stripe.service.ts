@@ -1,3 +1,4 @@
+// backend/src/stripe/stripe.service.ts
 import { Injectable, Inject } from '@nestjs/common';
 import Stripe from 'stripe';
 
@@ -25,6 +26,24 @@ export class StripeService {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      // Collect customer details for order creation
+      customer_creation: 'always',
+      billing_address_collection: 'required',
+      shipping_address_collection: {
+        allowed_countries: ['DK', 'SE', 'NO', 'DE', 'NL'], // Add your supported countries
+      },
+    });
+  }
+
+  /**
+   * Retrieve a checkout session with line items
+   * @param sessionId The checkout session ID
+   */
+  async retrieveSessionWithLineItems(
+    sessionId: string,
+  ): Promise<Stripe.Checkout.Session> {
+    return this.stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items', 'line_items.data.price.product'],
     });
   }
 
@@ -39,5 +58,43 @@ export class StripeService {
       signature,
       this.webhookSecret,
     );
+  }
+
+  /**
+   * Create a checkout session with product metadata for easier order creation
+   * @param products Array of products with IDs and quantities
+   * @param successUrl Success URL
+   * @param cancelUrl Cancel URL
+   */
+  async createCheckoutSessionWithProducts(
+    products: Array<{
+      productId: number;
+      quantity: number;
+      name: string;
+      price: number;
+      image?: string;
+    }>,
+    successUrl: string,
+    cancelUrl: string,
+  ): Promise<Stripe.Checkout.Session> {
+    const lineItems = products.map((product) => ({
+      price_data: {
+        currency: 'dkk',
+        product_data: {
+          name: product.name,
+          images: product.image ? [product.image] : [],
+          metadata: {
+            productId: product.productId.toString(),
+          },
+        },
+        unit_amount: Math.round(product.price * 100), // Convert to cents
+        metadata: {
+          productId: product.productId.toString(),
+        },
+      },
+      quantity: product.quantity,
+    }));
+
+    return this.createCheckoutSession(lineItems, successUrl, cancelUrl);
   }
 }

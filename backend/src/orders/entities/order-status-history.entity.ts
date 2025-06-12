@@ -1,5 +1,5 @@
+// backend/src/orders/entities/order-status-history.entity.ts
 import {
-  BaseEntity,
   Entity,
   PrimaryGeneratedColumn,
   Column,
@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Order } from './order.entity';
+import { User } from '../../users/entities/user.entity';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -19,8 +20,8 @@ export enum OrderStatus {
 }
 
 @Entity('order_status_history')
-export class OrderStatusHistory extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'history_id', unsigned: true })
+export class OrderStatusHistory {
+  @PrimaryGeneratedColumn({ name: 'history_id' })
   id: number;
 
   @ManyToOne(() => Order, (order) => order.statusHistory, {
@@ -29,14 +30,20 @@ export class OrderStatusHistory extends BaseEntity {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ type: 'enum', enum: OrderStatus })
+  @Column({
+    name: 'status',
+    type: 'enum',
+    enum: OrderStatus,
+  })
   status: OrderStatus;
 
-  @Column({ type: 'text', nullable: true })
-  comment?: string;
+  @Column({ name: 'comment', type: 'text', nullable: true })
+  comment: string;
 
-  @Column({ name: 'created_by', type: 'int', unsigned: true, nullable: true })
-  createdBy?: number; // you could later replace this with a User relation
+  // Reference to the user who made the change (admin user)
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'created_by' })
+  createdBy?: User;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

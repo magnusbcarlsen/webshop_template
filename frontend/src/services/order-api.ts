@@ -122,9 +122,9 @@ export async function fetchOrders(
   withDeleted: boolean = false
 ): Promise<OrderAPI[]> {
   const query = withDeleted ? "?withDeleted=true" : "";
-  const res = await fetch(`${API_ROOT}/orders${query}`, {
+  const res = await fetch(`${API_ROOT}/orders/admin/all${query}`, {
     method: "GET",
-    credentials: "include", // ← send JWT cookie
+    credentials: "include",
     cache: "no-store",
   });
   return handleResponse(res);
