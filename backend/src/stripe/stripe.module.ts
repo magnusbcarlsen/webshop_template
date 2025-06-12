@@ -1,13 +1,22 @@
 // backend/src/stripe/stripe.module.ts
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import Stripe from 'stripe';
 import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
+import { OrdersModule } from '../orders/orders.module';
+import { Order } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order-item.entity';
+import { OrderStatusHistory } from '../orders/entities/order-status-history.entity';
 
-@Global() 
+@Global()
 @Module({
-  imports: [ConfigModule],
+  imports: [
+    ConfigModule,
+    OrdersModule, // This imports the OrdersService
+    TypeOrmModule.forFeature([Order, OrderItem, OrderStatusHistory]),
+  ],
   providers: [
     {
       provide: 'STRIPE_CLIENT',

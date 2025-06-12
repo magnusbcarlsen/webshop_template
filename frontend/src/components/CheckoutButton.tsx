@@ -21,9 +21,9 @@ export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
 
   const handleClick = async () => {
     const stripe = await stripePromise;
-    // ⚠️ make sure BASE_URL ends with /api
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/stripe/create-session`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/stripe/create-session`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

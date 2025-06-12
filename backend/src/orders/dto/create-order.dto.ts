@@ -1,33 +1,49 @@
-// src/orders/dto/create-order.dto.ts
+// backend/src/orders/dto/create-order.dto.ts
 import {
   IsString,
   IsEmail,
-  MinLength,
-  IsArray,
-  ArrayMinSize,
-  ValidateNested,
-  IsOptional,
   IsNumber,
+  IsArray,
+  IsOptional,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class OrderItemDto {
-  @IsNumber() productId: number;
-  @IsNumber() quantity: number;
+class CreateOrderItemDto {
+  @IsNumber()
+  productId: number;
+
+  @IsNumber()
+  quantity: number;
+
+  @IsOptional()
+  @IsNumber()
+  variantId?: number;
 }
 
 export class CreateOrderDto {
-  @IsString() @MinLength(1) guestName: string;
-  @IsEmail() guestEmail: string;
+  @IsString()
+  guestName: string;
 
-  @IsString() @MinLength(5) shippingAddress: string;
-  @IsString() @MinLength(5) billingAddress: string;
+  @IsEmail()
+  guestEmail: string;
 
-  @IsOptional() @IsString() paymentMethod?: string;
+  @IsString()
+  shippingAddress: string;
+
+  @IsString()
+  billingAddress: string;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 
   @IsArray()
-  @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => OrderItemDto)
-  items: OrderItemDto[];
+  @Type(() => CreateOrderItemDto)
+  items: CreateOrderItemDto[];
 }

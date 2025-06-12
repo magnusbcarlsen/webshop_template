@@ -67,9 +67,9 @@ export class User extends BaseEntity {
   addresses: UserAddress[];
 
   // now matches your OrdersModule, and Optional in the DB
-  @OneToMany(() => Order, (order) => order.user, { cascade: true })
-  orders: Order[];
-  carts: CartItem[];
+  // @OneToMany(() => Order, (order) => order.user, { cascade: true })
+  // orders: Order[];
+  // carts: CartItem[];
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user, { cascade: true })
   wishlists: Wishlist[];
   // @OneToMany(() => CartItem, (cartItem) => cartItem.user, { cascade: true })

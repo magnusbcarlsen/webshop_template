@@ -1,5 +1,5 @@
+// backend/src/orders/entities/order-item.entity.ts
 import {
-  BaseEntity,
   Entity,
   PrimaryGeneratedColumn,
   Column,
@@ -9,37 +9,45 @@ import {
 import { Order } from './order.entity';
 import { Product } from '../../products/entities/product.entity';
 import { ProductVariant } from '../../products/entities/product-variant.entity';
-import { Exclude } from 'class-transformer';
 
 @Entity('order_items')
-export class OrderItem extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'order_item_id', unsigned: true })
+export class OrderItem {
+  @PrimaryGeneratedColumn({ name: 'order_item_id' })
   id: number;
 
-  @Exclude()
   @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @ManyToOne(() => Product, (product) => product.orderItems, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => Product, { eager: false })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ManyToOne(() => ProductVariant, (variant) => variant.orderItems, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
+  // Product variants relation
+  @ManyToOne(() => ProductVariant, { nullable: true })
   @JoinColumn({ name: 'variant_id' })
   variant?: ProductVariant;
 
-  @Column({ type: 'int' })
+  @Column({ name: 'quantity', type: 'int' })
   quantity: number;
 
   @Column({ name: 'unit_price', type: 'decimal', precision: 10, scale: 2 })
   unitPrice: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  @Column({ name: 'subtotal', type: 'decimal', precision: 12, scale: 2 })
   subtotal: number;
+
+  // Stripe integration
+  @Column({
+    name: 'stripe_price_id',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  stripePriceId: string;
+
+  // Computed field for subtotal getter (if you want to keep the old logic)
+  get computedSubtotal(): number {
+    return this.quantity * this.unitPrice;
+  }
 }

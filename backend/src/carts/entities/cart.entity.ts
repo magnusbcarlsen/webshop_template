@@ -20,10 +20,10 @@ export class Cart extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'cart_id', unsigned: true })
   id: number;
 
-  @ManyToOne(() => User, (user) => user.carts, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
+  // @ManyToOne(() => User, (user) => user.carts, {
+  //   nullable: true,
+  //   onDelete: 'SET NULL',
+  // })
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
