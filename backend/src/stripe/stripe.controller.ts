@@ -12,7 +12,8 @@ import {
 import { Request, Response } from 'express';
 import { StripeService } from './stripe.service';
 import { ConfigService } from '@nestjs/config';
-import * as rawBodyMiddleware from 'raw-body';
+import rawBodyMiddleware from 'raw-body';
+import Stripe from 'stripe';
 
 @Controller('stripe')
 export class StripeController {
@@ -49,7 +50,7 @@ export class StripeController {
     const buf = (await rawBodyMiddleware(req)) as Buffer;
     let event: Stripe.Event;
     try {
-      event = this.stripeService.constructEvent(buf, sig, secret);
+      event = this.stripeService.constructEvent(buf, sig);
     } catch (err) {
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }

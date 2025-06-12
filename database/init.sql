@@ -88,6 +88,8 @@ CREATE TABLE products (
     slug VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    stripe_product_id VARCHAR(255) UNIQUE,
+    stripe_price_id VARCHAR(255) UNIQUE,
     sale_price DECIMAL(10, 2) CHECK (sale_price >= 0),
     stock_quantity MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
     sku VARCHAR(50) UNIQUE,
@@ -98,6 +100,7 @@ CREATE TABLE products (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
 
 -- Product images
 CREATE TABLE product_images (

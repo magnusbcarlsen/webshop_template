@@ -26,6 +26,9 @@ export type CreateCategoryPayload = {
  */
 export type ProductAPI = {
   id: number;
+  // STRIPE
+  stripeProductId: string;
+  stripePriceId: string;
   // category: { id: number; name: string } | null;
   categories: { id: number; name: string }[];
   name: string;
@@ -55,6 +58,15 @@ export type ProductAPI = {
     stockQuantity: number;
     isActive: boolean;
   }[];
+};
+
+export type AdminProductPayload = Omit<
+  ProductAPI,
+  "id" | "createdAt" | "updatedAt" | "images" | "variants" | "categories"
+> & {
+  categoryIds: number[];
+  unitAmount: number; // in smallest currency unit, e.g. øre
+  currency: string; // e.g. "DKK"
 };
 
 // frontend/src/services/product-api.ts
@@ -117,12 +129,7 @@ export async function fetchProductBySlug(slug: string): Promise<ProductAPI> {
 
 // ─── PRODUCTS (ADMIN) ──────────────────────────────────────────────
 export async function createProduct(
-  payload:
-    | FormData
-    | (Omit<
-        ProductAPI,
-        "id" | "createdAt" | "updatedAt" | "images" | "variants" | "categories"
-      > & { categoryIds: number[] })
+  payload: FormData | AdminProductPayload
 ): Promise<ProductAPI> {
   const isForm = payload instanceof FormData;
   const res = await fetch(`${API_ROOT}/products`, {
@@ -136,19 +143,7 @@ export async function createProduct(
 
 export async function updateProduct(
   id: number,
-  payload:
-    | FormData
-    | (Partial<
-        Omit<
-          ProductAPI,
-          | "id"
-          | "createdAt"
-          | "updatedAt"
-          | "images"
-          | "variants"
-          | "categories"
-        >
-      > & { categoryIds: number[] })
+  payload: FormData | AdminProductPayload
 ): Promise<ProductAPI> {
   const isForm = payload instanceof FormData;
   const res = await fetch(`${API_ROOT}/products/${id}`, {

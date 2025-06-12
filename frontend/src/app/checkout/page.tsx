@@ -16,6 +16,8 @@ import {
 } from "@heroui/react";
 import { CartAPI } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
+import { CheckoutButton } from "@/components/CheckoutButton";
+
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -437,16 +439,16 @@ export default function ClientCheckout() {
           </div>
 
           {/* Checkout Button */}
-          <Button
-            size="lg"
-            fullWidth
-            className="bg-black text-white hover:bg-gray-800 py-3 lg:py-4 text-base lg:text-lg font-semibold"
-            onPress={handleCheckout}
+
+          <CheckoutButton
+            items={cart.items.map((item) => ({
+              priceId: item.product.stripePriceId,
+              quantity: item.quantity,
+            }))}
             isDisabled={!isFormValid() || creatingSession}
             isLoading={creatingSession}
-          >
-            {creatingSession ? "Processing..." : "COMPLETE ORDER"}
-          </Button>
+            className="bg-black text-white hover:bg-gray-800 py-3 lg:py-4 text-base lg:text-lg font-semibold"
+          />
 
           {!isFormValid() && (
             <p className="text-xs lg:text-sm text-red-600 text-center">

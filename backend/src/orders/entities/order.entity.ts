@@ -9,6 +9,7 @@ import {
   ManyToOne,
   JoinColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
 import { OrderStatusHistory, OrderStatus } from './order-status-history.entity';
@@ -37,6 +38,15 @@ export class Order extends BaseEntity {
   // — track session for guest orders
   @Column({ name: 'session_id', type: 'varchar', length: 36 })
   sessionId: string;
+
+  @Index({ unique: true })
+  @Column({
+    name: 'stripe_session_id',
+    type: 'varchar',
+    length: 255,
+    nullable: false,
+  })
+  stripeSessionId: string;
 
   @Column({
     type: 'enum',

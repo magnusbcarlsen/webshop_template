@@ -23,7 +23,7 @@ import { memoryStorage } from 'multer';
       ProductVariant,
       Attribute,
       AttributeValue,
-      Category, // Assuming you need to reference categories in products
+      Category,
     ]),
     MulterModule.register({
       storage: memoryStorage(), // or diskStorage
