@@ -59,7 +59,7 @@ export default function HeroSection() {
               transform: `translate3d(0, ${scrollY * -0.05}px, 0)`,
             }}
           >
-            bestil et maleri eller portræt
+            Bestil et maleri eller portræt
           </Button>
         </Link>
       </div>
