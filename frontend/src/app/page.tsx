@@ -1,7 +1,8 @@
+// app/page.tsx
 import ProductList from "@/components/products/ProductList";
+import HeroSection from "@/components/HeroSection";
 import { fallbackProducts } from "@/data/fallbackProduct ";
 import { ProductAPI, fetchProducts } from "@/services/product-api";
-import Image from "next/image";
 
 export const revalidate = 60;
 
@@ -24,40 +25,21 @@ export const metadata = {
     "Få lavet et portræt af dig selv eller en du holder af, bestillings maleri eller portrtæt. Eller køb et færdigt maleri.",
 };
 
-// app/page.tsx
 export default async function Home() {
   let products: ProductAPI[] = [];
   let error = false;
 
   try {
-    // Use the updated fetchProducts function that now has the correct API path
     products = await fetchProducts();
   } catch (err) {
     console.error("Error fetching products:", err);
-    // Use fallback data if API request fails
     products = fallbackProducts;
     error = true;
   }
 
   return (
     <>
-      <section className="relative h-[70vh] w-full overflow-hidden">
-        {/* Text overlay */}
-        <div className="absolute inset-0 z-10 bg-black bg-opacity-30 flex flex-col items-center justify-center text-center  px-4">
-          <h1 className="!text-white text-4xl md:text-6xl font-bold">
-            Portrætter og malerier
-          </h1>
-          <p className="!text-white text-xl md:text-2xl mt-4">
-            af Bergstrøm art
-          </p>
-        </div>
-
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-fixed bg-bottom bg-cover"
-          style={{ backgroundImage: "url('/HeroImageBergstroemArt.png')" }}
-        ></div>
-      </section>
+      <HeroSection />
 
       <div>
         <section className="text-center p-8">
