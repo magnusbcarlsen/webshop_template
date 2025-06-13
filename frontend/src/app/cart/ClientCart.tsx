@@ -161,13 +161,6 @@ export default function ClientCart() {
 
                       {/* Price and Quantity Row */}
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                        <div className="flex items-center space-x-8">
-                          <div className="text-lg font-semibold">
-                            DKK{item.product.price}
-                          </div>
-                          {/* <div className="text-lg">Qty: {item.quantity}</div> */}
-                        </div>
-
                         <div className="flex items-center space-x-6">
                           <div className="text-xl font-bold">
                             DKK{" "}
@@ -225,34 +218,18 @@ export default function ClientCart() {
 
               {/* Show only when cart has items */}
               {cart.items.length > 0 && (
-                <>
-                  <div className="space-y-4">
-                    <Checkbox size="sm" className="text-sm">
-                      <span className="text-sm text-gray-700">
-                        I agree to{" "}
-                        <Link
-                          href="/terms"
-                          className="underline hover:text-black"
-                        >
-                          Terms & Conditions
-                        </Link>
-                      </span>
-                    </Checkbox>
-                  </div>
-                  
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    className="!text-white !hover:text-white"
-                    size="lg"
-                    fullWidth
-                    onPress={() => {
-                      window.location.href = "/checkout";
-                    }}
-                  >
-                    PROCEED TO CHECKOUT
-                  </Button>
-                </>
+                <Button
+                  variant="solid"
+                  color="primary"
+                  className="!text-white !hover:text-white"
+                  size="lg"
+                  fullWidth
+                  onPress={() => {
+                    window.location.href = "/checkout";
+                  }}
+                >
+                  PROCEED TO CHECKOUT
+                </Button>
               )}
             </>
           )}

@@ -100,7 +100,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {/* Instagram Icon */}
             <motion.a
-              href="https://instagram.com" // Replace with your Instagram URL
+              href="https://www.instagram.com/dina.bergstrom.art" // Replace with your Instagram URL
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
