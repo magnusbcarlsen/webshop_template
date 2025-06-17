@@ -1,0 +1,286 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  COMPOSE_PROJECT_NAME: webshop-prod
+
+jobs:
+  test-and-build:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [frontend, backend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+  deploy:
+    name: Deploy to Production
+    needs: [test-and-build, security-scan]
+    runs-on: ubuntu-latest
+    environment: production # GitHub environment for additional protection
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DO_SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Digital Ocean
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true # Stop on first error
+          script: |
+            set -e
+
+            echo "🚀 Starting deployment..."
+
+            # Navigate to app directory
+            cd /var/www/webshop
+
+            # Create backup before deployment
+            echo "📦 Creating backup..."
+            BACKUP_DIR="/var/backups/webshop/$(date +%Y%m%d_%H%M%S)"
+            sudo mkdir -p $BACKUP_DIR
+
+            # Backup database
+            docker compose -f docker-compose.prod.yml exec -T db mysqldump \
+              -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }} \
+              ${{ secrets.MYSQL_DATABASE }} > $BACKUP_DIR/backup.sql || echo "Database backup failed"
+
+            # Backup MinIO data
+            sudo cp -r /var/lib/docker/volumes/webshop_minio_data $BACKUP_DIR/minio_backup || echo "MinIO backup failed"
+
+            # Backup current deployment
+            sudo cp -r . $BACKUP_DIR/app_backup/ || echo "App backup failed"
+
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+
+            # Create production environment file
+            echo "⚙️ Setting up environment..."
+            cat > .env << EOF
+            # Database
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+
+            # Application
+            PORT=3001
+            FRONTEND_URL=https://${{ secrets.DOMAIN }}
+            BACKEND_URL=http://backend:3001
+            NEXT_PUBLIC_API_URL=/api
+            NEXT_PUBLIC_API_BASE_URL=https://${{ secrets.DOMAIN }}
+
+            # Security
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+            # Stripe
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
+            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+
+            # MinIO Configuration
+            MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
+            MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
+
+            # S3 settings for MinIO (backend)
+            do_spaces_endpoint=http://minio:9000
+            do_spaces_region=us-east-1
+            do_spaces_bucket=${{ secrets.MINIO_BUCKET }}
+            do_spaces_key=${{ secrets.MINIO_ROOT_USER }}
+            do_spaces_secret=${{ secrets.MINIO_ROOT_PASSWORD }}
+
+            # MinIO Frontend URLs
+            NEXT_PUBLIC_MINIO_PUBLIC_URL=https://${{ secrets.DOMAIN }}
+            MINIO_API_HOST=${{ secrets.DOMAIN }}
+            MINIO_API_PORT=443
+
+            # Domain
+            DOMAIN=${{ secrets.DOMAIN }}
+            EOF
+
+            # Update nginx config with domain
+            sed -i "s/bergstromart.dk/${{ secrets.DOMAIN }}/g" nginx/nginx.prod.conf
+
+            # Stop services gracefully
+            echo "🛑 Stopping services..."
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+
+            # Clean up old images
+            echo "🧹 Cleaning up..."
+            docker system prune -f || true
+
+            # Build and deploy
+            echo "🏗️ Building and starting services..."
+            docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+
+            # Wait for services to be ready
+            echo "⏳ Waiting for services to start..."
+            sleep 90  # MinIO needs more time to initialize
+
+            # Initialize MinIO buckets and policies
+            echo "🪣 Initializing MinIO..."
+
+            # Install MinIO client on host if not present
+            if ! command -v mc &> /dev/null; then
+              wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
+              chmod +x mc
+              sudo mv mc /usr/local/bin/
+            fi
+
+            # Wait for MinIO to be ready
+            echo "⏳ Waiting for MinIO to be ready..."
+            until curl -f http://localhost:9000/minio/health/live > /dev/null 2>&1; do
+                echo "MinIO not ready yet, waiting..."
+                sleep 10
+            done
+
+            # Configure mc client
+            mc alias set local http://localhost:9000 ${{ secrets.MINIO_ROOT_USER }} ${{ secrets.MINIO_ROOT_PASSWORD }}
+
+            # Create buckets
+            mc mb local/products --ignore-existing || echo "Products bucket exists"
+            mc mb local/uploads --ignore-existing || echo "Uploads bucket exists"
+            mc mb local/static --ignore-existing || echo "Static bucket exists"
+
+            # Set bucket policies (public read for products and static)
+            mc policy set public local/products || echo "Failed to set products policy"
+            mc policy set public local/static || echo "Failed to set static policy"
+            mc policy set private local/uploads || echo "Failed to set uploads policy"
+
+            echo "✅ MinIO initialized successfully"
+
+            # Run health checks
+            echo "🏥 Running health checks..."
+            max_attempts=30
+            attempt=1
+
+            while [ $attempt -le $max_attempts ]; do
+              if curl -f http://localhost/health > /dev/null 2>&1; then
+                echo "✅ Health check passed!"
+                break
+              fi
+              
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ Health check failed after $max_attempts attempts"
+                
+                # Show logs for debugging
+                echo "📋 Backend logs:"
+                docker compose -f docker-compose.prod.yml logs --tail=50 backend
+                echo "📋 Frontend logs:"
+                docker compose -f docker-compose.prod.yml logs --tail=50 frontend
+                echo "📋 Nginx logs:"
+                docker compose -f docker-compose.prod.yml logs --tail=50 nginx
+                echo "📋 MinIO logs:"
+                docker compose -f docker-compose.prod.yml logs --tail=50 minio
+                
+                exit 1
+              fi
+              
+              echo "Attempt $attempt/$max_attempts failed, retrying in 10 seconds..."
+              sleep 10
+              attempt=$((attempt + 1))
+            done
+
+            # Run database migrations if needed
+            echo "🗃️ Running database migrations..."
+            docker compose -f docker-compose.prod.yml exec -T backend npm run migration:run || echo "Migration failed or not needed"
+
+            # Final verification
+            echo "🔍 Final verification..."
+            docker compose -f docker-compose.prod.yml ps
+
+            # Test MinIO connectivity
+            echo "🧪 Testing MinIO connectivity..."
+            mc ls local/ || echo "MinIO listing failed"
+
+            echo "🎉 Deployment completed successfully!"
+            echo "🌐 Application: https://${{ secrets.DOMAIN }}"
+            echo "🗄️ MinIO Console: https://console.${{ secrets.DOMAIN }}"
+
+  notify:
+    name: Notify Deployment Status
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Notify Success
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "✅ Deployment successful!"
+          # Add Slack/Discord notification here if needed
+
+      - name: Notify Failure
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          # Add Slack/Discord notification here if needed
