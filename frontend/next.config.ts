@@ -76,8 +76,8 @@ const nextConfig: NextConfig = {
       "localhost",
       "minio",
       // Add your production domain here - replace with actual domain
-      "yourdomain.com",
-      "console.yourdomain.com",
+      "bergstromart.dk",
+      "console.bergstromart.dk",
     ],
 
     // Modern remotePatterns for more specific control
@@ -104,17 +104,17 @@ const nextConfig: NextConfig = {
       // Production MinIO (through nginx proxy)
       {
         protocol: "https",
-        hostname: "yourdomain.com", // Replace with your actual domain
+        hostname: "bergstromart.dk", 
         pathname: "/products/**",
       },
       {
         protocol: "https",
-        hostname: "yourdomain.com", // Replace with your actual domain
+        hostname: "bergstromart.dk", 
         pathname: "/uploads/**",
       },
       {
         protocol: "https",
-        hostname: "yourdomain.com", // Replace with your actual domain
+        hostname: "bergstromart.dk", 
         pathname: "/static/**",
       },
       // MinIO container direct access (for development docker-compose)
