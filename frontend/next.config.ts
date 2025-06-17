@@ -1,7 +1,10 @@
-// frontend/next.config.js
 import webpack from "webpack";
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Enable standalone output for Docker optimization in production
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+
   // 1) API rewrites
   async rewrites() {
     const backendUrl = process.env.BACKEND_URL ?? "http://backend:3001";
@@ -28,6 +31,7 @@ const nextConfig = {
       },
     ];
   },
+
   // 3) Development optimizations
   webpack: (config: webpack.Configuration, { dev }: { dev: boolean }) => {
     if (dev) {
@@ -36,95 +40,126 @@ const nextConfig = {
         poll: false,
         // debounce rebuilds:
         aggregateTimeout: 300,
-        // skip huge folders you don’t edit
+        // skip huge folders you don't edit
         ignored: [
           "**/node_modules/**",
           "**/.next/**",
           "**/public/**",
           "**/src/config/**",
           "**/src/services/**",
-          // ← skip all your App routes & sub-folders
           "**/src/app/**",
         ],
+      };
+    } else {
+      // Production optimizations
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: "all",
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: "vendors",
+              chunks: "all",
+            },
+          },
+        },
       };
     }
     return config;
   },
 
-  // 4) Images, ESLint, TS relax in dev
+  // 4) Images configuration for both development and production
   images: {
-    domains: ["localhost", "minio"],
+    // Legacy domains array for backwards compatibility
+    domains: [
+      "localhost",
+      "minio",
+      // Add your production domain here - replace with actual domain
+      "yourdomain.com",
+      "console.yourdomain.com",
+    ],
+
+    // Modern remotePatterns for more specific control
     remotePatterns: [
+      // Development MinIO (localhost:9000)
       {
         protocol: "http",
         hostname: "localhost",
         port: "9000",
         pathname: "/products/**",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/static/**",
+      },
+      // Production MinIO (through nginx proxy)
+      {
+        protocol: "https",
+        hostname: "yourdomain.com", // Replace with your actual domain
+        pathname: "/products/**",
+      },
+      {
+        protocol: "https",
+        hostname: "yourdomain.com", // Replace with your actual domain
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "yourdomain.com", // Replace with your actual domain
+        pathname: "/static/**",
+      },
+      // MinIO container direct access (for development docker-compose)
+      {
+        protocol: "http",
+        hostname: "minio",
+        port: "9000",
+        pathname: "/**",
+      },
     ],
+    formats: ["image/webp", "image/avif"],
   },
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
+
+  // Environment variables that should be available in the browser
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_MINIO_PUBLIC_URL: process.env.NEXT_PUBLIC_MINIO_PUBLIC_URL,
+    MINIO_API_HOST: process.env.MINIO_API_HOST,
+    MINIO_API_PORT: process.env.MINIO_API_PORT,
+  },
+
+  // 5) ESLint and TypeScript - keep your existing settings
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  // Production optimizations
+  compress: true,
+  swcMinify: true,
+  poweredByHeader: false,
+
+  // Experimental features for better performance
+  experimental: {
+    esmExternals: true,
+    optimizeCss: true,
+  },
+
+  // Trailing slash handling
+  trailingSlash: false,
 };
 
-module.exports = nextConfig;
-
-// import { NextConfig } from "next";
-
-// const nextConfig: NextConfig = {
-//   // 1) API rewrites - use environment variable for flexibility
-//   async rewrites() {
-//     const backendUrl = process.env.BACKEND_URL || "http://backend:3001";
-//     return [
-//       {
-//         source: "/api/:path*",
-//         destination: `${backendUrl}/api/:path*`,
-//       },
-//     ];
-//   },
-
-//   // 2) Security headers for all routes
-//   async headers() {
-//     return [
-//       {
-//         source: "/(.*)",
-//         headers: [
-//           { key: "X-Frame-Options", value: "DENY" },
-//           { key: "X-Content-Type-Options", value: "nosniff" },
-//           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-//           { key: "X-XSS-Protection", value: "1; mode=block" },
-//           { key: "Permissions-Policy", value: "geolocation=(), microphone=()" },
-//         ],
-//       },
-//     ];
-//   },
-
-//   // 3) Development optimizations
-//   webpack: (config, { dev }) => {
-//     if (dev) {
-//       // Development-specific webpack config
-//       config.watchOptions = {
-//         poll: 1000,
-//         aggregateTimeout: 300,
-//         ignored: [/node_modules/, /\.next/],
-//       };
-//     }
-//     return config;
-//   },
-
-//   // 4) Image optimization
-//   images: {
-//     domains: ["localhost"], // Add your image domains here
-//   },
-
-//   // 5) ESLint and TypeScript - relaxed for development
-//   eslint: {
-//     ignoreDuringBuilds: true,
-//   },
-
-//   typescript: {
-//     ignoreBuildErrors: true,
-//   },
-// };
-
-// export default nextConfig;
+export default nextConfig;
