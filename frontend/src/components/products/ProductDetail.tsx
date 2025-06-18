@@ -37,7 +37,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
   // Force check image availability on mount and when selectedImage changes
   useEffect(() => {
-    if (!currentImage) return;
+    if (!currentImage || typeof window === "undefined") return;
 
     setImageChecked(false);
     setImageError(false);
@@ -71,6 +71,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
   // Keyboard navigation
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
         prevImage();

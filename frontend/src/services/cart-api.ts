@@ -1,5 +1,6 @@
 import { API_ROOT } from "@/config/api";
 import { ProductAPI } from "./product-api";
+import router from "next/router";
 
 export interface CartItemAPI {
   id: number;
@@ -15,11 +16,9 @@ export interface CartAPI {
 
 async function handleCartResponse(res: Response): Promise<CartAPI> {
   if (res.status === 401 || res.status === 403) {
-    // Optional: redirect or trigger login modal
     if (typeof window !== "undefined") {
-      window.location.href = "/login"; // or toast message
+      throw new Error("Unauthorized access to cart.");
     }
-    throw new Error("Unauthorized access to cart.");
   }
 
   if (!res.ok) {

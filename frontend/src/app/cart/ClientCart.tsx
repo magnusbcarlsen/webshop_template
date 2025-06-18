@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Button, Checkbox } from "@heroui/react";
 import { CartAPI, removeItemFromCart } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
+import router from "next/router";
 
 export default function ClientCart() {
   const [cart, setCart] = useState<CartAPI | null>(null);
@@ -225,7 +226,7 @@ export default function ClientCart() {
                   size="lg"
                   fullWidth
                   onPress={() => {
-                    window.location.href = "/checkout";
+                    router.push("/checkout");
                   }}
                 >
                   PROCEED TO CHECKOUT
