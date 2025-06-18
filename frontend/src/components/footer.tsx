@@ -49,7 +49,7 @@ export default function ModernFooter() {
                   href="tel:12345678"
                   className="hover:text-gray-900 transition-colors"
                 >
-                  12 34 56 78
+                  + 45 2361 8505
                 </a>
               </div>
               <div className="flex items-start space-x-3 text-gray-600">

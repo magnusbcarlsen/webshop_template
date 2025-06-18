@@ -1,6 +1,7 @@
 // frontend/src/services/product-api.ts
 
 import { API_ROOT } from "@/config/api";
+import router from "next/router";
 
 export type CategoryAPI = {
   id: number;
@@ -74,7 +75,6 @@ export type AdminProductPayload = Omit<
 // ─── UTILITIES ─────────────────────────────────────────────────────
 async function handleResponse<T = unknown>(res: Response): Promise<T> {
   if (res.status === 401 || res.status === 403) {
-    window.location.href = "/login";
     throw new Error("Unauthorized");
   }
   if (!res.ok) {

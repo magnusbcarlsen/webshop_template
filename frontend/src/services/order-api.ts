@@ -2,6 +2,7 @@
 
 // Root for API calls: either explicit NEXT_PUBLIC_API_URL or proxy via /api
 import { API_ROOT } from "@/config/api";
+import router from "next/router";
 
 /**
  * One item in an order
@@ -80,7 +81,6 @@ export type UpdateOrderPayload = Partial<CreateOrderPayload> & {
 // ─── UTIL ───────────────────────────────────────────────────────────
 async function handleResponse<T = unknown>(res: Response): Promise<T> {
   if (res.status === 401 || res.status === 403) {
-    window.location.href = "/login";
     throw new Error("Unauthorized");
   }
   if (!res.ok) {

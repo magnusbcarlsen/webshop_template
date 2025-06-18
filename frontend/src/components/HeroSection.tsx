@@ -10,6 +10,7 @@ export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     let ticking = false;
 
     const updateScrollY = () => {
@@ -30,10 +31,12 @@ export default function HeroSection() {
   }, []);
 
   const scrollToNextSection = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: "smooth",
-    });
+    if (typeof window !== "undefined") {
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   return (
