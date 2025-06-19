@@ -3,10 +3,10 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=secretPassword
-      - MYSQL_USER=magnus
-      - MYSQL_PASSWORD=secretPassword
-      - MYSQL_DATABASE=webshop
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
       - ./database:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
@@ -31,21 +31,20 @@ services:
       - "3001:3001"
     env_file:
       - .env
-      - .env.local
     environment:
-      - NODE_ENV=development
-      - NODE_OPTIONS=--max-old-space-size=1024
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USERNAME=magnus
-      - DB_PASSWORD=secretPassword
-      - DB_DATABASE=webshop
-      - PORT=3001
-      - do_spaces_endpoint=http://minio:9000
-      - do_spaces_region=us-east-1
-      - do_spaces_bucket=products
-      - do_spaces_key=minioadmin
-      - do_spaces_secret=minioadmin123
+      - NODE_ENV=${NODE_ENV}
+      - NODE_OPTIONS=${NODE_OPTIONS}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - PORT=${PORT}
+      - do_spaces_endpoint=${do_spaces_endpoint}
+      - do_spaces_region=${do_spaces_region}
+      - do_spaces_bucket=${do_spaces_bucket}
+      - do_spaces_key=${do_spaces_key}
+      - do_spaces_secret=${do_spaces_secret}
     depends_on:
       - db
       - minio
@@ -64,13 +63,12 @@ services:
       - "3000:3000"
     env_file:
       - .env
-      - .env.local
     environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=1000
-      - WATCHPACK_POLLING=true
-      - NODE_OPTIONS=--max-old-space-size=2048
+      - NODE_ENV=${NODE_ENV}
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+      - CHOKIDAR_INTERVAL=${CHOKIDAR_INTERVAL}
+      - WATCHPACK_POLLING=${WATCHPACK_POLLING}
+      - NODE_OPTIONS=${NODE_OPTIONS}
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -99,8 +97,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin123
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -115,10 +113,10 @@ services:
       /bin/sh -c "
       echo 'Waiting for MinIO to be ready...';
       sleep 5;
-      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin123;
-      /usr/bin/mc mb myminio/products --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/products;
-      /usr/bin/mc ls myminio/products;
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb myminio/${do_spaces_bucket} --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/${do_spaces_bucket};
+      /usr/bin/mc ls myminio/${do_spaces_bucket};
       echo 'Bucket setup complete';
       exit 0;
       "
