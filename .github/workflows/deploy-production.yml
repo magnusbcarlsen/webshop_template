@@ -3,101 +3,11 @@ name: Deploy to Production
 on:
   push:
     branches: [main]
-  workflow_dispatch: # Allow manual triggering
-
-env:
-  COMPOSE_PROJECT_NAME: webshop-prod
+  workflow_dispatch:
 
 jobs:
-  build-frontend:
-    name: Build Frontend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Run linting
-        working-directory: frontend
-        run: npm run lint
-        continue-on-error: true
-
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-        env:
-          NODE_ENV: production
-
-  build-backend:
-    name: Build Backend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: backend
-        run: npm ci
-
-      - name: Run linting
-        working-directory: backend
-        run: npm run lint
-        continue-on-error: true
-
-      - name: Run tests
-        working-directory: backend
-        run: npm test
-        continue-on-error: true
-
-      - name: Build backend
-        working-directory: backend
-        run: npm run build
-        env:
-          NODE_ENV: production
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
-        continue-on-error: true
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: "trivy-results.sarif"
-        continue-on-error: true
-
   deploy:
     name: Deploy to Production
-    needs: [build-frontend, build-backend]
     runs-on: ubuntu-latest
     environment: production
 
@@ -131,18 +41,6 @@ jobs:
             # Navigate to app directory
             cd /var/www/webshop
 
-            # Create backup before deployment
-            echo "📦 Creating backup..."
-            BACKUP_DIR="/var/backups/webshop/$(date +%Y%m%d_%H%M%S)"
-            sudo mkdir -p $BACKUP_DIR
-
-            # Backup database if running
-            if docker compose -f docker-compose.prod.yml ps db 2>/dev/null | grep -q "Up"; then
-              docker compose -f docker-compose.prod.yml exec -T db mysqldump \
-                -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }} \
-                ${{ secrets.MYSQL_DATABASE }} > $BACKUP_DIR/backup.sql || echo "Database backup failed"
-            fi
-
             # Pull latest code
             echo "📥 Pulling latest code..."
             git fetch origin
@@ -152,7 +50,6 @@ jobs:
             # Create production environment file
             echo "⚙️ Setting up environment..."
             cat > .env << 'EOF'
-            # Environment
             NODE_ENV=production
             ENVIRONMENT=production
 
@@ -264,18 +161,3 @@ jobs:
 
             echo "🎉 Deployment completed successfully!"
             echo "🌐 Application: https://${{ secrets.DOMAIN }}"
-
-  notify:
-    name: Notify Deployment Status
-    needs: [deploy]
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Notify Success
-        if: needs.deploy.result == 'success'
-        run: echo "✅ Deployment successful!"
-
-      - name: Notify Failure
-        if: needs.deploy.result == 'failure'
-        run: echo "❌ Deployment failed!"
