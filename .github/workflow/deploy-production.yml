@@ -125,46 +125,91 @@ jobs:
 
             # Create production environment file
             echo "⚙️ Setting up environment..."
-            cat > .env << EOF
-            # Database
+            cat > .env << 'EOF'
+            # -----------------------------------------------------------------------------
+            # Environment
+            # -----------------------------------------------------------------------------
+            NODE_ENV=production
+            ENVIRONMENT=production
+
+            # -----------------------------------------------------------------------------
+            # Database Configuration
+            # -----------------------------------------------------------------------------
+            # MySQL Database Settings (for Docker Compose)
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+            MYSQL_PORT=3306
 
-            # Application
+            # Backend Database Connection (what your NestJS backend code looks for)
+            DB_HOST=db
+            DB_PORT=3306
+            DB_USER=${{ secrets.MYSQL_USER }}
+            DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            DB_NAME=${{ secrets.MYSQL_DATABASE }}
+            DB_USERNAME=${{ secrets.MYSQL_USER }}
+            DB_DATABASE=${{ secrets.MYSQL_DATABASE }}
+
+            # -----------------------------------------------------------------------------
+            # Backend Configuration (NestJS)
+            # -----------------------------------------------------------------------------
             PORT=3001
             FRONTEND_URL=https://${{ secrets.DOMAIN }}
+
+            # -----------------------------------------------------------------------------
+            # Frontend Configuration (Next.js)
+            # -----------------------------------------------------------------------------
+            # Server-side requests (Docker internal network)
             BACKEND_URL=http://backend:3001
+            # Client-side requests (browser)
             NEXT_PUBLIC_API_URL=/api
             NEXT_PUBLIC_API_BASE_URL=https://${{ secrets.DOMAIN }}
 
+            # -----------------------------------------------------------------------------
             # Security
+            # -----------------------------------------------------------------------------
             JWT_SECRET=${{ secrets.JWT_SECRET }}
 
-            # Stripe
+            # -----------------------------------------------------------------------------
+            # Stripe Configuration (Production)
+            # -----------------------------------------------------------------------------
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
             WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
 
+            # -----------------------------------------------------------------------------
             # MinIO Configuration
+            # -----------------------------------------------------------------------------
             MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
             MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
 
-            # S3 settings for MinIO (backend)
+            # MinIO API Access
+            MINIO_API_HOST=${{ secrets.DOMAIN }}
+            MINIO_API_PORT=443
+
+            # Public MinIO URL (for frontend/browser access)
+            NEXT_PUBLIC_MINIO_PUBLIC_URL=https://${{ secrets.DOMAIN }}
+
+            # -----------------------------------------------------------------------------
+            # S3-Compatible Settings (for backend MinIO communication)
+            # -----------------------------------------------------------------------------
             do_spaces_endpoint=http://minio:9000
             do_spaces_region=us-east-1
             do_spaces_bucket=${{ secrets.MINIO_BUCKET }}
             do_spaces_key=${{ secrets.MINIO_ROOT_USER }}
             do_spaces_secret=${{ secrets.MINIO_ROOT_PASSWORD }}
 
-            # MinIO Frontend URLs
-            NEXT_PUBLIC_MINIO_PUBLIC_URL=https://${{ secrets.DOMAIN }}
-            MINIO_API_HOST=${{ secrets.DOMAIN }}
-            MINIO_API_PORT=443
-
-            # Domain
+            # -----------------------------------------------------------------------------
+            # Domain Configuration
+            # -----------------------------------------------------------------------------
             DOMAIN=${{ secrets.DOMAIN }}
+
+            # -----------------------------------------------------------------------------
+            # Node.js Performance Settings
+            # -----------------------------------------------------------------------------
+            NODE_OPTIONS=--max-old-space-size=2048
+            NEXT_TELEMETRY_DISABLED=1
             EOF
 
             # Update nginx config with domain
