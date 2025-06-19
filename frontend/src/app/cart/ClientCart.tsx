@@ -6,9 +6,10 @@ import Image from "next/image";
 import { Button, Checkbox } from "@heroui/react";
 import { CartAPI, removeItemFromCart } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function ClientCart() {
+  const router = useRouter();
   const [cart, setCart] = useState<CartAPI | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
