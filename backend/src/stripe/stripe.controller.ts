@@ -94,9 +94,7 @@ export class StripeController {
         switch (event.type) {
           case 'checkout.session.completed':
             console.log('🛒 Processing checkout session completed');
-            await this.handleCheckoutCompleted(
-              event.data.object as Stripe.Checkout.Session,
-            );
+            await this.handleCheckoutCompleted(event.data.object);
             console.log('✅ Checkout session processed successfully');
             break;
           case 'checkout.session.expired':
