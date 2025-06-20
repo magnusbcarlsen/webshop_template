@@ -1,6 +1,6 @@
 import { API_ROOT } from "@/config/api";
 import { ProductAPI } from "./product-api";
-import router from "next/router";
+
 
 export interface CartItemAPI {
   id: number;

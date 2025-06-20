@@ -1,7 +1,7 @@
 // frontend/src/services/product-api.ts
 
 import { API_ROOT } from "@/config/api";
-import router from "next/router";
+
 
 export type CategoryAPI = {
   id: number;

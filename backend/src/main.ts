@@ -6,8 +6,6 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
-import { raw, Request, Response, NextFunction } from 'express';
-import csurf from 'csurf';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,33 +23,6 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
-
-  // CSRF Protection with enhanced configuration
-  const csrfMiddleware = csurf({
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3600000, // 1 hour
-    },
-    ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
-  });
-
-  // Set CSRF secret globally for the application
-  process.env.CSRF_SECRET = process.env.CSRF_SECRET || 'fallback-secret-key';
-
-  // Conditional CSRF middleware
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    // Skip for Stripe webhooks
-    if (req.path.startsWith('/api/stripe/webhook')) return next();
-    // Skip for CSRF token endpoint itself
-    if (req.path === '/api/csrf-token') return next();
-    // Skip for health checks
-    if (req.path === '/api/health') return next();
-
-    // Apply CSRF protection for all other routes
-    return csrfMiddleware(req, res, next);
-  });
 
   // 1) prefix all routes with /api
   app.setGlobalPrefix('api');
@@ -102,47 +73,14 @@ async function bootstrap() {
       'Accept',
       'Authorization',
       'X-Cart-ID', // Allow our custom header
-      'X-CSRF-Token', // ADD: Allow CSRF token header
-      'CSRF-Token', // ADD: Alternative CSRF header name
     ],
-  });
-
-  interface RequestWithCSRF extends Request {
-    csrfToken(): string;
-  }
-
-  // Then use it in your endpoint:
-  app.use('/api/csrf-token', (req: RequestWithCSRF, res: Response) => {
-    try {
-      const token: string = req.csrfToken();
-      res.json({
-        csrfToken: token,
-        success: true,
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: 'Failed to generate CSRF token',
-        success: false,
-      });
-    }
-  });
-
-  // ADD: Health check endpoint
-  app.use('/api/health', (req: Request, res: Response) => {
-    res.json({
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      csrf: 'protected',
-    });
   });
 
   await app.listen(process.env.PORT || 3001, '0.0.0.0'); // Listen on all interfaces
 
   // ADD: Console logs for confirmation
   console.log(`🚀 Application running on port ${process.env.PORT || 3001}`);
-  console.log(
-    `🛡️ CSRF Protection: ${process.env.NODE_ENV === 'production' ? 'ENABLED (Secure)' : 'ENABLED (Development)'}`,
-  );
+
 }
 
 bootstrap();
