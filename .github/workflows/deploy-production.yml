@@ -45,7 +45,10 @@ jobs:
             echo "📥 Pulling latest code..."
             git fetch origin
             git reset --hard origin/main
-            git clean -fd
+
+            # Clean git workspace but exclude certbot directories
+            echo "🧹 Cleaning workspace (excluding certbot)..."
+            git clean -fd -e certbot/
 
             # Create production environment file
             echo "⚙️ Setting up environment..."
