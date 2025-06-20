@@ -83,6 +83,8 @@ jobs:
 
             # Security
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+            CSRF_SECRET=${{ secrets.CSRF_SECRET }}
+            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
 
             # Stripe Configuration
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
