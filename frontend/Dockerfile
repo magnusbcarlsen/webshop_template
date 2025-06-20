@@ -1,7 +1,8 @@
 FROM node:18-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# Cache node modules and clean cache
+RUN npm ci --only=production && npm cache clean --force
 
 FROM node:18-alpine AS builder
 WORKDIR /app
@@ -10,6 +11,8 @@ COPY . .
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Limit memory usage during build
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 RUN npm run build
 
@@ -34,5 +37,4 @@ USER nextjs
 
 EXPOSE 3000
 
-# Force port 3000 explicitly
 CMD ["sh", "-c", "PORT=3000 HOSTNAME=0.0.0.0 node server.js"]
