@@ -355,22 +355,6 @@ INSERT INTO roles (role_name, description) VALUES
 ('customer', 'Regular customer'),
 ('manager', 'Store manager with limited admin access');
 
--- Users
-INSERT INTO users (role_id, email, password, first_name, last_name, phone, is_active) VALUES 
-(1, 'admin@example.com', 'Password', 'Admin', 'User', '+1234567890', true),
-(2, 'john.doe@example.com', 'Password', 'John', 'Doe', '+1987654321', true),
-(2, 'jane.smith@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane', 'Smith', '+1122334455', true),
-(3, 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Store', 'Manager', '+1555666777', true),
-(2, 'bob.johnson@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Bob', 'Johnson', '+1444333222', true);
-
--- User addresses
-INSERT INTO user_addresses (user_id, address_type, is_default, street_address, city, state, postal_code, country) VALUES 
-(2, 'billing', true, '123 Main St', 'New York', 'NY', '10001', 'USA'),
-(2, 'shipping', true, '123 Main St', 'New York', 'NY', '10001', 'USA'),
-(3, 'billing', true, '456 Park Ave', 'Boston', 'MA', '02108', 'USA'),
-(3, 'shipping', true, '789 Work Blvd', 'Boston', 'MA', '02110', 'USA'),
-(5, 'billing', true, '101 Lake St', 'Chicago', 'IL', '60601', 'USA'),
-(5, 'shipping', true, '101 Lake St', 'Chicago', 'IL', '60601', 'USA');
 
 -- Categories
 INSERT INTO categories (name, slug, description, image_url, is_active) VALUES
@@ -568,6 +552,24 @@ WHERE p.slug IN (
   'go-with-the-flow-yellow'
 );
 
+-- Users
+-- INSERT INTO users (role_id, email, password, first_name, last_name, phone, is_active) VALUES 
+-- (1, 'admin@example.com', 'Password', 'Admin', 'User', '+1234567890', true),
+-- (2, 'john.doe@example.com', 'Password', 'John', 'Doe', '+1987654321', true),
+-- (2, 'jane.smith@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane', 'Smith', '+1122334455', true),
+-- (3, 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Store', 'Manager', '+1555666777', true),
+-- (2, 'bob.johnson@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Bob', 'Johnson', '+1444333222', true);
+
+-- User addresses
+-- INSERT INTO user_addresses (user_id, address_type, is_default, street_address, city, state, postal_code, country) VALUES 
+-- (2, 'billing', true, '123 Main St', 'New York', 'NY', '10001', 'USA'),
+-- (2, 'shipping', true, '123 Main St', 'New York', 'NY', '10001', 'USA'),
+-- (3, 'billing', true, '456 Park Ave', 'Boston', 'MA', '02108', 'USA'),
+-- (3, 'shipping', true, '789 Work Blvd', 'Boston', 'MA', '02110', 'USA'),
+-- (5, 'billing', true, '101 Lake St', 'Chicago', 'IL', '60601', 'USA'),
+-- (5, 'shipping', true, '101 Lake St', 'Chicago', 'IL', '60601', 'USA');
+
+
 
 -- Attributes
 -- INSERT INTO attributes (name) VALUES 
@@ -645,11 +647,11 @@ WHERE p.slug IN (
 -- (11, 7); -- L size dress
 
 -- Carts
-INSERT INTO carts (user_id, session_id) VALUES 
-(2, NULL),
-(3, NULL),
-(NULL, 'guest_session_12345'),
-(NULL, 'guest_session_67890');
+-- INSERT INTO carts (user_id, session_id) VALUES 
+-- (2, NULL),
+-- (3, NULL),
+-- (NULL, 'guest_session_12345'),
+-- (NULL, 'guest_session_67890');
 
 -- Cart items
 -- INSERT INTO cart_items (cart_id, product_id, variant_id, quantity) VALUES 
@@ -663,105 +665,105 @@ INSERT INTO carts (user_id, session_id) VALUES
 -- Orders
 -- Orders
 -- Orders
-INSERT INTO orders (
-    user_id,
-    guest_name,
-    guest_email,
-    status,
-    total_amount,
-    subtotal,
-    tax_amount,
-    shipping_amount,
-    discount_amount,
-    shipping_address,
-    billing_address,
-    payment_method,
-    tracking_number
-) VALUES
-  -- John’s first delivered order
-  (
-    2,
-    'John Doe',
-    'john.doe@example.com',
-    'delivered',
-    1059.99,
-    999.99,
-    50.00,
-    10.00,
-    0.00,
-    '123 Main St, New York, NY 10001, USA',
-    '123 Main St, New York, NY 10001, USA',
-    'credit_card',
-    'TRK123456789'
-  ),
+-- INSERT INTO orders (
+--     user_id,
+--     guest_name,
+--     guest_email,
+--     status,
+--     total_amount,
+--     subtotal,
+--     tax_amount,
+--     shipping_amount,
+--     discount_amount,
+--     shipping_address,
+--     billing_address,
+--     payment_method,
+--     tracking_number
+-- ) VALUES
+--   -- John’s first delivered order
+--   (
+--     2,
+--     'John Doe',
+--     'john.doe@example.com',
+--     'delivered',
+--     1059.99,
+--     999.99,
+--     50.00,
+--     10.00,
+--     0.00,
+--     '123 Main St, New York, NY 10001, USA',
+--     '123 Main St, New York, NY 10001, USA',
+--     'credit_card',
+--     'TRK123456789'
+--   ),
 
-  -- Jane’s shipped order
-  (
-    3,
-    'Jane Smith',
-    'jane.smith@example.com',
-    'shipped',
-    134.98,
-    119.98,
-    10.00,
-    5.00,
-    0.00,
-    '789 Work Blvd, Boston, MA 02110, USA',
-    '456 Park Ave, Boston, MA 02108, USA',
-    'paypal',
-    'TRK987654321'
-  ),
+--   -- Jane’s shipped order
+--   (
+--     3,
+--     'Jane Smith',
+--     'jane.smith@example.com',
+--     'shipped',
+--     134.98,
+--     119.98,
+--     10.00,
+--     5.00,
+--     0.00,
+--     '789 Work Blvd, Boston, MA 02110, USA',
+--     '456 Park Ave, Boston, MA 02108, USA',
+--     'paypal',
+--     'TRK987654321'
+--   ),
 
-  -- John’s processing order
-  (
-    2,
-    'John Doe',
-    'john.doe@example.com',
-    'processing',
-    384.97,
-    359.97,
-    25.00,
-    0.00,
-    0.00,
-    '123 Main St, New York, NY 10001, USA',
-    '123 Main St, New York, NY 10001, USA',
-    'credit_card',
-    NULL
-  ),
+--   -- John’s processing order
+--   (
+--     2,
+--     'John Doe',
+--     'john.doe@example.com',
+--     'processing',
+--     384.97,
+--     359.97,
+--     25.00,
+--     0.00,
+--     0.00,
+--     '123 Main St, New York, NY 10001, USA',
+--     '123 Main St, New York, NY 10001, USA',
+--     'credit_card',
+--     NULL
+--   ),
 
-  -- Bob’s pending order
-  (
-    5,
-    'Bob Johnson',
-    'bob.johnson@example.com',
-    'pending',
-    129.99,
-    119.99,
-    10.00,
-    0.00,
-    0.00,
-    '101 Lake St, Chicago, IL 60601, USA',
-    '101 Lake St, Chicago, IL 60601, USA',
-    'bank_transfer',
-    NULL
-  ),
+--   -- Bob’s pending order
+--   (
+--     5,
+--     'Bob Johnson',
+--     'bob.johnson@example.com',
+--     'pending',
+--     129.99,
+--     119.99,
+--     10.00,
+--     0.00,
+--     0.00,
+--     '101 Lake St, Chicago, IL 60601, USA',
+--     '101 Lake St, Chicago, IL 60601, USA',
+--     'bank_transfer',
+--     NULL
+--   ),
 
-  -- Jane’s cancelled order
-  (
-    3,
-    'Jane Smith',
-    'jane.smith@example.com',
-    'cancelled',
-    24.99,
-    24.99,
-    0.00,
-    0.00,
-    0.00,
-    '789 Work Blvd, Boston, MA 02110, USA',
-    '456 Park Ave, Boston, MA 02108, USA',
-    'credit_card',
-    NULL
-  );
+--   -- Jane’s cancelled order
+--   (
+--     3,
+--     'Jane Smith',
+--     'jane.smith@example.com',
+--     'cancelled',
+--     24.99,
+--     24.99,
+--     0.00,
+--     0.00,
+--     0.00,
+--     '789 Work Blvd, Boston, MA 02110, USA',
+--     '456 Park Ave, Boston, MA 02108, USA',
+--     'credit_card',
+--     NULL
+--   );
 
 
 
@@ -792,11 +794,11 @@ INSERT INTO orders (
 -- (5, 'cancelled', 'Cancelled by customer', 3);
 
 -- Discounts
-INSERT INTO discounts (code, type, value, minimum_order_amount, is_active, start_date, end_date, usage_limit, used_count) VALUES 
-('SUMMER2025', 'percentage', 15.00, 100.00, true, '2025-06-01 00:00:00', '2025-08-31 23:59:59', 1000, 0),
-('WELCOME10', 'percentage', 10.00, 50.00, true, '2025-01-01 00:00:00', '2025-12-31 23:59:59', NULL, 45),
-('FREESHIP', 'fixed_amount', 10.00, 75.00, true, '2025-04-01 00:00:00', '2025-05-15 23:59:59', 500, 120),
-('FLASH25', 'percentage', 25.00, 200.00, false, '2025-03-10 00:00:00', '2025-03-12 23:59:59', 100, 100);
+-- INSERT INTO discounts (code, type, value, minimum_order_amount, is_active, start_date, end_date, usage_limit, used_count) VALUES 
+-- ('SUMMER2025', 'percentage', 15.00, 100.00, true, '2025-06-01 00:00:00', '2025-08-31 23:59:59', 1000, 0),
+-- ('WELCOME10', 'percentage', 10.00, 50.00, true, '2025-01-01 00:00:00', '2025-12-31 23:59:59', NULL, 45),
+-- ('FREESHIP', 'fixed_amount', 10.00, 75.00, true, '2025-04-01 00:00:00', '2025-05-15 23:59:59', 500, 120),
+-- ('FLASH25', 'percentage', 25.00, 200.00, false, '2025-03-10 00:00:00', '2025-03-12 23:59:59', 100, 100);
 
 -- Reviews
 -- INSERT INTO reviews (product_id, user_id, rating, title, comment, is_approved) VALUES 
@@ -809,11 +811,11 @@ INSERT INTO discounts (code, type, value, minimum_order_amount, is_active, start
 -- (5, 2, 4, 'Gripping story', 'Couldn\'t put this book down! Exciting from start to finish.', false);
 
 -- Wishlists
-INSERT INTO wishlists (user_id, name) VALUES 
-(2, 'Birthday Wishlist'),
-(2, 'Christmas Ideas'),
-(3, 'Tech Gadgets'),
-(5, 'Kitchen Upgrades');
+-- INSERT INTO wishlists (user_id, name) VALUES 
+-- (2, 'Birthday Wishlist'),
+-- (2, 'Christmas Ideas'),
+-- (3, 'Tech Gadgets'),
+-- (5, 'Kitchen Upgrades');
 
 -- Wishlist items
 -- INSERT INTO wishlist_items (wishlist_id, product_id) VALUES 
