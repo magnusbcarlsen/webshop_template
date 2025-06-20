@@ -1,4 +1,4 @@
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS runner
 WORKDIR /app
 COPY package*.json ./
 # Install all dependencies including dev dependencies for build
@@ -11,7 +11,7 @@ COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
 
 # Set memory limit and install Nest CLI globally
-ENV NODE_OPTIONS="--max-old-space-size=512"
+ENV NODE_OPTIONS="--max-old-space-size=512 --experimental-global-webcrypto"
 RUN npm install -g @nestjs/cli
 
 # Build the application
