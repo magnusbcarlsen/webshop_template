@@ -1,6 +1,8 @@
 // frontend/src/services/product-api.ts
 
 import { API_ROOT } from "@/config/api";
+import { api } from "./csrf.service";
+import { fetchWithCSRFFormData } from "./csrf-formdata.helper"; // ADD THIS IMPORT
 import router from "next/router";
 
 export type CategoryAPI = {
@@ -70,8 +72,6 @@ export type AdminProductPayload = Omit<
   currency: string; // e.g. "DKK"
 };
 
-// frontend/src/services/product-api.ts
-
 // ─── UTILITIES ─────────────────────────────────────────────────────
 async function handleResponse<T = unknown>(res: Response): Promise<T> {
   if (res.status === 401 || res.status === 403) {
@@ -87,43 +87,37 @@ async function handleResponse<T = unknown>(res: Response): Promise<T> {
 
 // ─── CATEGORIES ────────────────────────────────────────────────────
 export async function fetchCategories(): Promise<CategoryAPI[]> {
-  const res = await fetch(`${API_ROOT}/categories`, {
-    cache: "no-store",
-  });
+  // GET requests don't need CSRF, but using for consistency (no /api prefix)
+  const res = await api.get("/categories");
   return handleResponse(res);
 }
 
 export async function createCategory(
   payload: CreateCategoryPayload
 ): Promise<CategoryAPI> {
-  const res = await fetch(`${API_ROOT}/categories`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.post("/categories", payload);
   return handleResponse(res);
 }
 
 // ─── PRODUCTS (PUBLIC) ─────────────────────────────────────────────
 export async function fetchProducts(): Promise<ProductAPI[]> {
-  const res = await fetch(`${API_ROOT}/products`, { cache: "no-store" });
+  // GET requests don't need CSRF, but using for consistency (no /api prefix)
+  const res = await api.get("/products");
   return handleResponse(res);
 }
 
 export async function fetchProductById(
   id: number | string
 ): Promise<ProductAPI> {
-  const res = await fetch(`${API_ROOT}/products/${id}`, {
-    cache: "no-store",
-  });
+  // GET requests don't need CSRF, but using for consistency (no /api prefix)
+  const res = await api.get(`/products/${id}`);
   return handleResponse(res);
 }
 
 export async function fetchProductBySlug(slug: string): Promise<ProductAPI> {
-  const res = await fetch(`${API_ROOT}/products/slug/${slug}`, {
-    cache: "no-store",
-  });
+  // GET requests don't need CSRF, but using for consistency (no /api prefix)
+  const res = await api.get(`/products/slug/${slug}`);
   return handleResponse(res);
 }
 
@@ -132,13 +126,18 @@ export async function createProduct(
   payload: FormData | AdminProductPayload
 ): Promise<ProductAPI> {
   const isForm = payload instanceof FormData;
-  const res = await fetch(`${API_ROOT}/products`, {
-    method: "POST",
-    credentials: "include",
-    headers: isForm ? undefined : { "Content-Type": "application/json" },
-    body: isForm ? payload : JSON.stringify(payload),
-  });
-  return handleResponse(res);
+
+  if (isForm) {
+    // UPDATED: Use CSRF FormData helper (API_ROOT already included)
+    const res = await fetchWithCSRFFormData(`${API_ROOT}/products`, payload, {
+      method: "POST",
+    });
+    return handleResponse(res);
+  } else {
+    // UPDATED: Use CSRF-protected API call for JSON (no /api prefix)
+    const res = await api.post("/products", payload);
+    return handleResponse(res);
+  }
 }
 
 export async function updateProduct(
@@ -146,19 +145,26 @@ export async function updateProduct(
   payload: FormData | AdminProductPayload
 ): Promise<ProductAPI> {
   const isForm = payload instanceof FormData;
-  const res = await fetch(`${API_ROOT}/products/${id}`, {
-    method: "PATCH",
-    credentials: "include",
-    headers: isForm ? undefined : { "Content-Type": "application/json" },
-    body: isForm ? payload : JSON.stringify(payload),
-  });
-  return handleResponse(res);
+
+  if (isForm) {
+    // UPDATED: Use CSRF FormData helper (API_ROOT already included)
+    const res = await fetchWithCSRFFormData(
+      `${API_ROOT}/products/${id}`,
+      payload,
+      {
+        method: "PATCH",
+      }
+    );
+    return handleResponse(res);
+  } else {
+    // UPDATED: Use CSRF-protected API call for JSON (no /api prefix)
+    const res = await api.put(`/products/${id}`, payload);
+    return handleResponse(res);
+  }
 }
 
 export async function deleteProduct(id: number): Promise<void> {
-  const res = await fetch(`${API_ROOT}/products/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.delete(`/products/${id}`);
   await handleResponse(res);
 }

@@ -1,4 +1,4 @@
-// src/main.ts - Your version with the missing pieces added
+// src/main.ts - TypeScript safe with correct middleware order
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
@@ -8,6 +8,11 @@ import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
 import { raw, Request, Response, NextFunction } from 'express';
 import csurf from 'csurf';
+
+// TypeScript interface for CSRF-enabled requests
+interface RequestWithCSRF extends Request {
+  csrfToken(): string;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,7 +31,18 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  // CSRF Protection with enhanced configuration
+  // IMPORTANT: Add endpoints that don't need CSRF BEFORE the CSRF middleware
+
+  // Health check endpoint (before CSRF middleware)
+  app.use('/health', (req: Request, res: Response) => {
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      csrf: 'not-required',
+    });
+  });
+
+  // CSRF Protection configuration
   const csrfMiddleware = csurf({
     cookie: {
       httpOnly: true,
@@ -35,22 +51,41 @@ async function bootstrap() {
       maxAge: 3600000, // 1 hour
     },
     ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+    // Remove the secret property - csurf handles this automatically
   });
 
-  // Set CSRF secret globally for the application
-  process.env.CSRF_SECRET = process.env.CSRF_SECRET || 'fallback-secret-key';
-
-  // Conditional CSRF middleware
+  // Conditional CSRF middleware - apply CSRF to most routes
   app.use((req: Request, res: Response, next: NextFunction) => {
     // Skip for Stripe webhooks
     if (req.path.startsWith('/api/stripe/webhook')) return next();
-    // Skip for CSRF token endpoint itself
-    if (req.path === '/api/csrf-token') return next();
     // Skip for health checks
-    if (req.path === '/api/health') return next();
+    if (req.path === '/health' || req.path === '/api/health') return next();
+    // Skip for CSRF token endpoint itself
+    if (req.path === '/csrf-token' || req.path === '/api/csrf-token')
+      return next();
 
     // Apply CSRF protection for all other routes
     return csrfMiddleware(req, res, next);
+  });
+
+  // NOW add the CSRF token endpoint (after CSRF middleware is configured)
+  app.use('/csrf-token', (req: RequestWithCSRF, res: Response) => {
+    try {
+      console.log('CSRF token requested');
+      const token: string = req.csrfToken();
+      console.log('CSRF token generated successfully');
+      res.json({
+        csrfToken: token,
+        success: true,
+      });
+    } catch (error) {
+      console.error('CSRF token generation error:', error);
+      res.status(500).json({
+        error: 'Failed to generate CSRF token',
+        success: false,
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   });
 
   // 1) prefix all routes with /api
@@ -90,8 +125,8 @@ async function bootstrap() {
       'http://localhost:3000', // Direct frontend access
       'http://localhost', // Nginx proxy access
       'http://frontend:3000', // Docker internal network
-      'https://bergstromart.dk', // ADD: Your production domain
-      'https://www.bergstromart.dk', // ADD: Your production domain with www
+      'https://bergstromart.dk', // Your production domain
+      'https://www.bergstromart.dk', // Your production domain with www
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
@@ -102,47 +137,53 @@ async function bootstrap() {
       'Accept',
       'Authorization',
       'X-Cart-ID', // Allow our custom header
-      'X-CSRF-Token', // ADD: Allow CSRF token header
-      'CSRF-Token', // ADD: Alternative CSRF header name
+      'X-CSRF-Token', // Allow CSRF token header
+      'CSRF-Token', // Alternative CSRF header name
     ],
   });
 
-  interface RequestWithCSRF extends Request {
-    csrfToken(): string;
-  }
-
-  // Then use it in your endpoint:
+  // API-prefixed CSRF token endpoint (after setGlobalPrefix)
   app.use('/api/csrf-token', (req: RequestWithCSRF, res: Response) => {
     try {
+      console.log('API CSRF token requested');
       const token: string = req.csrfToken();
+      console.log('API CSRF token generated successfully');
       res.json({
         csrfToken: token,
         success: true,
       });
     } catch (error) {
+      console.error('API CSRF token generation error:', error);
       res.status(500).json({
         error: 'Failed to generate CSRF token',
         success: false,
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
 
-  // ADD: Health check endpoint
+  // API Health check endpoint (after setGlobalPrefix)
   app.use('/api/health', (req: Request, res: Response) => {
     res.json({
       status: 'OK',
       timestamp: new Date().toISOString(),
       csrf: 'protected',
+      environment: process.env.NODE_ENV || 'development',
     });
   });
 
   await app.listen(process.env.PORT || 3001, '0.0.0.0'); // Listen on all interfaces
 
-  // ADD: Console logs for confirmation
+  // Console logs for confirmation
   console.log(`🚀 Application running on port ${process.env.PORT || 3001}`);
   console.log(
     `🛡️ CSRF Protection: ${process.env.NODE_ENV === 'production' ? 'ENABLED (Secure)' : 'ENABLED (Development)'}`,
   );
+  console.log('🔗 CSRF Token endpoints:');
+  console.log('  - /csrf-token (direct)');
+  console.log('  - /api/csrf-token (with API prefix)');
+  console.log('  - /health (health check)');
+  console.log('  - /api/health (API health check)');
 }
 
 bootstrap();

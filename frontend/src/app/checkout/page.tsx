@@ -17,7 +17,7 @@ import {
 import { CartAPI } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
 import { CheckoutButton } from "@/components/CheckoutButton";
-
+import { api } from "@/services/csrf.service"; // ADD THIS IMPORT
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -58,10 +58,9 @@ export default function ClientCheckout() {
   useEffect(() => {
     async function loadCart() {
       try {
-        const response = await fetch("/api/carts/items", {
-          credentials: "include",
-          cache: "no-store",
-        });
+        // UPDATED: Use CSRF-protected API call (no /api prefix)
+        const response = await api.get("/carts/items");
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -140,16 +139,10 @@ export default function ClientCheckout() {
     }));
 
     try {
-      const res = await fetch("/api/checkout/create-session", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: lineItems,
-          customerDetails: customerDetails,
-        }),
+      // UPDATED: Use CSRF-protected API call (no /api prefix)
+      const res = await api.post("/checkout/create-session", {
+        items: lineItems,
+        customerDetails: customerDetails,
       });
 
       if (!res.ok) {
@@ -439,7 +432,6 @@ export default function ClientCheckout() {
           </div>
 
           {/* Checkout Button */}
-
           <CheckoutButton
             items={cart.items.map((item) => ({
               priceId: item.product.stripePriceId,

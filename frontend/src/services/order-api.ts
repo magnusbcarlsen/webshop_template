@@ -2,6 +2,7 @@
 
 // Root for API calls: either explicit NEXT_PUBLIC_API_URL or proxy via /api
 import { API_ROOT } from "@/config/api";
+import { api } from "./csrf.service"; // ADD THIS IMPORT
 import router from "next/router";
 
 /**
@@ -96,22 +97,15 @@ async function handleResponse<T = unknown>(res: Response): Promise<T> {
 export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<OrderAPI> {
-  const res = await fetch(`${API_ROOT}/orders`, {
-    method: "POST",
-    credentials: "include", // ← send sessionId cookie
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-    body: JSON.stringify(payload),
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.post("/orders", payload);
   return handleResponse(res);
 }
 
 /** Fetch your own guest order by ID */
 export async function fetchOrderById(id: number | string): Promise<OrderAPI> {
-  const res = await fetch(`${API_ROOT}/orders/${id}`, {
-    credentials: "include", // ← send sessionId cookie
-    cache: "no-store",
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.get(`/orders/${id}`);
   return handleResponse(res);
 }
 
@@ -122,11 +116,8 @@ export async function fetchOrders(
   withDeleted: boolean = false
 ): Promise<OrderAPI[]> {
   const query = withDeleted ? "?withDeleted=true" : "";
-  const res = await fetch(`${API_ROOT}/orders/admin/all${query}`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.get(`/orders/admin/all${query}`);
   return handleResponse(res);
 }
 
@@ -135,40 +126,28 @@ export async function updateOrder(
   id: number,
   payload: UpdateOrderPayload
 ): Promise<OrderAPI> {
-  const res = await fetch(`${API_ROOT}/orders/${id}`, {
-    method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.put(`/orders/${id}`, payload);
   return handleResponse(res);
 }
 
 /** Soft-delete an order (admin only) */
 export async function deleteOrder(id: number): Promise<void> {
-  const res = await fetch(`${API_ROOT}/orders/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.delete(`/orders/${id}`);
   await handleResponse(res);
 }
 
 /** Restore a soft-deleted order (admin only) */
 export async function restoreOrder(id: number): Promise<void> {
-  const res = await fetch(`${API_ROOT}/orders/${id}/restore`, {
-    method: "POST",
-    credentials: "include",
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.post(`/orders/${id}/restore`);
   await handleResponse(res);
 }
 
 /** Mark as delivered (admin only) */
 export async function completeOrder(id: number): Promise<OrderAPI> {
-  const res = await fetch(`${API_ROOT}/orders/${id}`, {
-    method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: "delivered" }),
-  });
+  // UPDATED: Use CSRF-protected API call (no /api prefix)
+  const res = await api.put(`/orders/${id}`, { status: "delivered" });
   return handleResponse(res);
 }

@@ -40,8 +40,8 @@ export default function LoginPage() {
     setErrors({});
 
     try {
-      // Use the secure API method instead of direct fetch
-      const response = await api.post("/api/auth/login", formValues);
+      // UPDATED: Use the secure API method (no /api prefix)
+      const response = await api.post("/auth/login", formValues);
 
       if (response.ok) {
         const { role } = await response.json();

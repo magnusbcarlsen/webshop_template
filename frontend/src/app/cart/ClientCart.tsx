@@ -7,6 +7,7 @@ import { Button, Checkbox } from "@heroui/react";
 import { CartAPI, removeItemFromCart } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
 import { useRouter } from "next/navigation";
+import { api } from "@/services/csrf.service"; // ADD THIS IMPORT
 
 export default function ClientCart() {
   const router = useRouter();
@@ -20,10 +21,9 @@ export default function ClientCart() {
   useEffect(() => {
     async function loadCart() {
       try {
-        const response = await fetch("/api/carts/items", {
-          credentials: "include",
-          cache: "no-store",
-        });
+        // UPDATED: Use CSRF-protected API call (no /api prefix)
+        const response = await api.get("/carts/items");
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -45,6 +45,7 @@ export default function ClientCart() {
 
   async function handleDeleteitem(id: number) {
     try {
+      // UPDATED: Use the secure removeItemFromCart function (which should also be updated)
       const updated = await removeItemFromCart(id);
       setCart(updated);
     } catch (err) {

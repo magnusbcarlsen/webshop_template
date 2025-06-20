@@ -1,4 +1,6 @@
-// src/services/csrf.service.ts - Create this new file
+// src/services/csrf.service.ts - Updated to use API_ROOT
+import { API_ROOT } from "@/config/api"; 
+
 export class CSRFService {
   private static token: string | null = null;
   private static tokenExpiry: number = 0;
@@ -10,7 +12,8 @@ export class CSRFService {
     }
 
     try {
-      const response = await fetch("/api/csrf-token", {
+      // UPDATED: Use API_ROOT for consistent URL resolution
+      const response = await fetch(`${API_ROOT}/csrf-token`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -71,6 +74,11 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       defaultHeaders["X-CSRF-Token"] = csrfToken;
     }
 
+    // UPDATED: Use API_ROOT for URL resolution
+    const fullUrl = url.startsWith("http")
+      ? url
+      : `${API_ROOT}${url.startsWith("/") ? url.slice(1) : url}`;
+
     const requestOptions: RequestInit = {
       credentials: "include",
       headers: {
@@ -80,7 +88,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       ...options,
     };
 
-    const response = await fetch(url, requestOptions);
+    const response = await fetch(fullUrl, requestOptions);
 
     // Handle CSRF token validation errors
     if (response.status === 403) {
@@ -97,7 +105,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
             ...requestOptions.headers,
             "X-CSRF-Token": newToken,
           };
-          return fetch(url, requestOptions);
+          return fetch(fullUrl, requestOptions);
         }
       }
     }
