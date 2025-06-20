@@ -1,8 +1,8 @@
 FROM node:18-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
-# Cache node modules and clean cache
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies including dev dependencies needed for build
+RUN npm ci --include=dev && npm cache clean --force
 
 FROM node:18-alpine AS builder
 WORKDIR /app
@@ -11,7 +11,6 @@ COPY . .
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-# Limit memory usage during build
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 RUN npm run build
@@ -25,11 +24,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy public files
 COPY --from=builder /app/public ./public
 
+# Create .next directory and set ownership
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
+# Copy Next.js build output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
