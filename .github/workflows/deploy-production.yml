@@ -105,6 +105,9 @@ jobs:
             do_spaces_key=${{ secrets.MINIO_ROOT_USER }}
             do_spaces_secret=${{ secrets.MINIO_ROOT_PASSWORD }}
 
+            # MinIO Bucket
+            MINIO_BUCKET=${{ secrets.MINIO_BUCKET }}
+
             # Domain
             DOMAIN=${{ secrets.DOMAIN }}
 
