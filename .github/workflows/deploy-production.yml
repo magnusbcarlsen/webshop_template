@@ -52,7 +52,7 @@ jobs:
 
             # Create production environment file
             echo "⚙️ Setting up environment..."
-            cat > .env << 'ENVEOF'
+            cat > .env << ENVEOF
             NODE_ENV=production
             ENVIRONMENT=production
 
