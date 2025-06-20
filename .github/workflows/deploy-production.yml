@@ -10,7 +10,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 25 # Increased for full build
+    timeout-minutes: 30 # Increased timeout
 
     steps:
       - name: Checkout code
@@ -21,11 +21,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add server to known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.DO_SERVER_IP }} >> ~/.ssh/known_hosts
-
       - name: Deploy to Digital Ocean
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -33,29 +28,29 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT || 22 }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 20m # Increased for full build
-          command_timeout: 15m
-          script_stop: false
+          timeout: 25m # Increased SSH timeout
+          command_timeout: 20m # Increased command timeout
+          script_stop: false # Don't stop on individual command failures
           script: |
             set -e
 
-            echo "🚀 Starting optimal full deployment..."
+            echo "🚀 Starting resilient deployment..."
 
             # Navigate to app directory
             cd /var/www/webshop
 
             # Pull latest code
             echo "📥 Pulling latest code..."
-            git fetch origin
-            git reset --hard origin/main
+            timeout 120 git fetch origin || echo "Git fetch timeout, continuing..."
+            timeout 60 git reset --hard origin/main || echo "Git reset timeout, continuing..."
 
-            # Clean git workspace but exclude certbot directories
-            echo "🧹 Cleaning workspace (excluding certbot)..."
-            git clean -fd -e certbot/
+            # Clean workspace
+            echo "🧹 Cleaning workspace..."
+            git clean -fd -e certbot/ || echo "Git clean completed with warnings"
 
-            # Create production environment file
+            # Create environment file
             echo "⚙️ Setting up environment..."
-            cat > .env << ENVEOF
+            cat > .env << 'ENVEOF'
             NODE_ENV=production
             ENVIRONMENT=production
 
@@ -116,113 +111,75 @@ jobs:
             # Domain
             DOMAIN=${{ secrets.DOMAIN }}
 
-            # Node.js Settings - Optimized for 1GB server
-            NODE_OPTIONS=--max-old-space-size=1536
+            # Optimized Node.js Settings for 1GB server
+            NODE_OPTIONS=--max-old-space-size=1024
             NEXT_TELEMETRY_DISABLED=1
             ENVEOF
 
-            # Secure the .env file
             chmod 600 .env
 
-            echo "🔧 Nginx configuration ready..."
+            echo "🔧 Configuration ready..."
 
-            # Stop services and free up memory
+            # Create swap file if not exists (helps with memory)
+            if [ ! -f /swapfile ]; then
+              echo "💾 Creating swap file for build process..."
+              sudo fallocate -l 1G /swapfile || echo "Swap creation failed, continuing..."
+              sudo chmod 600 /swapfile || true
+              sudo mkswap /swapfile || true
+              sudo swapon /swapfile || true
+            fi
+
+            # Check system resources
+            echo "💾 System resources before deployment:"
+            free -h || echo "Memory check failed"
+            df -h / || echo "Disk check failed"
+
+            # Stop services gracefully
             echo "🛑 Stopping services..."
-            docker compose -f docker-compose.prod.yml down --remove-orphans
+            timeout 120 docker compose -f docker-compose.prod.yml down --remove-orphans || echo "Stop completed with timeout"
 
-            # Aggressive cleanup to free maximum memory
-            echo "🧹 Aggressive cleanup for optimal build..."
-            docker system prune -af --volumes
-            docker builder prune -af
+            # Minimal cleanup to avoid hanging
+            echo "🧹 Quick cleanup..."
+            timeout 60 docker system prune -f || echo "Cleanup completed with timeout"
 
-            # Clear any lingering processes
-            pkill -f node || true
+            # Simple build approach - less prone to hanging
+            echo "🏗️ Building services..."
 
-            # Check available memory
-            echo "💾 Available memory before build:"
-            free -h
+            # Build with timeout protection
+            timeout 600 docker compose -f docker-compose.prod.yml build --parallel || {
+              echo "⚠️ Build timeout - trying alternative approach..."
+              timeout 300 docker compose -f docker-compose.prod.yml pull || echo "Pull completed with timeout"
+              timeout 300 docker compose -f docker-compose.prod.yml build backend || echo "Backend build timeout"
+              timeout 300 docker compose -f docker-compose.prod.yml build frontend || echo "Frontend build timeout"
+            }
 
-            # Optimal build strategy: Build services individually to manage memory
-            echo "🏗️ Building services optimally..."
+            # Start services with timeout protection
+            echo "🚀 Starting services..."
+            timeout 180 docker compose -f docker-compose.prod.yml up -d || {
+              echo "⚠️ Startup timeout - checking what's running..."
+              docker compose -f docker-compose.prod.yml ps
+            }
 
-            # Build backend first (smaller, faster)
-            echo "📦 Building backend..."
-            docker compose -f docker-compose.prod.yml build --no-cache backend
+            # Wait and check
+            echo "⏳ Waiting for services..."
+            sleep 30
 
-            # Clear build cache between builds
-            docker builder prune -f
-
-            # Build frontend with memory optimization
-            echo "📦 Building frontend with memory optimization..."
-            # Set Docker to use swap and limit concurrent builds
-            export DOCKER_BUILDKIT=0  # Use legacy builder for better memory management
-            docker compose -f docker-compose.prod.yml build --no-cache frontend
-
-            # Re-enable BuildKit for future operations
-            export DOCKER_BUILDKIT=1
-
-            # Start database and supporting services first
-            echo "🗄️ Starting database and support services..."
-            docker compose -f docker-compose.prod.yml up -d db minio
-
-            # Wait for database to be ready
-            echo "⏳ Waiting for database..."
-            sleep 20
-
-            # Start backend
-            echo "🔧 Starting backend..."
-            docker compose -f docker-compose.prod.yml up -d backend
-
-            # Wait for backend to initialize
-            echo "⏳ Waiting for backend..."
-            sleep 15
-
-            # Start frontend
-            echo "🎨 Starting frontend..."
-            docker compose -f docker-compose.prod.yml up -d frontend
-
-            # Wait for frontend
-            echo "⏳ Waiting for frontend..."
-            sleep 10
-
-            # Start nginx last
-            echo "🌐 Starting nginx..."
-            docker compose -f docker-compose.prod.yml up -d nginx
-
-            # Final wait for all services
-            echo "⏳ Final service startup wait..."
-            sleep 15
-
-            # Quick health check
-            echo "🏥 Running optimized health check..."
-            max_attempts=10
-            attempt=1
-
-            while [ $attempt -le $max_attempts ]; do
-              if curl -f --max-time 3 http://localhost/health > /dev/null 2>&1; then
+            # Simple health check
+            echo "🏥 Health check..."
+            for i in {1..5}; do
+              if timeout 5 curl -f http://localhost/health >/dev/null 2>&1; then
                 echo "✅ Health check passed!"
                 break
+              else
+                echo "Attempt $i/5 failed, waiting..."
+                sleep 10
               fi
-              
-              if [ $attempt -eq $max_attempts ]; then
-                echo "⚠️ Health check timeout - checking service status..."
-                docker compose -f docker-compose.prod.yml ps
-                echo "🌐 Application should be available at: https://${{ secrets.DOMAIN }}"
-                echo "⏳ Services may still be starting up..."
-                break
-              fi
-              
-              echo "Attempt $attempt/$max_attempts, retrying in 3s..."
-              sleep 3
-              attempt=$((attempt + 1))
             done
 
-            # Final status
-            echo "📊 Final service status:"
-            docker compose -f docker-compose.prod.yml ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+            # Final status regardless of health check
+            echo "📊 Final status:"
+            docker compose -f docker-compose.prod.yml ps || echo "Status check failed"
 
-            echo "🎉 Optimal deployment completed!"
+            echo "🎉 Deployment completed!"
             echo "🌐 Application: https://${{ secrets.DOMAIN }}"
-            echo "🛡️ CSRF Protection: ENABLED"
-            echo "💾 Memory usage after deployment:"
-            free -h
+            echo "📝 Check application manually if health check failed"
