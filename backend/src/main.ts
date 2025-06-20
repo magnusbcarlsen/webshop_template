@@ -6,6 +6,7 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
+import { raw } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -55,14 +56,14 @@ async function bootstrap() {
   app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
   app.use(bodyParser.json());
 
-  // 2) allow CORS from your frontend - Updated to match nginx proxy
+  // 2) allow CORS from your frontend - Updated to include production domains
   app.enableCors({
     origin: [
       'http://localhost:3000', // Direct frontend access
       'http://localhost', // Nginx proxy access
       'http://frontend:3000', // Docker internal network
-      'https://bergstromart.dk', // ADD: Your production domain
-      'https://www.bergstromart.dk', // ADD: Your production domain with www
+      'https://bergstromart.dk', // Production domain
+      'https://www.bergstromart.dk', // Production domain with www
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
@@ -78,9 +79,8 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT || 3001, '0.0.0.0'); // Listen on all interfaces
 
-  // ADD: Console logs for confirmation
+  // Console logs for confirmation
   console.log(`🚀 Application running on port ${process.env.PORT || 3001}`);
-
 }
 
 bootstrap();
