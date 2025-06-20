@@ -37,6 +37,9 @@ async function bootstrap() {
     ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
   });
 
+  // Set CSRF secret globally for the application
+  process.env.CSRF_SECRET = process.env.CSRF_SECRET || 'fallback-secret-key';
+
   // Conditional CSRF middleware
   app.use((req: Request, res: Response, next: NextFunction) => {
     // Skip for Stripe webhooks
