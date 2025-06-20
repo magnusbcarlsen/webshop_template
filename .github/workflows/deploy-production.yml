@@ -116,10 +116,8 @@ jobs:
             # Secure the .env file
             chmod 600 .env
 
-            # Copy nginx config
-            echo "🔧 Configuring nginx..."
-            cp nginx/nginx.prod.conf nginx/nginx.local.conf
-            sed -i "s/bergstromart.dk/${{ secrets.DOMAIN }}/g" nginx/nginx.local.conf
+            # Nginx config is already configured for bergstromart.dk
+            echo "🔧 Nginx configuration ready..."
 
             # Stop services gracefully
             echo "🛑 Stopping services..."
