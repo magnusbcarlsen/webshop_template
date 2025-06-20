@@ -1,4 +1,4 @@
-name: Deploy to Production!
+name: Deploy to Production
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT || 22 }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
+          script_stop: false
           script: |
             set -e
 
@@ -49,7 +49,7 @@ jobs:
 
             # Create production environment file
             echo "⚙️ Setting up environment..."
-            cat > .env << 'EOF'
+            cat > .env << 'ENVEOF'
             NODE_ENV=production
             ENVIRONMENT=production
 
@@ -108,7 +108,7 @@ jobs:
             # Node.js Settings
             NODE_OPTIONS=--max-old-space-size=2048
             NEXT_TELEMETRY_DISABLED=1
-            EOF
+            ENVEOF
 
             # Secure the .env file
             chmod 600 .env
