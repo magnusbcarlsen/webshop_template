@@ -4,14 +4,12 @@ import React from "react";
 
 interface CheckoutButtonProps {
   items: { priceId: string; quantity: number }[];
-  className?: string;
   isDisabled?: boolean;
   isLoading?: boolean;
 }
 
 export const CheckoutButton: React.FC<CheckoutButtonProps> = ({
   items,
-  className,
   isDisabled,
   isLoading,
 }) => {
