@@ -3,6 +3,7 @@ import React, { useState, KeyboardEvent } from "react";
 import AdminProducts from "../../components/adminComponents/AdminProducts";
 import AdminOrders from "../../components/adminComponents/AdminOrders";
 import { Button } from "@heroui/react";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const ProductsView: React.FC = () => (
   <div>
@@ -37,24 +38,56 @@ export default function AdminPage() {
     <div className="mt-16 flex h-screen overflow-hidden bg-gray-50">
       {/* Modern Sidebar */}
       <aside
-        className={`flex-none h-full bg-white shadow-xl border-r border-gray-200 transition-all duration-300 ease-in-out z-20 ${
+        className={`flex-none h-screen bg-white shadow-xl border-r border-gray-200 transition-all duration-300 ease-in-out z-20 ${
           isOpen ? "w-64" : "w-0"
         }`}
       >
-        {/* Sidebar Header */}
+        {/* Sidebar Content Container */}
         {isOpen && (
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={() => setIsOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
+          <div className="flex flex-col h-full">
+            {/* Sidebar Header */}
+            <div className="flex-shrink-0 p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  onPress={() => setIsOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+
+            {/* Navigation Menu - flex-1 with overflow handling */}
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => selectView("products")}
+                onKeyDown={keyToggle(() => selectView("products"))}
+                className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
+                  view === "products"
+                    ? "bg-gray-50 text-black border-r-4 border-black shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 mr-3"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -63,77 +96,50 @@ export default function AdminPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                   />
                 </svg>
-              </Button>
-            </div>
+                <span className="font-medium">Products</span>
+                {view === "products" && (
+                  <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
+                )}
+              </div>
+
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => selectView("orders")}
+                onKeyDown={keyToggle(() => selectView("orders"))}
+                className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
+                  view === "orders"
+                    ? "bg-gray-50 text-black border-r-4 border-black shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>
+                <span className="font-medium">Orders</span>
+                {view === "orders" && (
+                  <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
+                )}
+              </div>
+              {/* Logout Button at Bottom */}
+              <div className="p-4 border-t border-gray-200">
+                <LogoutButton />
+              </div>
+            </nav>
           </div>
-        )}
-
-        {/* Navigation Menu */}
-        {isOpen && (
-          <nav className="p-4 space-y-2">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => selectView("products")}
-              onKeyDown={keyToggle(() => selectView("products"))}
-              className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
-                view === "products"
-                  ? "bg-gray-50 text-black border-r-4 border-black shadow-sm"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              <svg
-                className="w-5 h-5 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                />
-              </svg>
-              <span className="font-medium">Products</span>
-              {view === "products" && (
-                <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
-              )}
-            </div>
-
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => selectView("orders")}
-              onKeyDown={keyToggle(() => selectView("orders"))}
-              className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
-                view === "orders"
-                  ? "bg-gray-50 text-black border-r-4 border-black shadow-sm"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              <svg
-                className="w-5 h-5 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                />
-              </svg>
-              <span className="font-medium">Orders</span>
-              {view === "orders" && (
-                <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
-              )}
-            </div>
-          </nav>
         )}
       </aside>
 
