@@ -11,6 +11,8 @@ import { raw } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.set('trust proxy', 1);
+
   app.use('/api/stripe/webhook', raw({ type: 'application/json' }));
   app.use(
     '/api/auth/login',
