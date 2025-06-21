@@ -6,12 +6,12 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
-import { raw } from 'express';
+import { raw, Express } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  app.set('trust proxy', 1);
+  const server = app.getHttpAdapter().getInstance() as Express;
+  server.set('trust proxy', 1);
 
   app.use('/api/stripe/webhook', raw({ type: 'application/json' }));
   app.use(
