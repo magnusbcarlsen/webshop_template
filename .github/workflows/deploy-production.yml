@@ -81,7 +81,7 @@ jobs:
 
             # Security
             JWT_SECRET=${{ secrets.JWT_SECRET }}
-          
+
 
             # Stripe Configuration
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
@@ -144,12 +144,18 @@ jobs:
             # Simple build approach - less prone to hanging
             echo "🏗️ Building services..."
 
-            # Build with timeout protection
-            timeout 600 docker compose -f docker-compose.prod.yml build --parallel || {
+            # Build with build args for environment variables
+            timeout 600 docker compose -f docker-compose.prod.yml build \
+              --build-arg NEXT_PUBLIC_API_BASE_URL=https://${{ secrets.DOMAIN }} \
+              --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }} \
+              frontend || {
               echo "⚠️ Build timeout - trying alternative approach..."
               timeout 300 docker compose -f docker-compose.prod.yml pull || echo "Pull completed with timeout"
               timeout 300 docker compose -f docker-compose.prod.yml build backend || echo "Backend build timeout"
-              timeout 300 docker compose -f docker-compose.prod.yml build frontend || echo "Frontend build timeout"
+              timeout 300 docker compose -f docker-compose.prod.yml build \
+                --build-arg NEXT_PUBLIC_API_BASE_URL=https://${{ secrets.DOMAIN }} \
+                --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }} \
+                frontend || echo "Frontend build timeout"
             }
 
             # Start services with timeout protection
