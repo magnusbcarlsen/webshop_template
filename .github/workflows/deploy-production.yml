@@ -10,7 +10,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 30 # Increased timeout
+    timeout-minutes: 45 # Increased from 30
 
     steps:
       - name: Checkout code
@@ -28,13 +28,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT || 22 }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 25m # Increased SSH timeout
-          command_timeout: 20m # Increased command timeout
+          timeout: 40m # Increased SSH timeout
+          command_timeout: 35m # Increased command timeout
           script_stop: false # Don't stop on individual command failures
           script: |
             set -e
 
-            echo "🚀 Starting resilient deployment..."
+            echo "🚀 Starting optimized deployment..."
 
             # Navigate to app directory
             cd /var/www/webshop
@@ -110,7 +110,7 @@ jobs:
             DOMAIN=${{ secrets.DOMAIN }}
 
             # Optimized Node.js Settings for 1GB server
-            NODE_OPTIONS=--max-old-space-size=1024
+            NODE_OPTIONS=--max-old-space-size=512
             NEXT_TELEMETRY_DISABLED=1
             ENVEOF
 
@@ -132,52 +132,125 @@ jobs:
             free -h || echo "Memory check failed"
             df -h / || echo "Disk check failed"
 
-            # Stop services gracefully
+            # Stop services gracefully with longer timeout
             echo "🛑 Stopping services..."
-            timeout 120 docker compose -f docker-compose.prod.yml down --remove-orphans || echo "Stop completed with timeout"
+            timeout 180 docker compose -f docker-compose.prod.yml down --remove-orphans || echo "Stop completed with timeout"
 
-            # Minimal cleanup to avoid hanging
-            echo "🧹 Quick cleanup..."
-            timeout 60 docker system prune -f || echo "Cleanup completed with timeout"
+            # More aggressive cleanup to free memory
+            echo "🧹 Aggressive cleanup..."
+            timeout 60 docker system prune -af || echo "Cleanup completed with timeout"
+            timeout 30 docker volume prune -f || echo "Volume cleanup timeout"
 
-            # Build services - simplified approach
-            echo "🏗️ Building services..."
+            # Check resources after cleanup
+            echo "💾 Resources after cleanup:"
+            free -h || echo "Memory check failed"
 
-            # Build with no cache to ensure fresh build with new environment variables
-            timeout 600 docker compose -f docker-compose.prod.yml build --no-cache || {
-              echo "⚠️ Build timeout - trying alternative approach..."
-              timeout 300 docker compose -f docker-compose.prod.yml pull || echo "Pull completed with timeout"
-              timeout 300 docker compose -f docker-compose.prod.yml build --no-cache backend || echo "Backend build timeout"
-              timeout 300 docker compose -f docker-compose.prod.yml build --no-cache frontend || echo "Frontend build timeout"
+            # Build services sequentially to avoid memory issues
+            echo "🏗️ Building services sequentially..."
+
+            # Build backend first
+            echo "🔧 Building backend..."
+            timeout 800 docker compose -f docker-compose.prod.yml build --no-cache backend || {
+              echo "⚠️ Backend build timeout"
             }
 
-            # Start services with timeout protection
-            echo "🚀 Starting services..."
-            timeout 180 docker compose -f docker-compose.prod.yml up -d || {
-              echo "⚠️ Startup timeout - checking what's running..."
-              docker compose -f docker-compose.prod.yml ps
+            # Build frontend second
+            echo "🎨 Building frontend..."
+            timeout 800 docker compose -f docker-compose.prod.yml build --no-cache frontend || {
+              echo "⚠️ Frontend build timeout"
             }
 
-            # Wait and check
-            echo "⏳ Waiting for services..."
+            # Start services sequentially to avoid startup conflicts
+            echo "🚀 Starting services sequentially..."
+
+            # Start infrastructure services first
+            echo "📊 Starting infrastructure services..."
+            timeout 120 docker compose -f docker-compose.prod.yml up -d db minio || echo "Infrastructure startup timeout"
+
+            # Wait for database to be ready
+            echo "⏳ Waiting for database..."
             sleep 30
 
-            # Simple health check
-            echo "🏥 Health check..."
-            for i in {1..5}; do
-              if timeout 5 curl -f http://localhost/health >/dev/null 2>&1; then
-                echo "✅ Health check passed!"
+            # Start backend
+            echo "🔧 Starting backend..."
+            timeout 120 docker compose -f docker-compose.prod.yml up -d backend || echo "Backend startup timeout"
+
+            # Wait for backend to be ready
+            echo "⏳ Waiting for backend..."
+            sleep 20
+
+            # Start frontend
+            echo "🎨 Starting frontend..."
+            timeout 120 docker compose -f docker-compose.prod.yml up -d frontend || echo "Frontend startup timeout"
+
+            # Wait for frontend
+            echo "⏳ Waiting for frontend..."
+            sleep 20
+
+            # Start nginx and certbot
+            echo "🌐 Starting web services..."
+            timeout 60 docker compose -f docker-compose.prod.yml up -d nginx certbot || echo "Web services timeout"
+
+            # Final wait and comprehensive health check
+            echo "⏳ Final service stabilization..."
+            sleep 60
+
+            # Comprehensive health check
+            echo "🏥 Comprehensive health check..."
+
+            # Check container status
+            echo "📊 Container status:"
+            docker compose -f docker-compose.prod.yml ps
+
+            # Check if containers are actually running
+            RUNNING_CONTAINERS=$(docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | wc -l)
+            echo "✅ Running containers: $RUNNING_CONTAINERS"
+
+            # Test database connection
+            echo "🔍 Testing database..."
+            docker compose -f docker-compose.prod.yml exec -T db mysqladmin ping -h localhost || echo "Database test failed"
+
+            # Test backend health
+            echo "🔍 Testing backend..."
+            for i in {1..3}; do
+              if timeout 10 curl -f http://localhost:3001/health >/dev/null 2>&1; then
+                echo "✅ Backend health check passed!"
                 break
               else
-                echo "Attempt $i/5 failed, waiting..."
+                echo "Backend attempt $i/3 failed, waiting..."
                 sleep 10
               fi
             done
 
-            # Final status regardless of health check
-            echo "📊 Final status:"
-            docker compose -f docker-compose.prod.yml ps || echo "Status check failed"
+            # Test frontend
+            echo "🔍 Testing frontend..."
+            for i in {1..3}; do
+              if timeout 10 curl -f http://localhost:3000 >/dev/null 2>&1; then
+                echo "✅ Frontend health check passed!"
+                break
+              else
+                echo "Frontend attempt $i/3 failed, waiting..."
+                sleep 10
+              fi
+            done
+
+            # Test nginx
+            echo "🔍 Testing nginx..."
+            for i in {1..3}; do
+              if timeout 10 curl -f http://localhost >/dev/null 2>&1; then
+                echo "✅ Nginx health check passed!"
+                break
+              else
+                echo "Nginx attempt $i/3 failed, waiting..."
+                sleep 10
+              fi
+            done
+
+            # Final resource check
+            echo "💾 Final system resources:"
+            free -h || echo "Memory check failed"
+            df -h / || echo "Disk check failed"
 
             echo "🎉 Deployment completed!"
             echo "🌐 Application: https://${{ secrets.DOMAIN }}"
-            echo "📝 Check application manually if health check failed"
+            echo "📊 Manual verification recommended"
