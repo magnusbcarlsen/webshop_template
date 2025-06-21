@@ -48,7 +48,7 @@ jobs:
             echo "🧹 Cleaning workspace..."
             git clean -fd -e certbot/ || echo "Git clean completed with warnings"
 
-            # Create environment file
+            # Create environment file FIRST (before building)
             echo "⚙️ Setting up environment..."
             cat > .env << 'ENVEOF'
             NODE_ENV=production
@@ -81,7 +81,6 @@ jobs:
 
             # Security
             JWT_SECRET=${{ secrets.JWT_SECRET }}
-
 
             # Stripe Configuration
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
@@ -141,21 +140,15 @@ jobs:
             echo "🧹 Quick cleanup..."
             timeout 60 docker system prune -f || echo "Cleanup completed with timeout"
 
-            # Simple build approach - less prone to hanging
+            # Build services - simplified approach
             echo "🏗️ Building services..."
 
-            # Build with build args for environment variables
-            timeout 600 docker compose -f docker-compose.prod.yml build \
-              --build-arg NEXT_PUBLIC_API_BASE_URL=https://${{ secrets.DOMAIN }} \
-              --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }} \
-              frontend || {
+            # Build with no cache to ensure fresh build with new environment variables
+            timeout 600 docker compose -f docker-compose.prod.yml build --no-cache || {
               echo "⚠️ Build timeout - trying alternative approach..."
               timeout 300 docker compose -f docker-compose.prod.yml pull || echo "Pull completed with timeout"
-              timeout 300 docker compose -f docker-compose.prod.yml build backend || echo "Backend build timeout"
-              timeout 300 docker compose -f docker-compose.prod.yml build \
-                --build-arg NEXT_PUBLIC_API_BASE_URL=https://${{ secrets.DOMAIN }} \
-                --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }} \
-                frontend || echo "Frontend build timeout"
+              timeout 300 docker compose -f docker-compose.prod.yml build --no-cache backend || echo "Backend build timeout"
+              timeout 300 docker compose -f docker-compose.prod.yml build --no-cache frontend || echo "Frontend build timeout"
             }
 
             # Start services with timeout protection

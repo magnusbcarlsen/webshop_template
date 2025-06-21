@@ -6,12 +6,26 @@ RUN npm ci --include=dev && npm cache clean --force
 
 FROM node:18-alpine AS builder
 WORKDIR /app
+
+# Accept build arguments - THIS WAS MISSING!
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
+# Set them as environment variables for the build process
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=512"
+
+# Debug: Print environment variables to see if they're set
+RUN echo "Build-time environment variables:"
+RUN echo "NEXT_PUBLIC_API_BASE_URL: $NEXT_PUBLIC_API_BASE_URL"
+RUN echo "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:0:20}..." # Only show first 20 chars for security
 
 RUN npm run build
 
