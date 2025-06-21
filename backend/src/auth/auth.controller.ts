@@ -18,7 +18,6 @@ export class AuthController {
   ) {}
 
   @UseGuards(LocalAuthGuard)
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
     @Req() req: Request & { user: { id: number } },
