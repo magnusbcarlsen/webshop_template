@@ -14,7 +14,7 @@ export default function About() {
       </div>
       <div className="w-full lg:w-1/2 h-auto lg:h-screen flex flex-col justify-center items-center bg-[var(--background)] text-[var(--foreground)] py-16">
         <div className="mb-4 text-center border-b-2 border-current border-solid border-b-[var(--foreground)] w-[60%]">
-          <h1 className="text-5xl font-bold pb-6">ABOUT</h1>
+          <h1 className="text-5xl font-bold pb-6">OM BERGSTRØM ART</h1>
         </div>
         <div className="text-left w-[80%]  lg:w-[60%] max-w-3xl mb-2">
           <p className="mb-4">
@@ -25,11 +25,11 @@ export default function About() {
           <p className="mb-4">
             Men det er i maleriet jeg endelig føler mig ægte hjemme. Jeg
             navigerer gennem min kunstverden med et skræddersyet dogme for hvert
-            billede. Det er ikke bare portrætter; det er eksperimenter i farver
+            maleri. Det er ikke bare portrætter; det er eksperimenter i farver
             og form, hvor jeg konsekvent udfordrer mine egne grænser og regler.
           </p>
           <p className="mb-4">
-            Hvert billede har sit eget sæt af teknikker og redskaber, som jeg
+            Hvert maleri har sit eget sæt af teknikker og redskaber, som jeg
             omhyggeligt vælger for at forme en unik fortælling. Jeg stræber
             efter at fange et øjeblik, hvor følelserne er intense eller måske
             netop det øjeblik, hvor mange døre åbner sig. Min intuitive tilgang

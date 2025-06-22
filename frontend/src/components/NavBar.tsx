@@ -183,7 +183,7 @@ export default function Navbar() {
                   transition={{ delay: 0.1 }}
                 >
                   <NavLink href="/" onClick={handleLinkClick}>
-                    Home
+                    Forside
                   </NavLink>
                 </motion.li>
                 <motion.li
@@ -210,7 +210,7 @@ export default function Navbar() {
                   transition={{ delay: 0.4 }}
                 >
                   <NavLink href="/bestilling" onClick={handleLinkClick}>
-                    Bestillngs maleri
+                    Bestillngs portræt eller maleri
                   </NavLink>
                 </motion.li>
               </ul>

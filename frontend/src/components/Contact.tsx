@@ -16,7 +16,7 @@ export default function Contact() {
         */}
       <div className="w-full lg:w-1/2 h-auto lg:h-screen flex flex-col justify-center items-center bg-[var(--background)] text-[var(--foreground)] py-16">
         <div className="mb-4 text-center border-b-2 border-current border-solid border-b-[var(--foreground)] w-[50%] ">
-          <h1 className="text-5xl font-bold pb-6 ">CONTACT</h1>
+          <h1 className="text-5xl font-bold pb-6 ">KONTAKT</h1>
         </div>
         <p className="text-lg mb-4">
           <a
