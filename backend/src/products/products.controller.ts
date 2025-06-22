@@ -30,8 +30,8 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard) // ← new
-  @Roles('ADMIN') // ← new
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @UseInterceptors(FilesInterceptor('images', 5))
   async create(
     @Body() createProductDto: CreateProductDto,

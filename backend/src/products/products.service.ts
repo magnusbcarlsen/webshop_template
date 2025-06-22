@@ -111,7 +111,7 @@ export class ProductsService {
       this.configService.get<string>('MINIO_API_HOST') || 'localhost';
     const apiPort = this.configService.get<string>('MINIO_API_PORT') || '9000';
 
-    // Return the correct MinIO URL format - no double bucket name
+    // Return the correct MinIO URL format
     return `http://${apiHost}:${apiPort}/${bucket}/${key}`;
   }
 
@@ -179,48 +179,6 @@ export class ProductsService {
     return product;
   }
 
-  // async create(createProductDto: CreateProductDto): Promise<Product> {
-  //   const { images, categoryIds, ...data } = createProductDto;
-  //   const product = this.productsRepository.create(data);
-  //   if (categoryIds?.length) {
-  //     const cats = await this.categoryRepository.findBy({
-  //       id: In(categoryIds),
-  //     });
-  //     product.categories = cats;
-  //   }
-
-  //   try {
-  //     const savedProduct = await this.productsRepository.save(product);
-
-  //     if (images && images.length > 0) {
-  //       const imageEntities = images.map((url, index) =>
-  //         this.productImageRepository.create({
-  //           imageUrl: url,
-  //           product: savedProduct,
-  //           sortOrder: index,
-  //           isPrimary: index === 0,
-  //         }),
-  //       );
-
-  //       await this.productImageRepository.save(imageEntities);
-  //       savedProduct.images = imageEntities;
-  //     }
-
-  //     return savedProduct;
-  //   } catch (err: unknown) {
-  //     if (err instanceof QueryFailedError) {
-  //       const driverErr = (err as any).driverError;
-  //       if (
-  //         driverErr.code === 'ER_DUP_ENTRY' &&
-  //         driverErr.sqlMessage.includes('products.slug')
-  //       ) {
-  //         throw new ConflictException('Slug must be unique');
-  //       }
-  //     }
-  //     throw new InternalServerErrorException('Failed to create product');
-  //   }
-  // }
-
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const { images, categoryIds, unitAmount, currency, ...data } =
       createProductDto;
@@ -274,83 +232,6 @@ export class ProductsService {
       throw new InternalServerErrorException('Failed to create product');
     }
   }
-
-  // async update(
-  //   id: number,
-  //   updateProductDto: UpdateProductDto,
-  // ): Promise<Product> {
-  //   const { images, categoryIds, unitAmount, currency, ...data } =
-  //     updateProductDto;
-  //   const product = await this.findOne(id);
-  //   Object.assign(product, data);
-
-  //   if (unitAmount && currency) {
-  //     // Deactivate old price and create new
-  //     await this.stripe.prices.update(product.stripePriceId, { active: false });
-  //     const newPrice = await this.stripe.prices.create({
-  //       product: product.stripeProductId,
-  //       unit_amount: unitAmount,
-  //       currency,
-  //     });
-  //     product.stripePriceId = newPrice.id;
-  //   }
-
-  //   if (categoryIds) {
-  //     product.categories = await this.categoryRepository.findBy({
-  //       id: In(categoryIds),
-  //     });
-  //   }
-
-  //   try {
-  //     const saved = await this.productsRepository.save(product);
-  //     if (images?.length) {
-  //       const oldImages = await this.productImageRepository.find({
-  //         where: { productId: id },
-  //       });
-  //       await this.productImageRepository.delete({ productId: id });
-  //       oldImages.forEach((img) => {
-  //         this.deleteImage(img.imageUrl).catch((err) =>
-  //           console.error('Failed to delete old image:', err),
-  //         );
-  //       });
-
-  //       const newEntities = images.map((url, idx) =>
-  //         this.productImageRepository.create({
-  //           imageUrl: url,
-  //           product: saved,
-  //           sortOrder: idx,
-  //           isPrimary: idx === 0,
-  //         }),
-  //       );
-  //       await this.productImageRepository.save(newEntities);
-  //       saved.images = newEntities;
-  //     }
-  //     return saved;
-  //   } catch (err: any) {
-  //     if (
-  //       err instanceof QueryFailedError &&
-  //       err.driverError.code === 'ER_DUP_ENTRY'
-  //     ) {
-  //       throw new ConflictException('Slug must be unique');
-  //     }
-  //     throw new InternalServerErrorException('Failed to update product');
-  //   }
-  // }
-
-  // async remove(id: number): Promise<{ success: boolean }> {
-  //   const product = await this.findOne(id);
-  //   // Optionally archive in Stripe: await this.stripe.products.update(product.stripeProductId, { active: false });
-  //   await this.productsRepository.remove(product);
-  //   const imgs = await this.productImageRepository.find({
-  //     where: { productId: id },
-  //   });
-  //   imgs.forEach((img) => {
-  //     this.deleteImage(img.imageUrl).catch((err) =>
-  //       console.error('Failed to delete image during product removal:', err),
-  //     );
-  //   });
-  //   return { success: true };
-  // }
 
   async update(
     id: number,
