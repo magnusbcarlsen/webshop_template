@@ -29,6 +29,24 @@ export default function AdminOrders() {
   const [newStatus, setNewStatus] = useState<OrderStatus | "">("pending");
   const [statusComment, setStatusComment] = useState<string>("");
 
+  // Helper function to get item display name
+  const getItemDisplayName = (item: any) => {
+    // Priority: SKU > Product Name > Stripe Product Name > Nothing
+    if (item.variant?.sku) {
+      return item.variant.sku;
+    }
+    if (item.product?.name) {
+      return item.product.name;
+    }
+    if (item.stripeProductName) {
+      return item.stripeProductName;
+    }
+    if (item.sku) {
+      return item.sku;
+    }
+    return ""; // Show nothing if no name/sku available
+  };
+
   useEffect(() => {
     let isActive = true;
 
@@ -498,7 +516,7 @@ export default function AdminOrders() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-lg font-semibold text-gray-900">
-                          ${order.totalAmount}
+                          DKK {order.totalAmount}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -590,7 +608,7 @@ export default function AdminOrders() {
                       <p>
                         <strong>Total:</strong>{" "}
                         <span className="text-lg font-semibold">
-                          ${selectedOrder.totalAmount}
+                          DKK {selectedOrder.totalAmount}
                         </span>
                       </p>
                     </div>
@@ -616,24 +634,29 @@ export default function AdminOrders() {
                 </div>
               )}
 
-              {/* Items */}
+              {/* Items - FIXED TO USE getItemDisplayName */}
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">
                   Order Items
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="space-y-2">
-                    {selectedOrder.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
-                      >
-                        <span>
-                          {item.quantity} ×{" "}
-                          {item.product?.name ?? item.variant?.sku ?? "N/A"}
-                        </span>
-                      </div>
-                    ))}
+                    {selectedOrder.items.map((item) => {
+                      const displayName = getItemDisplayName(item);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
+                        >
+                          <span>
+                            {item.quantity} × {displayName || "Unknown Item"}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            DKK {(item.unitPrice * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

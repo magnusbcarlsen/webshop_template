@@ -33,10 +33,12 @@ interface StripeOrderData {
   paymentMethod: string;
   status: OrderStatus;
   items: Array<{
-    productId: number;
+    productId: number | null;
     quantity: number;
     unitPrice: number;
     stripePriceId: string;
+    stripeProductName: string;
+    sku?: string;
   }>;
 }
 
@@ -79,7 +81,7 @@ export class OrdersService {
     return this.orderRepository.save(order);
   }
 
-  // Create order from Stripe webhook 
+  // Create order from Stripe webhook
   async createFromStripeWebhook(data: StripeOrderData): Promise<Order> {
     const queryRunner =
       this.orderRepository.manager.connection.createQueryRunner();
@@ -123,11 +125,13 @@ export class OrdersService {
       // Create order items
       const orderItems = data.items.map((item) =>
         queryRunner.manager.create(OrderItem, {
-          product: { id: item.productId } as Product,
+          product: item.productId ? ({ id: item.productId } as Product) : null,
           unitPrice: item.unitPrice,
           quantity: item.quantity,
           subtotal: item.unitPrice * item.quantity,
           stripePriceId: item.stripePriceId,
+          stripeProductName: item.stripeProductName,
+          sku: item.sku,
           order: savedOrder,
         }),
       );
