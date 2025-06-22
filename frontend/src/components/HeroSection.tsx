@@ -71,7 +71,7 @@ export default function HeroSection() {
       <div
         className="absolute bg-center bg-cover"
         style={{
-          backgroundImage: "url('/HeroImageBergstroemArt.png')",
+          backgroundImage: "url('/Dina_Bergstrøm_art_hero_image.webp')",
           transform: `translate3d(0, ${scrollY * 0.3}px, 0)`,
           willChange: "transform",
           top: "-20%",
