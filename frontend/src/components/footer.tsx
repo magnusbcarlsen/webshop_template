@@ -23,8 +23,9 @@ export default function ModernFooter() {
               <p className="text-lg text-gray-600">Bergstrøm Art</p>
             </div>
             <p className="text-gray-600 leading-relaxed max-w-sm">
-              Creating unique art pieces that inspire and transform spaces.
-              Discover the beauty of contemporary artistic expression.
+              Skaber unikke kunstværker, malerier og potrætter, der inspirerer
+              og giver liv i din hverdag. Oplev skønheden i moderne kunstnerisk
+              udtryk.
             </p>
           </div>
 
@@ -103,25 +104,14 @@ export default function ModernFooter() {
                 href="/about"
                 className="block text-gray-600 hover:text-gray-900 transition-colors"
               >
-                About
+                Om
               </a>
-              <a
-                href="/gallery"
-                className="block text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Gallery
-              </a>
+
               <a
                 href="/contact"
                 className="block text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Contact
-              </a>
-              <a
-                href="/privacy"
-                className="block text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Privacy Policy
+                Kontakt
               </a>
             </div>
           </div>
@@ -140,12 +130,9 @@ export default function ModernFooter() {
               >
                 Terms of Service
               </a>
-              <a
-                href="/privacy"
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Privacy Policy
-              </a>
+              <p className="text-gray-500 hover:text-gray-700 transition-colors">
+                Udviklet af Magnus Bergstrøm Carlsen
+              </p>
             </div>
           </div>
         </div>

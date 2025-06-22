@@ -27,8 +27,8 @@ const MenuToggle = ({ toggle }) => (
   <Button
     variant="light"
     onPress={toggle}
-    className="cursor-pointer relative z-20 border-none bg-transparent p-2 hover:bg-black/5 rounded-lg transition-colors duration-200"
-    style={{ color: "var(--color-primary)" }}
+    className="cursor-pointer  relative z-20 border-none bg-transparent p-2 hover:bg-transparent hover:text-[var(--color-primary)] rounded-lg transition-colors duration-200"
+    style={{ color: "var(--color-foreground)" }}
     aria-label="Open menu"
   >
     <svg width="24" height="24" viewBox="0 0 23 23">
@@ -100,17 +100,17 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {/* Instagram Icon */}
             <motion.a
-              href="https://www.instagram.com/dina.bergstrom.art" // Replace with your Instagram URL
+              href="https://www.instagram.com/dina.bergstrom.art"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              className="p-2 rounded-lg text-[var(--color-primary)] hover:bg-gray-100 transition-colors duration-200"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               aria-label="Visit our Instagram"
             >
               <Instagram
                 size={22}
-                className="text-gray-700 hover:text-[var(--color-primary)] transition-colors duration-200"
+                className="text-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors duration-200"
               />
             </motion.a>
 
@@ -124,7 +124,7 @@ export default function Navbar() {
               >
                 <ShoppingCartIcon
                   size={22}
-                  className="text-gray-700 hover:text-[var(--color-primary)] transition-colors duration-200"
+                  className="text-[var(--forground)] hover:text-[var(--color-primary)] transition-colors duration-200"
                 />
                 {/* Optional cart count badge */}
                 {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
