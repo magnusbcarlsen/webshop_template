@@ -1,3 +1,4 @@
+// roles.guard.ts
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ROLES_KEY } from './roles.decorator';
 import { Reflector } from '@nestjs/core';

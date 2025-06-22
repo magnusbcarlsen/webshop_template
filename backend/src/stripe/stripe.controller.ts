@@ -121,7 +121,7 @@ export class StripeController {
       throw new Error('No customer details found in session');
     }
 
-    // Calculate totals (Stripe amounts are in cents)
+    // Calculate totals
     const subtotal = (sessionWithLineItems.amount_subtotal || 0) / 100;
     const totalAmount = (sessionWithLineItems.amount_total || 0) / 100;
     const taxAmount =

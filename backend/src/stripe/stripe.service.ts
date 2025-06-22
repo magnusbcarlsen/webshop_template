@@ -30,7 +30,7 @@ export class StripeService {
       customer_creation: 'always',
       billing_address_collection: 'required',
       shipping_address_collection: {
-        allowed_countries: ['DK', 'SE', 'NO', 'DE', 'NL'], // Add your supported countries
+        allowed_countries: ['DK', 'SE', 'NO', 'DE', 'NL'],
       },
     });
   }

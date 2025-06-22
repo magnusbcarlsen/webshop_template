@@ -79,7 +79,7 @@ export class OrdersService {
     return this.orderRepository.save(order);
   }
 
-  // ─── NEW: Create order from Stripe webhook ────────────────────
+  // Create order from Stripe webhook 
   async createFromStripeWebhook(data: StripeOrderData): Promise<Order> {
     const queryRunner =
       this.orderRepository.manager.connection.createQueryRunner();
@@ -123,7 +123,7 @@ export class OrdersService {
       // Create order items
       const orderItems = data.items.map((item) =>
         queryRunner.manager.create(OrderItem, {
-          product: { id: item.productId } as Product, // TypeORM will handle the relation
+          product: { id: item.productId } as Product,
           unitPrice: item.unitPrice,
           quantity: item.quantity,
           subtotal: item.unitPrice * item.quantity,

@@ -18,7 +18,6 @@ import { CartAPI } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
 import { CheckoutButton } from "@/components/CheckoutButton";
 
-
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
@@ -89,7 +88,7 @@ export default function ClientCheckout() {
       )
     : 0;
 
-  const shipping = subtotal > 500 ? 0 : 50; // Free shipping over 500 DKK
+  const shipping = subtotal > 500 ? 0 : 50;
   const total = subtotal + shipping;
 
   // Handle image errors
@@ -127,7 +126,7 @@ export default function ClientCheckout() {
     );
   };
 
-  // Handle checkout
+  // Handle checkout regurlar... ikke nødvendigt i nuværende setup
   async function handleCheckout() {
     if (!cart || cart.items.length === 0 || !isFormValid()) {
       return;
@@ -225,13 +224,14 @@ export default function ClientCheckout() {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Left Column: Customer Details Form */}
-      <div className="w-full lg:w-[60vw] lg:h-screen lg:overflow-y-scroll scrollbar-none bg-[var(--background)] text-[var(--foreground)]">
+      <div className="w-full lg:w-[70vw] lg:h-screen lg:overflow-y-scroll scrollbar-none bg-[var(--background)] text-[var(--foreground)]">
         <div className="p-6 sm:p-8 lg:p-12">
           {/* Page Title */}
-          <div className="mb-8 lg:mb-12 text-center border-b-2 border-current border-solid border-b-[var(--foreground)] w-[60%] mx-auto">
-            <h1 className="text-4xl sm:text-6xl lg:text-8xl font-bold pb-4 lg:pb-6">
-              CHECKOUT
-            </h1>
+          <div
+            className="mb-6 mt-6 text-left border-b-2 border-current border-b-[var(--foreground)]
+                w-full sm:max-w-lg md:max-w-md lg:max-w-sm"
+          >
+            <h1 className="font-bold pb-6">Checkout</h1>
           </div>
 
           {/* Customer Details Form */}
@@ -358,7 +358,7 @@ export default function ClientCheckout() {
       </div>
 
       {/* Right Column: Order Summary */}
-      <div className="w-full lg:w-[40vw] lg:h-screen bg-gray-100 flex flex-col justify-center p-6 sm:p-8 lg:p-12 relative">
+      <div className="w-full lg:w-[30vw] lg:h-screen bg-gray-100 flex flex-col justify-center p-6 sm:p-8 lg:p-12 relative">
         <div className="w-full max-w-md mx-auto space-y-6 lg:space-y-8">
           <div className="text-center border-b-2 border-current border-solid border-b-gray-700 w-[80%] mx-auto">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold pb-3 lg:pb-4">

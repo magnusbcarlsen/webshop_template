@@ -83,7 +83,7 @@ export default function ClientCart() {
             className="mb-6 mt-6 text-left border-b-2 border-current border-b-[var(--foreground)]
                 w-full sm:max-w-lg md:max-w-md lg:max-w-sm"
           >
-            <h1 className="font-bold pb-6">YOUR CART</h1>
+            <h1 className="font-bold pb-6">Din kurv</h1>
           </div>
 
           {/* Error Message */}

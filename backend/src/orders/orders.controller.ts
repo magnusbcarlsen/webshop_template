@@ -39,7 +39,7 @@ export class OrdersController {
     return this.ordersService.createFromSession(req, res, dto);
   }
 
-  // ─── ADMIN: List ALL orders (moved before :id route) ──────────────
+  // ─── ADMIN: List all orders
   @Get('admin/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')

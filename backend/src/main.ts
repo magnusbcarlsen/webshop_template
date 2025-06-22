@@ -1,4 +1,4 @@
-// src/main.ts - Your version with the missing pieces added
+// src/main.ts
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
