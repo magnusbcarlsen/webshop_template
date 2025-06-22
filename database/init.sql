@@ -236,9 +236,11 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
   order_item_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   order_id        INT UNSIGNED               NOT NULL,
+  sku             VARCHAR(50)                NULL,
   product_id      INT UNSIGNED               NOT NULL,
   variant_id      INT UNSIGNED               NULL,
   quantity        INT                        NOT NULL,
+  stripe_product_name                        VARCHAR(255) NOT NULL,
   unit_price      DECIMAL(10,2)              NOT NULL CHECK (unit_price >= 0),
   stripe_price_id VARCHAR(255) NULL,
   subtotal        DECIMAL(12,2)              NOT NULL CHECK (subtotal >= 0),

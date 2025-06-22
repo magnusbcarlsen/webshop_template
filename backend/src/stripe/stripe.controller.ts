@@ -1,4 +1,4 @@
-// backend/src/stripe/stripe.controller.ts
+// backend/src/stripe/stripe.controller.ts - Fixed version
 import {
   Controller,
   Post,
@@ -16,7 +16,7 @@ import { OrdersService } from '../orders/orders.service';
 import Stripe from 'stripe';
 import { OrderStatus } from '../orders/entities/order-status-history.entity';
 
-@Controller('stripe') // NO /api prefix - nginx handles this
+@Controller('stripe')
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,
@@ -143,12 +143,20 @@ export class StripeController {
       billingAddress: this.formatAddress(customerDetails.address, 'billing'),
       paymentMethod: sessionWithLineItems.payment_method_types?.[0] || 'card',
       status: OrderStatus.PENDING as const,
-      items: sessionWithLineItems.line_items.data.map((item) => ({
-        productId: this.extractProductIdFromStripeItem(item),
-        quantity: item.quantity || 1,
-        unitPrice: (item.amount_total || 0) / 100 / (item.quantity || 1),
-        stripePriceId: item.price?.id || '',
-      })),
+      items: sessionWithLineItems.line_items.data.map((item) => {
+        const productId = this.extractProductIdFromStripeItem(item);
+
+        return {
+          productId: productId, // This can be null
+          quantity: item.quantity || 1,
+          unitPrice: (item.amount_total || 0) / 100 / (item.quantity || 1),
+          stripePriceId: item.price?.id || '',
+          // Store the Stripe product name as fallback
+          stripeProductName: this.extractProductNameFromStripeItem(item),
+          // Store the SKU if available
+          sku: this.extractProductSkuFromStripeItem(item),
+        };
+      }),
     };
 
     // Create the order using a special method that doesn't require sessionId cookie
@@ -175,12 +183,17 @@ export class StripeController {
     return parts.join(', ');
   }
 
-  private extractProductIdFromStripeItem(item: Stripe.LineItem): number {
-    const metadata = item.price?.metadata;
-    if (metadata?.productId) {
-      return parseInt(metadata.productId, 10);
+  private extractProductIdFromStripeItem(item: Stripe.LineItem): number | null {
+    // First try to get from price metadata
+    const priceMetadata = item.price?.metadata;
+    if (priceMetadata?.productId) {
+      const id = parseInt(priceMetadata.productId, 10);
+      if (!isNaN(id)) {
+        return id;
+      }
     }
 
+    // Then try to get from product metadata
     const product = item.price?.product;
     if (
       typeof product === 'object' &&
@@ -188,10 +201,57 @@ export class StripeController {
       'metadata' in product &&
       product.metadata?.productId
     ) {
-      return parseInt(product.metadata.productId, 10);
+      const id = parseInt(product.metadata.productId, 10);
+      if (!isNaN(id)) {
+        return id;
+      }
     }
 
-    // Fallback to 1 if no product ID found
-    return 1;
+    // Log warning and return null instead of defaulting to 1
+    console.warn('No valid product ID found for Stripe item:', {
+      priceId: item.price?.id,
+      productName: this.extractProductNameFromStripeItem(item),
+    });
+
+    return null;
+  }
+
+  private extractProductNameFromStripeItem(item: Stripe.LineItem): string {
+    // Try to get product name from the Stripe product
+    const product = item.price?.product;
+
+    if (typeof product === 'object' && product && 'name' in product) {
+      return product.name || 'Unknown Product';
+    }
+
+    if (typeof product === 'string') {
+      // If it's just a product ID string, we can't get the name easily
+      return `Product ${product}`;
+    }
+
+    return 'Unknown Product';
+  }
+
+  private extractProductSkuFromStripeItem(
+    item: Stripe.LineItem,
+  ): string | undefined {
+    // Try to get SKU from price metadata first
+    const priceMetadata = item.price?.metadata;
+    if (priceMetadata?.sku) {
+      return priceMetadata.sku;
+    }
+
+    // Then try to get from product metadata
+    const product = item.price?.product;
+    if (
+      typeof product === 'object' &&
+      product &&
+      'metadata' in product &&
+      product.metadata?.sku
+    ) {
+      return product.metadata.sku;
+    }
+
+    return undefined;
   }
 }

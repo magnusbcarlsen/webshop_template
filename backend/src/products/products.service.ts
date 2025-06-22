@@ -1,4 +1,4 @@
-// products.service.ts
+// products.service.ts - FIXED VERSION
 
 import {
   Injectable,
@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError, In } from 'typeorm';
+import { Repository, QueryFailedError, In, DataSource } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { ProductImage } from './entities/product-image.entity';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -63,6 +63,7 @@ export class ProductsService {
     private readonly s3Client: S3Client,
     @Inject('STRIPE_CLIENT') private readonly stripe: Stripe,
     private readonly configService: ConfigService,
+    private readonly dataSource: DataSource, // Add this for transactions
   ) {}
 
   /**
@@ -183,46 +184,78 @@ export class ProductsService {
     const { images, categoryIds, unitAmount, currency, ...data } =
       createProductDto;
 
-    // 1) Create Stripe Product
-    const stripeProduct = await this.stripe.products.create({
-      name: data.name,
-      description: data.description,
-    });
-    // 2) Create Stripe Price
-    const stripePrice = await this.stripe.prices.create({
-      product: stripeProduct.id,
-      unit_amount: unitAmount,
-      currency,
-    });
-
-    const product = this.productsRepository.create({
-      ...data,
-      stripeProductId: stripeProduct.id,
-      stripePriceId: stripePrice.id,
-    });
-
-    if (categoryIds?.length) {
-      product.categories = await this.categoryRepository.findBy({
-        id: In(categoryIds),
-      });
-    }
+    // Use transaction to ensure consistency
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
     try {
-      const saved = await this.productsRepository.save(product);
+      // 1) Create the product in database first
+      const product = queryRunner.manager.create(Product, data);
+
+      if (categoryIds?.length) {
+        product.categories = await this.categoryRepository.findBy({
+          id: In(categoryIds),
+        });
+      }
+
+      const savedProduct = await queryRunner.manager.save(product);
+
+      // 2) Create Stripe Product with METADATA linking back to database
+      const stripeProduct = await this.stripe.products.create({
+        name: savedProduct.name,
+        description: savedProduct.description || undefined,
+        metadata: {
+          productId: savedProduct.id.toString(), // CRITICAL: Link back to DB!
+          sku: savedProduct.sku || '',
+        },
+      });
+
+      // 3) Create Stripe Price with METADATA linking back to database
+      const stripePrice = await this.stripe.prices.create({
+        product: stripeProduct.id,
+        unit_amount: unitAmount,
+        currency: currency || 'dkk',
+        metadata: {
+          productId: savedProduct.id.toString(), // CRITICAL: Link back to DB!
+          sku: savedProduct.sku || '',
+        },
+      });
+
+      // 4) Update the product with Stripe IDs
+      await queryRunner.manager.update(Product, savedProduct.id, {
+        stripeProductId: stripeProduct.id,
+        stripePriceId: stripePrice.id,
+      });
+
+      // 5) Handle images
       if (images?.length) {
         const imageEntities = images.map((url, idx) =>
-          this.productImageRepository.create({
+          queryRunner.manager.create(ProductImage, {
             imageUrl: url,
-            product: saved,
+            product: savedProduct,
             sortOrder: idx,
             isPrimary: idx === 0,
           }),
         );
-        await this.productImageRepository.save(imageEntities);
-        saved.images = imageEntities;
+        await queryRunner.manager.save(imageEntities);
+        savedProduct.images = imageEntities;
       }
-      return saved;
+
+      await queryRunner.commitTransaction();
+
+      console.log('Product created successfully with Stripe metadata:', {
+        productId: savedProduct.id,
+        stripeProductId: stripeProduct.id,
+        stripePriceId: stripePrice.id,
+        metadata: stripeProduct.metadata,
+      });
+
+      return savedProduct;
     } catch (err: any) {
+      await queryRunner.rollbackTransaction();
+      console.error('Error creating product:', err);
+
       if (
         err instanceof QueryFailedError &&
         err.driverError.code === 'ER_DUP_ENTRY'
@@ -230,6 +263,8 @@ export class ProductsService {
         throw new ConflictException('Slug must be unique');
       }
       throw new InternalServerErrorException('Failed to create product');
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -246,15 +281,20 @@ export class ProductsService {
     const descChanged =
       data.description !== undefined &&
       data.description !== product.description;
+    const skuChanged = data.sku !== undefined && data.sku !== product.sku;
 
     // 1) Apply all non-Stripe DTO fields locally
     Object.assign(product, data);
 
-    // 2) If name or description changed, update the Stripe Product
-    if (nameChanged || descChanged) {
+    // 2) If name, description, or SKU changed, update the Stripe Product
+    if (nameChanged || descChanged || skuChanged) {
       await this.stripe.products.update(product.stripeProductId, {
         ...(nameChanged ? { name: product.name } : {}),
         ...(descChanged ? { description: product.description } : {}),
+        metadata: {
+          productId: product.id.toString(), // Ensure metadata is always present
+          sku: product.sku || '',
+        },
       });
     }
 
@@ -265,6 +305,10 @@ export class ProductsService {
         product: product.stripeProductId,
         unit_amount: unitAmount,
         currency,
+        metadata: {
+          productId: product.id.toString(), // Ensure metadata is on new price too
+          sku: product.sku || '',
+        },
       });
       product.stripePriceId = newPrice.id;
     }
@@ -377,5 +421,41 @@ export class ProductsService {
     if (!img) throw new NotFoundException('Image not found');
     await this.productImageRepository.remove(img);
     await this.deleteImage(img.imageUrl);
+  }
+
+  /**
+   * Fix existing products that don't have metadata in Stripe
+   * You can call this method to fix your existing product (ID 19)
+   */
+  async fixStripeMetadata(productId: number): Promise<void> {
+    const product = await this.findOne(productId);
+
+    console.log('Fixing Stripe metadata for product:', {
+      productId: product.id,
+      stripeProductId: product.stripeProductId,
+      stripePriceId: product.stripePriceId,
+    });
+
+    // Update the Stripe product metadata
+    if (product.stripeProductId) {
+      await this.stripe.products.update(product.stripeProductId, {
+        metadata: {
+          productId: product.id.toString(),
+          sku: product.sku || '',
+        },
+      });
+    }
+
+    // Update the Stripe price metadata
+    if (product.stripePriceId) {
+      await this.stripe.prices.update(product.stripePriceId, {
+        metadata: {
+          productId: product.id.toString(),
+          sku: product.sku || '',
+        },
+      });
+    }
+
+    console.log('Stripe metadata fixed for product', productId);
   }
 }

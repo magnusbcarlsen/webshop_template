@@ -19,9 +19,10 @@ export class OrderItem {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @ManyToOne(() => Product, { eager: false })
+  // Make product nullable since Stripe items might not map to DB products
+  @ManyToOne(() => Product, { eager: false, nullable: true })
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product: Product | null;
 
   // Product variants relation
   @ManyToOne(() => ProductVariant, { nullable: true })
@@ -45,6 +46,23 @@ export class OrderItem {
     nullable: true,
   })
   stripePriceId: string;
+
+  // Add these new columns to store Stripe product information when DB product is not found
+  @Column({
+    name: 'stripe_product_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  stripeProductName?: string;
+
+  @Column({
+    name: 'sku',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  sku?: string;
 
   // Computed field for subtotal getter (if you want to keep the old logic)
   get computedSubtotal(): number {
