@@ -79,12 +79,12 @@ export default function Navbar() {
       />
 
       <motion.nav
-        className="fixed top-0 left-0 w-full z-50 bg-transparent"
+        className="fixed top-0 backdrop-blur-sm bg-white/10 left-0 w-full z-50 bg-transparent"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <div className="flex justify-between items-center px-4 md:px-6 py-4">
+        <div className="flex justify-between items-center px-4 md:px-6 py-1">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <motion.h1
