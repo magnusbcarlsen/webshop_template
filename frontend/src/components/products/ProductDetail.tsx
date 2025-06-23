@@ -90,7 +90,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       <div className="w-full lg:w-[60vw] h-[50vh] lg:h-screen bg-[var(--background)] text-[var(--foreground)] flex flex-col justify-center items-center p-8 lg:p-12 relative">
         {/* Main Product Image with Carousel Controls */}
         <div className="relative w-full max-w-2xl h-[70%] mb-6 group">
-          <div className="relative w-full h-full bg-gray-100 rounded-lg overflow-hidden">
+          <div className="relative w-full h-full bg-[var(--background)] rounded-lg overflow-hidden">
             <NextImage
               src={displayImageSrc}
               alt={altText}
