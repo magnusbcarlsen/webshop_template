@@ -554,6 +554,9 @@ WHERE p.slug IN (
   'go-with-the-flow-yellow'
 );
 
+
+INSERT INTO users (role_id, email, password, first_name, last_name, phone, is_active) VALUES (1, 'admin@example.com', 'Password', 'Dina', 'Bergstrøm', '+45 23618505', 1);
+
 -- Users
 -- INSERT INTO users (role_id, email, password, first_name, last_name, phone, is_active) VALUES 
 -- (1, 'admin@example.com', 'Password', 'Admin', 'User', '+1234567890', true),

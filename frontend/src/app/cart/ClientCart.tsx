@@ -7,6 +7,7 @@ import { Button, Checkbox } from "@heroui/react";
 import { CartAPI, removeItemFromCart } from "@/services/cart-api";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
 import { useRouter } from "next/navigation";
+import { CheckoutButton } from "@/components/CheckoutButton";
 
 export default function ClientCart() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function ClientCart() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   const FALLBACK_SRC = "/NoImageAvailable.png";
 
@@ -64,6 +66,17 @@ export default function ClientCart() {
       [itemId]: true,
     }));
   };
+
+  // Calculate totals
+  const subtotal = cart
+    ? cart.items.reduce(
+        (sum, item) => sum + item.quantity * item.product.price,
+        0
+      )
+    : 0;
+
+  const shipping = subtotal > 500 ? 0 : 50;
+  const total = subtotal + shipping;
 
   if (loading) {
     return (
@@ -188,53 +201,143 @@ export default function ClientCart() {
         </div>
       </div>
 
-      {/* Right Column: Checkout Section */}
-      <div className="mb-4 w-full lg:w-[30vw] h-auto lg:h-screen bg-gray-100 flex flex-col justify-center items-center relative">
-        <div className="w-[80%] max-w-md space-y-8">
-          {/* Cart Summary – always shown */}
-          {cart && (
-            <>
-              <div className="text-left space-y-4">
-                <h2 className="text-2xl font-bold">Order Summary</h2>
-                <div className="border-b border-gray-300 pb-4">
-                  <div className="flex justify-between items-center text-lg">
-                    <span>Subtotal</span>
-                    <span className="font-bold">
-                      DKK
-                      {cart.items.length > 0
-                        ? cart.items
-                            .reduce(
-                              (sum, item) =>
-                                sum + item.quantity * item.product.price,
-                              0
-                            )
-                            .toFixed(2)
-                        : "0.00"}
-                    </span>
-                  </div>
-                  <p className="text-left text-sm text-gray-600 mt-2">
-                    Shipping & taxes calculated at checkout
-                  </p>
-                </div>
-              </div>
+      {/* Right Column: Order Summary - From Checkout Page */}
+      <div className="w-full lg:w-[30vw] lg:h-screen bg-gray-100 flex flex-col justify-center p-6 sm:p-8 lg:p-12 relative">
+        <div className="w-full max-w-md mx-auto space-y-6 lg:space-y-8">
+          <div className="text-center border-b-2 border-current border-solid border-b-gray-700 w-[80%] mx-auto">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold pb-3 lg:pb-4">
+              ORDER SUMMARY
+            </h2>
+          </div>
 
-              {/* Show only when cart has items */}
-              {cart.items.length > 0 && (
-                <Button
-                  variant="solid"
-                  color="primary"
-                  className="!text-white !hover:text-white"
-                  size="lg"
-                  fullWidth
-                  onPress={() => {
-                    router.push("/checkout");
-                  }}
-                >
-                  PROCEED TO CHECKOUT
-                </Button>
-              )}
-            </>
+          {/* Cart Items */}
+          <div className="space-y-3 lg:space-y-4 max-h-48 lg:max-h-60 overflow-y-auto">
+            {cart &&
+              cart.items.map((item) => {
+                const primaryImage =
+                  item.product.images?.find((img) => img.isPrimary) ||
+                  item.product.images?.[0] ||
+                  null;
+
+                const imageSrc = primaryImage
+                  ? normalizeImageUrl(primaryImage.imageUrl)
+                  : FALLBACK_SRC;
+
+                const altText = primaryImage
+                  ? primaryImage.altText || item.product.name
+                  : `${item.product.name} (no image)`;
+
+                const displayImageSrc = imageErrors[item.id]
+                  ? FALLBACK_SRC
+                  : imageSrc;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center space-x-3 lg:space-x-4 bg-white/60 p-2 lg:p-3 rounded-lg"
+                  >
+                    <div className="relative w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                      <Image
+                        src={displayImageSrc}
+                        alt={altText}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        onError={() => handleImageError(item.id, imageSrc)}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate text-xs lg:text-sm">
+                        {item.product.name}
+                      </h3>
+                      <p className="text-xs text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
+                    </div>
+                    <div className="text-xs lg:text-sm font-semibold">
+                      DKK {(item.quantity * item.product.price).toFixed(2)}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          <div className="border-b border-gray-300"></div>
+
+          {/* Order Totals */}
+          <div className="space-y-2 lg:space-y-3">
+            <div className="flex justify-between text-base lg:text-lg">
+              <span>Subtotal</span>
+              <span>DKK {subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-base lg:text-lg">
+              <span>Shipping</span>
+              <span>
+                {shipping === 0 ? "Free" : `DKK ${shipping.toFixed(2)}`}
+              </span>
+            </div>
+            <div className="border-b border-gray-300"></div>
+            <div className="flex justify-between text-lg lg:text-xl font-bold">
+              <span>Total</span>
+              <span>DKK {total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Terms Agreement */}
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              isSelected={agreeTerms}
+              onValueChange={setAgreeTerms}
+              size="sm"
+            />
+            <span className="text-sm text-gray-700">
+              I agree to the{" "}
+              <Link href="/terms" className="underline hover:text-black">
+                Terms & Conditions
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="underline hover:text-black">
+                Privacy Policy
+              </Link>
+            </span>
+          </div>
+
+          {/* Checkout Button */}
+          {cart && cart.items.length > 0 && (
+            <CheckoutButton
+              items={cart.items.map((item) => ({
+                priceId: item.product.stripePriceId,
+                quantity: item.quantity,
+              }))}
+              isDisabled={!agreeTerms}
+              isLoading={false}
+              className="bg-black text-white hover:bg-gray-800 py-3 lg:py-4 text-base lg:text-lg font-semibold"
+            />
           )}
+
+          {!agreeTerms && cart && cart.items.length > 0 && (
+            <p className="text-xs lg:text-sm text-red-600 text-center">
+              Please agree to terms and conditions
+            </p>
+          )}
+        </div>
+
+        {/* Background Icon */}
+        <div className="absolute bottom-4 right-4 lg:bottom-8 lg:right-8 opacity-10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-16 w-16 lg:h-24 lg:w-24 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1}
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
         </div>
       </div>
     </div>
