@@ -111,7 +111,7 @@ export default function ClientCart() {
             <div className="text-center py-16">
               <p className="text-xl mb-6">Your cart is empty.</p>
               <Link
-                href="/products"
+                href="/"
                 className="inline-block bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors"
               >
                 Continue Shopping
