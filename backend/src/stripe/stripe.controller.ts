@@ -1,4 +1,4 @@
-// backend/src/stripe/stripe.controller.ts - Fixed version
+// backend/src/stripe/stripe.controller.ts
 import {
   Controller,
   Post,
