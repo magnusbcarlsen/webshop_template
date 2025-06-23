@@ -70,7 +70,7 @@ export default function Navbar() {
     <>
       {/* Backdrop blur when menu is open */}
       <motion.div
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-white/10 backdrop-blur-sm z-40"
         initial={{ opacity: 0 }}
         animate={{ opacity: isOpen ? 1 : 0 }}
         transition={{ duration: 0.2 }}
@@ -79,7 +79,7 @@ export default function Navbar() {
       />
 
       <motion.nav
-        className="fixed top-0 backdrop-blur-sm bg-white/10 left-0 w-full z-50 bg-transparent"
+        className="fixed top-0 backdrop-blur-sm bg-white/10 left-0 w-full z-50"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -149,7 +149,7 @@ export default function Navbar() {
           wrapper: "z-[60]",
         }}
       >
-        <DrawerContent className="bg-white/90 backdrop-blur-md border-l border-gray-200/50 shadow-2xl">
+        <DrawerContent className="bg-white/50 backdrop-blur-md border-l border-gray-200/50 shadow-2xl">
           <DrawerHeader className="border-b border-gray-200/30 pb-4 bg-white/20 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <motion.h2
