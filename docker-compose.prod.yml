@@ -40,6 +40,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      shm_size: 512m
     restart: unless-stopped
     mem_limit: 256m
     ports:
@@ -78,6 +79,7 @@ services:
       args:
         - NEXT_PUBLIC_API_BASE_URL=https://${DOMAIN}
         - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      shm_size: 512m
     restart: unless-stopped
     mem_limit: 256m
     ports:

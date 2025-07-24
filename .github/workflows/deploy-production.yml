@@ -156,8 +156,8 @@ jobs:
 
             # Build frontend second
             echo "🎨 Building frontend..."
-            timeout 800 docker compose -f docker-compose.prod.yml build --no-cache frontend || {
-              echo "⚠️ Frontend build timeout"
+            timeout 800 docker compose -f docker-compose.prod.yml build --no-cache --build-arg NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ frontend || {
+            echo "⚠️ Frontend build timeout"
             }
 
             # Start services sequentially to avoid startup conflicts

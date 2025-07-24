@@ -2,7 +2,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
 # Install all dependencies including dev dependencies for build
-RUN npm ci --include=dev && npm cache clean --force
+RUN npm ci --include=dev --no-audit --no-fund --prefer-offline && npm cache clean --force
 
 FROM deps AS builder
 WORKDIR /app
