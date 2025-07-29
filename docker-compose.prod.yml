@@ -2,7 +2,7 @@ services:
   db:
     image: mysql:8.0
     restart: unless-stopped
-    mem_limit: 256m
+    mem_limit: 800m
     env_file:
       - .env
     environment:
@@ -10,6 +10,14 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --innodb-use-native-aio=0
+      --innodb-buffer-pool-size=128M
+      --innodb-log-file-size=32M
+      --innodb-flush-method=fsync
+      --skip-host-cache
+      --skip-name-resolve
     volumes:
       - ./database:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
