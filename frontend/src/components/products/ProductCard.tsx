@@ -31,10 +31,11 @@ export function ProductCard({ product }: ProductCardProps) {
     ? primaryImage.altText || product.name
     : `${product.name} (no image)`;
 
-  // Local static image path (drop images in /public/product-images/{slug}.jpg)
-  const localImageSrc = `/product-images/${product.slug}.jpg`;
+  // Local static image paths (supports both .jpg and .jpeg)
+  const localImageJpg = `/product-images/${product.slug}.jpg`;
+  const localImageJpeg = `/product-images/${product.slug}.jpeg`;
 
-  // Cascading fallback: local image → database image → placeholder
+  // Cascading fallback: local .jpg → local .jpeg → database image → placeholder
   useEffect(() => {
     if (imageChecked) return;
 
@@ -48,27 +49,34 @@ export function ProductCard({ product }: ProductCardProps) {
     };
 
     const loadImage = async () => {
-      // 1. Try local static image first
-      if (await tryLoadImage(localImageSrc)) {
-        setDisplayImageSrc(localImageSrc);
+      // 1. Try local .jpg first
+      if (await tryLoadImage(localImageJpg)) {
+        setDisplayImageSrc(localImageJpg);
         setImageChecked(true);
         return;
       }
 
-      // 2. Try database image (MinIO)
+      // 2. Try local .jpeg
+      if (await tryLoadImage(localImageJpeg)) {
+        setDisplayImageSrc(localImageJpeg);
+        setImageChecked(true);
+        return;
+      }
+
+      // 3. Try database image (MinIO)
       if (databaseImageSrc && await tryLoadImage(databaseImageSrc)) {
         setDisplayImageSrc(databaseImageSrc);
         setImageChecked(true);
         return;
       }
 
-      // 3. Use fallback placeholder
+      // 4. Use fallback placeholder
       setDisplayImageSrc(FALLBACK_IMAGE);
       setImageChecked(true);
     };
 
     loadImage();
-  }, [localImageSrc, databaseImageSrc, imageChecked]);
+  }, [localImageJpg, localImageJpeg, databaseImageSrc, imageChecked]);
 
   return (
     <Card
