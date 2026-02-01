@@ -112,8 +112,12 @@ export class ProductsService {
       this.configService.get<string>('MINIO_API_HOST') || 'localhost';
     const apiPort = this.configService.get<string>('MINIO_API_PORT') || '9000';
 
+    // Use https for port 443, http otherwise
+    const protocol = apiPort === '443' ? 'https' : 'http';
+    const portSuffix = apiPort === '443' || apiPort === '80' ? '' : `:${apiPort}`;
+
     // Return the correct MinIO URL format
-    return `http://${apiHost}:${apiPort}/${bucket}/${key}`;
+    return `${protocol}://${apiHost}${portSuffix}/${bucket}/${key}`;
   }
 
   /**

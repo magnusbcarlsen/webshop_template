@@ -12,39 +12,63 @@ interface ProductCardProps {
   product: ProductAPI;
 }
 
+const FALLBACK_IMAGE = "/NoImageAvailable.png";
+
 export function ProductCard({ product }: ProductCardProps) {
-  const [imageError, setImageError] = useState(false);
+  const [displayImageSrc, setDisplayImageSrc] = useState<string>(FALLBACK_IMAGE);
   const [imageChecked, setImageChecked] = useState(false);
 
   // ─── Find primary image or fallback ───
   const primaryImage =
     product.images?.find((img) => img.isPrimary) || product.images?.[0] || null;
 
-  // Normalize or fallback:
-  const imageSrc = primaryImage
+  // Database image URL (from MinIO)
+  const databaseImageSrc = primaryImage
     ? normalizeImageUrl(primaryImage.imageUrl)
-    : "/NoImageAvailable.png";
+    : null;
+
   const altText = primaryImage
     ? primaryImage.altText || product.name
     : `${product.name} (no image)`;
 
-  const displayImageSrc = imageError ? "/NoImageAvailable.png" : imageSrc;
+  // Local static image path (drop images in /public/product-images/{slug}.jpg)
+  const localImageSrc = `/product-images/${product.slug}.jpg`;
 
-  // Force check image availability on mount
+  // Cascading fallback: local image → database image → placeholder
   useEffect(() => {
-    if (!primaryImage || imageChecked) return;
+    if (imageChecked) return;
 
-    const img = new Image();
-    img.onload = () => {
-      setImageError(false);
+    const tryLoadImage = (src: string): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = src;
+      });
+    };
+
+    const loadImage = async () => {
+      // 1. Try local static image first
+      if (await tryLoadImage(localImageSrc)) {
+        setDisplayImageSrc(localImageSrc);
+        setImageChecked(true);
+        return;
+      }
+
+      // 2. Try database image (MinIO)
+      if (databaseImageSrc && await tryLoadImage(databaseImageSrc)) {
+        setDisplayImageSrc(databaseImageSrc);
+        setImageChecked(true);
+        return;
+      }
+
+      // 3. Use fallback placeholder
+      setDisplayImageSrc(FALLBACK_IMAGE);
       setImageChecked(true);
     };
-    img.onerror = () => {
-      setImageError(true);
-      setImageChecked(true);
-    };
-    img.src = imageSrc;
-  }, [imageSrc, primaryImage, imageChecked]);
+
+    loadImage();
+  }, [localImageSrc, databaseImageSrc, imageChecked]);
 
   return (
     <Card

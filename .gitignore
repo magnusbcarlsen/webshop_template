@@ -49,3 +49,5 @@ coverage/
 # optional cache folders
 .cache/
 .eslintcache
+
+CLAUDE.md

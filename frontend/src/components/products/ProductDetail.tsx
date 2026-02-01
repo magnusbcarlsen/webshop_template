@@ -11,12 +11,12 @@ interface ProductDetailProps {
   product: ProductAPI;
 }
 
+const FALLBACK_SRC = "/NoImageAvailable.png";
+
 export default function ProductDetail({ product }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
-  const [imageError, setImageError] = useState(false);
+  const [displayImageSrc, setDisplayImageSrc] = useState<string>(FALLBACK_SRC);
   const [imageChecked, setImageChecked] = useState(false);
-
-  const FALLBACK_SRC = "/NoImageAvailable.png";
 
   // Get primary image or first available
   const primaryImage =
@@ -25,34 +25,54 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const allImages = product.images || [];
   const currentImage = allImages[selectedImage] || primaryImage;
 
-  // Normalize or fallback for current image
-  const imageSrc = currentImage
+  // Database image URL (from MinIO)
+  const databaseImageSrc = currentImage
     ? normalizeImageUrl(currentImage.imageUrl)
-    : FALLBACK_SRC;
+    : null;
+
   const altText = currentImage
     ? currentImage.altText || product.name
     : `${product.name} (no image)`;
 
-  const displayImageSrc = imageError ? FALLBACK_SRC : imageSrc;
+  // Local static image path (drop images in /public/product-images/{slug}.jpg)
+  const localImageSrc = `/product-images/${product.slug}.jpg`;
 
-  // Force check image availability on mount and when selectedImage changes
+  // Cascading fallback: local image → database image → placeholder
   useEffect(() => {
-    if (!currentImage || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
+
+    const tryLoadImage = (src: string): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const img = new window.Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = src;
+      });
+    };
+
+    const loadImage = async () => {
+      // 1. Try local static image first
+      if (await tryLoadImage(localImageSrc)) {
+        setDisplayImageSrc(localImageSrc);
+        setImageChecked(true);
+        return;
+      }
+
+      // 2. Try database image (MinIO)
+      if (databaseImageSrc && await tryLoadImage(databaseImageSrc)) {
+        setDisplayImageSrc(databaseImageSrc);
+        setImageChecked(true);
+        return;
+      }
+
+      // 3. Use fallback placeholder
+      setDisplayImageSrc(FALLBACK_SRC);
+      setImageChecked(true);
+    };
 
     setImageChecked(false);
-    setImageError(false);
-
-    const img = new window.Image();
-    img.onload = () => {
-      setImageError(false);
-      setImageChecked(true);
-    };
-    img.onerror = () => {
-      setImageError(true);
-      setImageChecked(true);
-    };
-    img.src = imageSrc;
-  }, [imageSrc, currentImage]);
+    loadImage();
+  }, [localImageSrc, databaseImageSrc, selectedImage]);
 
   // Carousel navigation functions
   const nextImage = () => {

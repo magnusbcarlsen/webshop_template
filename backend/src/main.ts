@@ -14,12 +14,38 @@ async function bootstrap() {
   server.set('trust proxy', 1);
 
   app.use('/api/stripe/webhook', raw({ type: 'application/json' }));
+
+  // Global rate limit - applies to all routes (defense in depth)
+  app.use(
+    rateLimit({
+      windowMs: 60 * 1000, // 1 minute
+      max: 100, // 100 requests per minute per IP
+      message: 'Too many requests, please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+      skip: (req) => req.path === '/api/stripe/webhook', // Skip webhook
+    }),
+  );
+
+  // Stricter rate limit for login
   app.use(
     '/api/auth/login',
     rateLimit({
       windowMs: 60 * 1000, // 1 minute
       max: 5, // limit each IP to 5 requests per window
       message: 'Too many login attempts, please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
+
+  // Stricter rate limit for registration (if you have one)
+  app.use(
+    '/api/auth/register',
+    rateLimit({
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 5, // 5 registrations per hour per IP
+      message: 'Too many accounts created, please try again later.',
       standardHeaders: true,
       legacyHeaders: false,
     }),
