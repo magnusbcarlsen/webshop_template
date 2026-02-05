@@ -92,6 +92,7 @@ async function bootstrap() {
       'http://frontend:3000', // Docker internal network
       'https://bergstromart.dk', // Production domain
       'https://www.bergstromart.dk', // Production domain with www
+      'https://bergstromart.vercel.app', // Vercel frontend
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
