@@ -2,8 +2,6 @@ import { NextConfig } from "next";
 import webpack from "webpack";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-
   // Security headers
   async headers() {
     return [

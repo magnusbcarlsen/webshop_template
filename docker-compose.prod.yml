@@ -80,32 +80,6 @@ services:
     networks:
       - app-net
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_BASE_URL=https://${DOMAIN}
-        - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      shm_size: 512m
-    restart: unless-stopped
-    mem_limit: 256m
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - BACKEND_URL=${BACKEND_URL}
-      - NODE_ENV=production
-      - NEXT_PUBLIC_MINIO_PUBLIC_URL=https://${DOMAIN}
-      - MINIO_API_HOST=${DOMAIN}
-      - MINIO_API_PORT=443
-    depends_on:
-      - backend
-    networks:
-      - app-net
-
   nginx:
     image: nginx:alpine
     restart: unless-stopped
@@ -118,7 +92,6 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
-      - frontend
       - backend
     networks:
       - app-net
