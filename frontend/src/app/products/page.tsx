@@ -4,7 +4,7 @@ import ProductList from "@/components/products/ProductList";
 import { fallbackProducts } from "@/data/fallbackProduct ";
 import { fetchProducts, ProductAPI } from "@/services/product-api";
 
-// Incremental Static Regeneration: revalidate this page every 60 seconds
+export const dynamic = "force-dynamic";
 export const revalidate = 60;
 
 // SEO metadata for this page

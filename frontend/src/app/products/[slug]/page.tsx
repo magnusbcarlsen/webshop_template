@@ -4,7 +4,7 @@ import Link from "next/link";
 import ProductDetail from "@/components/products/ProductDetail";
 import { fetchProductBySlug, ProductAPI } from "@/services/product-api";
 
-// Incremental Static Regeneration: revalidate this page every 60 seconds
+export const dynamic = "force-dynamic";
 export const revalidate = 60;
 
 // Define a fallback product in case the API is unavailable

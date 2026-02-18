@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import { fallbackProducts } from "@/data/fallbackProduct ";
 import { ProductAPI, fetchProducts } from "@/services/product-api";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 60;
 
 export const metadata = {
