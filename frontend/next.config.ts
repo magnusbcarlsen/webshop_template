@@ -62,6 +62,16 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // Proxy /api requests to Railway backend
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.BACKEND_URL || "http://backend:3001"}/api/:path*`,
+      },
+    ];
+  },
+
   // Performance and security
   compress: true,
   poweredByHeader: false,
