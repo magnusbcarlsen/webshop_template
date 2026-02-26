@@ -179,13 +179,16 @@ export class ProductsService {
     const { images, categoryIds, unitAmount, currency, ...data } =
       createProductDto;
 
-    // Use transaction to ensure consistency
+    // Use transaction for DB work only — Stripe calls happen AFTER commit
+    // so a Stripe failure cannot roll back an already-saved product + images
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+    let savedProduct: Product;
+
     try {
-      // 1) Create the product in database first
+      // 1) Create the product in database
       const product = queryRunner.manager.create(Product, data);
 
       if (categoryIds?.length) {
@@ -194,36 +197,9 @@ export class ProductsService {
         });
       }
 
-      const savedProduct = await queryRunner.manager.save(product);
+      savedProduct = await queryRunner.manager.save(product);
 
-      // 2) Create Stripe Product with METADATA linking back to database
-      const stripeProduct = await this.stripe.products.create({
-        name: savedProduct.name,
-        description: savedProduct.description || undefined,
-        metadata: {
-          productId: savedProduct.id.toString(), // CRITICAL: Link back to DB!
-          sku: savedProduct.sku || '',
-        },
-      });
-
-      // 3) Create Stripe Price with METADATA linking back to database
-      const stripePrice = await this.stripe.prices.create({
-        product: stripeProduct.id,
-        unit_amount: unitAmount,
-        currency: currency || 'dkk',
-        metadata: {
-          productId: savedProduct.id.toString(), // CRITICAL: Link back to DB!
-          sku: savedProduct.sku || '',
-        },
-      });
-
-      // 4) Update the product with Stripe IDs
-      await queryRunner.manager.update(Product, savedProduct.id, {
-        stripeProductId: stripeProduct.id,
-        stripePriceId: stripePrice.id,
-      });
-
-      // 5) Handle images
+      // 2) Handle images inside the same transaction
       if (images?.length) {
         const imageEntities = images.map((url, idx) =>
           queryRunner.manager.create(ProductImage, {
@@ -238,18 +214,9 @@ export class ProductsService {
       }
 
       await queryRunner.commitTransaction();
-
-      console.log('Product created successfully with Stripe metadata:', {
-        productId: savedProduct.id,
-        stripeProductId: stripeProduct.id,
-        stripePriceId: stripePrice.id,
-        metadata: stripeProduct.metadata,
-      });
-
-      return savedProduct;
     } catch (err: any) {
       await queryRunner.rollbackTransaction();
-      console.error('Error creating product:', err);
+      console.error('Error saving product to DB:', err);
 
       if (
         err instanceof QueryFailedError &&
@@ -261,6 +228,51 @@ export class ProductsService {
     } finally {
       await queryRunner.release();
     }
+
+    // 3) Stripe calls happen AFTER DB commit — a Stripe failure leaves the
+    //    product intact in the DB (just without Stripe IDs)
+    try {
+      const stripeProduct = await this.stripe.products.create({
+        name: savedProduct.name,
+        description: savedProduct.description || undefined,
+        metadata: {
+          productId: savedProduct.id.toString(),
+          sku: savedProduct.sku || '',
+        },
+      });
+
+      const stripePrice = await this.stripe.prices.create({
+        product: stripeProduct.id,
+        unit_amount: unitAmount,
+        currency: currency || 'dkk',
+        metadata: {
+          productId: savedProduct.id.toString(),
+          sku: savedProduct.sku || '',
+        },
+      });
+
+      await this.productsRepository.update(savedProduct.id, {
+        stripeProductId: stripeProduct.id,
+        stripePriceId: stripePrice.id,
+      });
+
+      savedProduct.stripeProductId = stripeProduct.id;
+      savedProduct.stripePriceId = stripePrice.id;
+
+      console.log('Stripe IDs attached:', {
+        productId: savedProduct.id,
+        stripeProductId: stripeProduct.id,
+        stripePriceId: stripePrice.id,
+      });
+    } catch (stripeErr) {
+      // Non-fatal: product + images are saved. Log and continue.
+      console.error(
+        `Stripe setup failed for product ${savedProduct.id} — product saved without Stripe IDs:`,
+        stripeErr,
+      );
+    }
+
+    return savedProduct;
   }
 
   async update(
