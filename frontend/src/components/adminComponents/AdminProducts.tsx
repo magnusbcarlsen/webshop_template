@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import Image from "next/image";
 import {
   fetchProducts,
   createProduct,
@@ -11,6 +12,7 @@ import {
   CategoryAPI,
   createCategory,
 } from "@/services/product-api";
+import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
 import { slugify } from "@/utils/slugify";
 import {
   Modal,
@@ -71,7 +73,7 @@ export default function AdminProducts() {
       setError(
         err instanceof Error
           ? `Failed to load products: ${err.message}`
-          : "Failed to load products"
+          : "Failed to load products",
       );
       setProducts([]);
     } finally {
@@ -90,7 +92,7 @@ export default function AdminProducts() {
   }
 
   function handleChange(
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const { name, value, type } = e.target;
     let v: string | number = value;
@@ -200,7 +202,7 @@ export default function AdminProducts() {
         isActive: true,
         categoryIds: form.selectedCategories.map((c) => c.id),
         // STRIPE //
-        unitAmount: Math.round(form.price * 100), 
+        unitAmount: Math.round(form.price * 100),
         currency: "DKK",
       };
 
@@ -234,8 +236,8 @@ export default function AdminProducts() {
         err instanceof Error
           ? err.message
           : isEditing
-          ? "Failed to edit product"
-          : "Failed to create product";
+            ? "Failed to edit product"
+            : "Failed to create product";
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -245,7 +247,7 @@ export default function AdminProducts() {
   async function handleDelete(id: number) {
     if (
       !confirm(
-        "Are you sure you want to delete this product? This cannot be undone"
+        "Are you sure you want to delete this product? This cannot be undone",
       )
     )
       return;
@@ -420,6 +422,7 @@ export default function AdminProducts() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     {[
+                      "Image",
                       "ID",
                       "Name",
                       "Slug",
@@ -443,6 +446,28 @@ export default function AdminProducts() {
                       key={product.id}
                       className="hover:bg-gray-50 transition-colors"
                     >
+                      <td className="px-6 py-4">
+                        {(() => {
+                          const img =
+                            product.images?.find((i) => i.isPrimary) ||
+                            product.images?.[0];
+                          return img ? (
+                            <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                              <Image
+                                src={normalizeImageUrl(img.imageUrl)}
+                                alt={img.altText || product.name}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                              No img
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-900 font-mono">
                         #{product.id}
                       </td>
@@ -482,8 +507,8 @@ export default function AdminProducts() {
                             product.stockQuantity > 10
                               ? "bg-green-100 text-green-800"
                               : product.stockQuantity > 0
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
                           }`}
                         >
                           {product.stockQuantity} in stock
@@ -729,8 +754,8 @@ export default function AdminProducts() {
                       ? "Saving..."
                       : "Creating..."
                     : isEditing
-                    ? "Save Changes"
-                    : "Create Product"}
+                      ? "Save Changes"
+                      : "Create Product"}
                 </Button>
               </ModalFooter>
             </>

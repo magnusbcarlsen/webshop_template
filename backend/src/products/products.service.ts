@@ -88,16 +88,12 @@ export class ProductsService {
     // Don't add extra path prefix - just use the filename
     const key = filename;
 
-    // Ensure bucket exists (optional)
-    await ensureBucketExists(this.s3Client, bucket);
-
     try {
       await this.s3Client.send(
         new PutObjectCommand({
           Bucket: bucket,
           Key: key,
           Body: file.buffer,
-          ACL: 'public-read',
           ContentType: file.mimetype,
           CacheControl: 'max-age=31536000', // 1 year cache
         }),
@@ -107,17 +103,12 @@ export class ProductsService {
       throw new InternalServerErrorException('Failed to upload image');
     }
 
-    // Build the correct URL format
-    const apiHost =
-      this.configService.get<string>('MINIO_API_HOST') || 'localhost';
-    const apiPort = this.configService.get<string>('MINIO_API_PORT') || '9000';
-
-    // Use https for port 443, http otherwise
-    const protocol = apiPort === '443' ? 'https' : 'http';
-    const portSuffix = apiPort === '443' || apiPort === '80' ? '' : `:${apiPort}`;
-
-    // Return the correct MinIO URL format
-    return `${protocol}://${apiHost}${portSuffix}/${bucket}/${key}`;
+    // Build the public URL — for R2 this is the r2.dev or custom domain URL
+    const publicUrl =
+      this.configService.get<string>('R2_PUBLIC_URL') ||
+      'http://localhost:9000';
+    // R2 public URLs have the format: https://<public-url>/<key> (no bucket prefix)
+    return `${publicUrl.replace(/\/$/, '')}/${key}`;
   }
 
   /**

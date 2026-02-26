@@ -85,14 +85,16 @@ async function bootstrap() {
   app.use(bodyParser.json());
 
   // 2) allow CORS from your frontend - Updated to include production domains
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   app.enableCors({
     origin: [
-      'http://localhost:3000', // Direct frontend access
-      'http://localhost', // Nginx proxy access
-      'http://frontend:3000', // Docker internal network
-      'https://bergstromart.dk', // Production domain
-      'https://www.bergstromart.dk', // Production domain with www
-      'https://bergstromart.vercel.app', // Vercel frontend
+      'http://localhost:3000',
+      'http://localhost',
+      'http://frontend:3000',
+      frontendUrl,
+      'https://bergstromart.dk',
+      'https://www.bergstromart.dk',
+      'https://bergstromart.vercel.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,

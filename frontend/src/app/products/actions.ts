@@ -1,9 +1,10 @@
 "use server";
 
+import { getBaseUrl } from "@/config/api";
+
 export async function getProducts() {
   try {
-    // Add the /api prefix to match the NestJS global prefix
-    const response = await fetch("http://backend:3001/api/products", {
+    const response = await fetch(`${getBaseUrl()}/products`, {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",

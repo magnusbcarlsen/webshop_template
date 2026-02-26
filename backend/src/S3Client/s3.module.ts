@@ -17,7 +17,7 @@ import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
         const secretKey = config.get<string>('do_spaces_secret');
 
         if (!endpoint || !region || !accessKey || !secretKey) {
-          throw new Error('Missing required DigitalOcean Spaces configuration');
+          throw new Error('Missing required S3/R2 storage configuration');
         }
 
         const s3Config: S3ClientConfig = {
@@ -27,7 +27,8 @@ import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
             accessKeyId: accessKey,
             secretAccessKey: secretKey,
           },
-          forcePathStyle: !endpoint.includes('digitaloceanspaces.com'),
+          // R2 and MinIO require path-style URLs; AWS S3 uses virtual-hosted style
+          forcePathStyle: true,
         };
 
         return new S3Client(s3Config);

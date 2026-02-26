@@ -43,13 +43,29 @@ const nextConfig: NextConfig = {
 
   // Images configuration
   images: {
-    domains: ["localhost", "bergstromart.dk", "minio"],
     remotePatterns: [
+      // Cloudflare R2 – default r2.dev public URL
+      {
+        protocol: "https",
+        hostname: "**.r2.dev",
+        pathname: "/**",
+      },
+      // Cloudflare R2 – custom domain (if set in Vercel as NEXT_PUBLIC_R2_PUBLIC_URL)
+      ...(process.env.NEXT_PUBLIC_R2_PUBLIC_URL
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: new URL(process.env.NEXT_PUBLIC_R2_PUBLIC_URL).hostname,
+              pathname: "/**",
+            },
+          ]
+        : []),
+      // Localhost fallback for development
       {
         protocol: "http",
         hostname: "localhost",
         port: "9000",
-        pathname: "/products/**",
+        pathname: "/**",
       },
     ],
   },
