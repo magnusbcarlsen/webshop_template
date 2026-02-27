@@ -12,7 +12,32 @@ import {
   CategoryAPI,
   createCategory,
 } from "@/services/product-api";
-import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
+import { useProductImage } from "@/hooks/useProductImage";
+
+function AdminThumbnail({
+  slug,
+  images,
+  name,
+}: {
+  slug: string;
+  images?: { imageUrl: string; altText: string | null; isPrimary: boolean }[];
+  name: string;
+}) {
+  const { src, altText, onError } = useProductImage(slug, images);
+
+  return (
+    <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+      <Image
+        src={src}
+        alt={altText || name}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={onError}
+      />
+    </div>
+  );
+}
 import { slugify } from "@/utils/slugify";
 import {
   Modal,
@@ -447,26 +472,11 @@ export default function AdminProducts() {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
-                        {(() => {
-                          const img =
-                            product.images?.find((i) => i.isPrimary) ||
-                            product.images?.[0];
-                          return img ? (
-                            <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                              <Image
-                                src={normalizeImageUrl(img.imageUrl)}
-                                alt={img.altText || product.name}
-                                fill
-                                className="object-cover"
-                                unoptimized
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-                              No img
-                            </div>
-                          );
-                        })()}
+                        <AdminThumbnail
+                          slug={product.slug}
+                          images={product.images}
+                          name={product.name}
+                        />
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 font-mono">
                         #{product.id}
