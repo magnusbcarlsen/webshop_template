@@ -370,16 +370,19 @@ export class ProductsService {
   }
 
   async remove(id: number): Promise<{ success: boolean }> {
-    // 1) Load your local product to get the Stripe IDs
+    // 1) Load product with images relation (need URLs before cascade delete)
     const product = await this.findOne(id);
 
-    // 2) List all Stripe Prices for this product
+    // 2) Save image URLs BEFORE deleting (ON DELETE CASCADE removes product_images rows)
+    const imageUrls = (product.images || []).map((img) => img.imageUrl);
+
+    // 3) List all Stripe Prices for this product
     const prices = await this.stripe.prices.list({
       product: product.stripeProductId,
       limit: 100,
     });
 
-    // 3) Deactivate each price, swallowing any errors
+    // 4) Deactivate each price, swallowing any errors
     await Promise.all(
       prices.data.map(async (price) => {
         try {
@@ -390,7 +393,7 @@ export class ProductsService {
       }),
     );
 
-    // 4) Archive (deactivate) the Stripe Product itself
+    // 5) Archive (deactivate) the Stripe Product itself
     try {
       await this.stripe.products.update(product.stripeProductId, {
         active: false,
@@ -402,19 +405,15 @@ export class ProductsService {
       );
     }
 
-    // 5) Remove the record locally
+    // 6) Remove the record locally (cascades to product_images rows)
     await this.productsRepository.remove(product);
 
-    // 6) Cleanup any images
-    const imgs = await this.productImageRepository.find({
-      where: { productId: id },
-    });
-    // Using for...of instead of forEach to properly handle async operations
-    for (const img of imgs) {
+    // 7) Delete actual image files from R2/S3
+    for (const url of imageUrls) {
       try {
-        await this.deleteImage(img.imageUrl);
+        await this.deleteImage(url);
       } catch (err) {
-        console.error('Failed deleting image:', err);
+        console.error('Failed deleting image from R2:', err);
       }
     }
 

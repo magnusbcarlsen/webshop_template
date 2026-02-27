@@ -1,6 +1,7 @@
 // src/components/ProductDetail.tsx
 "use client";
 import { ProductAPI } from "@/services/product-api";
+import { useProductImage, FALLBACK_IMAGE } from "@/hooks/useProductImage";
 import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
 import NextImage from "next/image";
 import { useState, useEffect } from "react";
@@ -11,76 +12,15 @@ interface ProductDetailProps {
   product: ProductAPI;
 }
 
-const FALLBACK_SRC = "/NoImageAvailable.png";
-
 export default function ProductDetail({ product }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
-  const [displayImageSrc, setDisplayImageSrc] = useState<string>(FALLBACK_SRC);
-  const [imageChecked, setImageChecked] = useState(false);
-
-  // Get primary image or first available
-  const primaryImage =
-    product.images?.find((img) => img.isPrimary) || product.images?.[0];
-
   const allImages = product.images || [];
-  const currentImage = allImages[selectedImage] || primaryImage;
 
-  // Database image URL (from MinIO)
-  const databaseImageSrc = currentImage
-    ? normalizeImageUrl(currentImage.imageUrl)
-    : null;
-
-  const altText = currentImage
-    ? currentImage.altText || product.name
-    : `${product.name} (no image)`;
-
-  // Local static image paths (supports both .jpg and .jpeg)
-  const localImageJpg = `/product-images/${product.slug}.jpg`;
-  const localImageJpeg = `/product-images/${product.slug}.jpeg`;
-
-  // Cascading fallback: local .jpg → local .jpeg → database image → placeholder
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const tryLoadImage = (src: string): Promise<boolean> => {
-      return new Promise((resolve) => {
-        const img = new window.Image();
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-        img.src = src;
-      });
-    };
-
-    const loadImage = async () => {
-      // 1. Try local .jpg first
-      if (await tryLoadImage(localImageJpg)) {
-        setDisplayImageSrc(localImageJpg);
-        setImageChecked(true);
-        return;
-      }
-
-      // 2. Try local .jpeg
-      if (await tryLoadImage(localImageJpeg)) {
-        setDisplayImageSrc(localImageJpeg);
-        setImageChecked(true);
-        return;
-      }
-
-      // 3. Try database image (MinIO)
-      if (databaseImageSrc && await tryLoadImage(databaseImageSrc)) {
-        setDisplayImageSrc(databaseImageSrc);
-        setImageChecked(true);
-        return;
-      }
-
-      // 4. Use fallback placeholder
-      setDisplayImageSrc(FALLBACK_SRC);
-      setImageChecked(true);
-    };
-
-    setImageChecked(false);
-    loadImage();
-  }, [localImageJpg, localImageJpeg, databaseImageSrc, selectedImage]);
+  const { src, altText, onError } = useProductImage(
+    product.slug,
+    product.images,
+    selectedImage,
+  );
 
   // Carousel navigation functions
   const nextImage = () => {
@@ -120,16 +60,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         <div className="relative w-full max-w-2xl h-[70%] mb-6 group">
           <div className="relative w-full h-full bg-[var(--background)] rounded-lg overflow-hidden">
             <NextImage
-              src={displayImageSrc}
+              src={src}
               alt={altText}
               fill
               className="object-contain"
               priority
               unoptimized
-              onError={(e) => {
-                console.error("Next/Image failed to load:", displayImageSrc);
-                e.currentTarget.src = FALLBACK_SRC;
-              }}
+              onError={onError}
             />
           </div>
 
@@ -211,7 +148,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                     className="object-cover"
                     unoptimized
                     onError={(e) => {
-                      e.currentTarget.src = FALLBACK_SRC;
+                      e.currentTarget.src = FALLBACK_IMAGE;
                     }}
                   />
                 </button>
