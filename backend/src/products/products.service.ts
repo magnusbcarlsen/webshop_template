@@ -294,30 +294,48 @@ export class ProductsService {
     Object.assign(product, data);
 
     // 2) If name, description, or SKU changed, update the Stripe Product
-    if (nameChanged || descChanged || skuChanged) {
-      await this.stripe.products.update(product.stripeProductId, {
-        ...(nameChanged ? { name: product.name } : {}),
-        ...(descChanged ? { description: product.description } : {}),
-        metadata: {
-          productId: product.id.toString(), // Ensure metadata is always present
-          sku: product.sku || '',
-        },
-      });
+    if ((nameChanged || descChanged || skuChanged) && product.stripeProductId) {
+      try {
+        await this.stripe.products.update(product.stripeProductId, {
+          ...(nameChanged ? { name: product.name } : {}),
+          ...(descChanged ? { description: product.description } : {}),
+          metadata: {
+            productId: product.id.toString(),
+            sku: product.sku || '',
+          },
+        });
+      } catch (error_) {
+        console.error(
+          `Stripe product update failed for product ${product.id}:`,
+          error_,
+        );
+      }
     }
 
     // 3) Rotate Stripe Price if price info provided
-    if (unitAmount != null && currency) {
-      await this.stripe.prices.update(product.stripePriceId, { active: false });
-      const newPrice = await this.stripe.prices.create({
-        product: product.stripeProductId,
-        unit_amount: unitAmount,
-        currency,
-        metadata: {
-          productId: product.id.toString(), // Ensure metadata is on new price too
-          sku: product.sku || '',
-        },
-      });
-      product.stripePriceId = newPrice.id;
+    if (unitAmount != null && currency && product.stripeProductId) {
+      try {
+        if (product.stripePriceId) {
+          await this.stripe.prices.update(product.stripePriceId, {
+            active: false,
+          });
+        }
+        const newPrice = await this.stripe.prices.create({
+          product: product.stripeProductId,
+          unit_amount: unitAmount,
+          currency,
+          metadata: {
+            productId: product.id.toString(),
+            sku: product.sku || '',
+          },
+        });
+        product.stripePriceId = newPrice.id;
+      } catch (error_) {
+        console.error(
+          `Stripe price rotation failed for product ${product.id}:`,
+          error_,
+        );
+      }
     }
 
     // 4) Update categories if provided
