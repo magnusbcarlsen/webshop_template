@@ -5,19 +5,43 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button, Checkbox } from "@heroui/react";
 import { CartAPI, removeItemFromCart } from "@/services/cart-api";
-import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
+import { useProductImage } from "@/hooks/useProductImage";
 import { useRouter } from "next/navigation";
 import { CheckoutButton } from "@/components/CheckoutButton";
+
+function CartItemImage({
+  slug,
+  images,
+  size = "md",
+}: {
+  slug: string;
+  images?: { imageUrl: string; altText: string | null; isPrimary: boolean }[];
+  size?: "sm" | "md";
+}) {
+  const { src, altText, onError } = useProductImage(slug, images);
+
+  const sizeClass = size === "sm" ? "w-12 h-12 lg:w-16 lg:h-16" : "w-32 h-32 lg:w-40 lg:h-40";
+
+  return (
+    <div className={`relative ${sizeClass} bg-gray-100 rounded overflow-hidden flex-shrink-0`}>
+      <Image
+        src={src}
+        alt={altText}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={onError}
+      />
+    </div>
+  );
+}
 
 export default function ClientCart() {
   const router = useRouter();
   const [cart, setCart] = useState<CartAPI | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [agreeTerms, setAgreeTerms] = useState(false);
-
-  const FALLBACK_SRC = "/NoImageAvailable.png";
 
   useEffect(() => {
     async function loadCart() {
@@ -58,14 +82,6 @@ export default function ClientCart() {
       );
     }
   }
-
-  const handleImageError = (itemId: number, imageSrc: string) => {
-    console.error("Next/Image failed to load:", imageSrc);
-    setImageErrors((prev) => ({
-      ...prev,
-      [itemId]: true,
-    }));
-  };
 
   // Calculate totals
   const subtotal = cart
@@ -122,39 +138,17 @@ export default function ClientCart() {
               <div className="space-y-8">
                 {/* Cart Items */}
                 {cart.items.map((item) => {
-                  const primaryImage =
-                    item.product.images?.find((img) => img.isPrimary) ||
-                    item.product.images?.[0] ||
-                    null;
-
-                  const imageSrc = primaryImage
-                    ? normalizeImageUrl(primaryImage.imageUrl)
-                    : FALLBACK_SRC;
-
-                  const altText = primaryImage
-                    ? primaryImage.altText || item.product.name
-                    : `${item.product.name} (no image)`;
-
-                  const displayImageSrc = imageErrors[item.id]
-                    ? FALLBACK_SRC
-                    : imageSrc;
-
                   return (
                     <div
                       key={item.id}
                       className="flex flex-col lg:flex-row items-start lg:items-center space-y-6 lg:space-y-0 lg:space-x-8 border-b border-gray-200 pb-8"
                     >
                       {/* Product Image */}
-                      <div className="relative w-32 h-32 lg:w-40 lg:h-40 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <Image
-                          src={displayImageSrc}
-                          alt={altText}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                          onError={() => handleImageError(item.id, imageSrc)}
-                        />
-                      </div>
+                      <CartItemImage
+                        slug={item.product.slug}
+                        images={item.product.images}
+                        size="md"
+                      />
 
                       {/* Product Details */}
                       <div className="flex-1 space-y-4">
@@ -214,38 +208,16 @@ export default function ClientCart() {
           <div className="space-y-3 lg:space-y-4 max-h-48 lg:max-h-60 overflow-y-auto">
             {cart &&
               cart.items.map((item) => {
-                const primaryImage =
-                  item.product.images?.find((img) => img.isPrimary) ||
-                  item.product.images?.[0] ||
-                  null;
-
-                const imageSrc = primaryImage
-                  ? normalizeImageUrl(primaryImage.imageUrl)
-                  : FALLBACK_SRC;
-
-                const altText = primaryImage
-                  ? primaryImage.altText || item.product.name
-                  : `${item.product.name} (no image)`;
-
-                const displayImageSrc = imageErrors[item.id]
-                  ? FALLBACK_SRC
-                  : imageSrc;
-
                 return (
                   <div
                     key={item.id}
                     className="flex items-center space-x-3 lg:space-x-4 bg-white/60 p-2 lg:p-3 rounded-lg"
                   >
-                    <div className="relative w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      <Image
-                        src={displayImageSrc}
-                        alt={altText}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                        onError={() => handleImageError(item.id, imageSrc)}
-                      />
-                    </div>
+                    <CartItemImage
+                      slug={item.product.slug}
+                      images={item.product.images}
+                      size="sm"
+                    />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium truncate text-xs lg:text-sm">
                         {item.product.name}

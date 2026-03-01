@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import NextImage from "next/image";
 import { loadStripe } from "@stripe/stripe-js";
 import Link from "next/link";
 import {
@@ -15,8 +15,31 @@ import {
   Divider,
 } from "@heroui/react";
 import { CartAPI } from "@/services/cart-api";
-import { normalizeImageUrl } from "@/utils/NormalizeImageUrl";
+import { useProductImage } from "@/hooks/useProductImage";
 import { CheckoutButton } from "@/components/CheckoutButton";
+
+function CheckoutItemImage({
+  slug,
+  images,
+}: {
+  slug: string;
+  images?: { imageUrl: string; altText: string | null; isPrimary: boolean }[];
+}) {
+  const { src, altText, onError } = useProductImage(slug, images);
+
+  return (
+    <div className="relative w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+      <NextImage
+        src={src}
+        alt={altText}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={onError}
+      />
+    </div>
+  );
+}
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -38,7 +61,6 @@ export default function ClientCheckout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creatingSession, setCreatingSession] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
     email: "",
@@ -50,8 +72,6 @@ export default function ClientCheckout() {
     country: "Denmark",
     phone: "",
   });
-
-  const FALLBACK_SRC = "/NoImageAvailable.png";
 
   // Load the cart
   useEffect(() => {
@@ -90,15 +110,6 @@ export default function ClientCheckout() {
 
   const shipping = subtotal > 500 ? 0 : 50;
   const total = subtotal + shipping;
-
-  // Handle image errors
-  const handleImageError = (itemId: number, imageSrc: string) => {
-    console.error("Next/Image failed to load:", imageSrc);
-    setImageErrors((prev) => ({
-      ...prev,
-      [itemId]: true,
-    }));
-  };
 
   // Handle form input changes
   const handleInputChange = (field: keyof CustomerDetails, value: string) => {
@@ -346,38 +357,15 @@ export default function ClientCheckout() {
             {/* Cart Items */}
             <div className="space-y-4 max-h-60 overflow-y-auto">
               {cart.items.map((item) => {
-                const primaryImage =
-                  item.product.images?.find((img) => img.isPrimary) ||
-                  item.product.images?.[0] ||
-                  null;
-
-                const imageSrc = primaryImage
-                  ? normalizeImageUrl(primaryImage.imageUrl)
-                  : FALLBACK_SRC;
-
-                const altText = primaryImage
-                  ? primaryImage.altText || item.product.name
-                  : `${item.product.name} (no image)`;
-
-                const displayImageSrc = imageErrors[item.id]
-                  ? FALLBACK_SRC
-                  : imageSrc;
-
                 return (
                   <div
                     key={item.id}
                     className="flex items-center space-x-4 bg-white/60 p-3 rounded-lg"
                   >
-                    <div className="relative w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      <Image
-                        src={displayImageSrc}
-                        alt={altText}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                        onError={() => handleImageError(item.id, imageSrc)}
-                      />
-                    </div>
+                    <CheckoutItemImage
+                      slug={item.product.slug}
+                      images={item.product.images}
+                    />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium truncate text-sm">
                         {item.product.name}
