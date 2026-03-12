@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"S3\\\\|storage\")"
+      "Bash(xargs grep -l \"S3\\\\|storage\")",
+      "Bash(find \"C:\\\\webshop_template\\\\frontend\\\\src\\\\app\\\\products\" -type f -name \"*.tsx\" -o -name \"*.ts\" 2>/dev/null | head -20)",
+      "Bash(find \"C:\\\\webshop_template\\\\frontend\\\\src\\\\components\" -name \"*ProductDetail*\" -o -name \"*product*\" 2>/dev/null | head -20)",
+      "Bash(cd /c/webshop_template && docker-compose exec -T database mysql -u magnus -psecretPassword webshop -e \"\nUPDATE products SET dimensions = '80 x 100 cm'  WHERE slug = 'dancing-on-the-square';\nUPDATE products SET dimensions = '60 x 80 cm'   WHERE slug = 'everything-is-possible';\nUPDATE products SET dimensions = '100 x 120 cm' WHERE slug = 'into-the-water';\nUPDATE products SET dimensions = '90 x 110 cm'  WHERE slug = 'into-the-woods';\nUPDATE products SET dimensions = '50 x 70 cm'   WHERE slug = 'love-my-hair';\nUPDATE products SET dimensions = '100 x 130 cm' WHERE slug = 'nukaka-greenland-forever';\nUPDATE products SET dimensions = '120 x 150 cm' WHERE slug = 'perfect-storm';\nUPDATE products SET dimensions = '60 x 90 cm'   WHERE slug = 'rainy-day';\nUPDATE products SET dimensions = '70 x 100 cm'  WHERE slug = 'saved';\nUPDATE products SET dimensions = '80 x 80 cm'   WHERE slug = 'silent-retreat';\nUPDATE products SET dimensions = '50 x 60 cm'   WHERE slug = 'stitching-up';\n\")",
+      "Bash(cd /c/webshop_template && docker-compose ps)",
+      "Bash(cd /c/webshop_template && docker-compose exec -T db mysql -u magnus -psecretPassword webshop -e \"\nUPDATE products SET dimensions = '80 x 100 cm'  WHERE slug = 'dancing-on-the-square';\nUPDATE products SET dimensions = '60 x 80 cm'   WHERE slug = 'everything-is-possible';\nUPDATE products SET dimensions = '100 x 120 cm' WHERE slug = 'into-the-water';\nUPDATE products SET dimensions = '90 x 110 cm'  WHERE slug = 'into-the-woods';\nUPDATE products SET dimensions = '50 x 70 cm'   WHERE slug = 'love-my-hair';\nUPDATE products SET dimensions = '100 x 130 cm' WHERE slug = 'nukaka-greenland-forever';\nUPDATE products SET dimensions = '120 x 150 cm' WHERE slug = 'perfect-storm';\nUPDATE products SET dimensions = '60 x 90 cm'   WHERE slug = 'rainy-day';\nUPDATE products SET dimensions = '70 x 100 cm'  WHERE slug = 'saved';\nUPDATE products SET dimensions = '80 x 80 cm'   WHERE slug = 'silent-retreat';\nUPDATE products SET dimensions = '50 x 60 cm'   WHERE slug = 'stitching-up';\n\")",
+      "Bash(cd /c/webshop_template && docker-compose exec -T db mysql -u magnus -psecretPassword webshop -e \"\nALTER TABLE products ADD COLUMN display_order INT NOT NULL DEFAULT 0 AFTER dimensions;\nSET @row_number = 0;\nUPDATE products SET display_order = \\(@row_number := @row_number + 1\\) - 1 ORDER BY created_at ASC;\nSELECT product_id, name, display_order FROM products ORDER BY display_order;\n\")",
+      "Bash(cd /c/webshop_template && docker-compose restart backend)",
+      "Bash(cd /c/webshop_template && docker-compose logs --tail=20 backend 2>&1 | tail -10)",
+      "Bash(cd /c/webshop_template && docker-compose logs --tail=5 backend 2>&1)",
+      "Bash(sleep 10 && cd /c/webshop_template && docker-compose logs --tail=10 backend 2>&1)",
+      "Bash(cd /c/webshop_template && docker-compose logs backend 2>&1 | grep -i \"products\")",
+      "Bash(cd /c/webshop_template && docker-compose logs --tail=5 frontend 2>&1)",
+      "Bash(cd /c/webshop_template && docker-compose logs --tail=10 frontend 2>&1)"
     ]
   }
 }

@@ -41,6 +41,7 @@ export type ProductAPI = {
   sku: string | null;
   weight: number | null;
   dimensions: string | null;
+  displayOrder: number;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
@@ -125,6 +126,26 @@ export async function fetchProductBySlug(slug: string): Promise<ProductAPI> {
     cache: "no-store",
   });
   return handleResponse(res);
+}
+
+export async function fetchAllProducts(): Promise<ProductAPI[]> {
+  const res = await fetch(`${API_ROOT}/products/admin/all`, {
+    cache: "no-store",
+    credentials: "include",
+  });
+  return handleResponse(res);
+}
+
+export async function reorderProducts(
+  items: { id: number; displayOrder: number }[]
+): Promise<void> {
+  const res = await fetch(`${API_ROOT}/products/reorder`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(items),
+  });
+  await handleResponse(res);
 }
 
 // ─── PRODUCTS (ADMIN) ──────────────────────────────────────────────

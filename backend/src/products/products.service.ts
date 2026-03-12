@@ -149,7 +149,24 @@ export class ProductsService {
     return this.productsRepository.find({
       where: { isActive: true },
       relations: ['images', 'variants', 'categories'],
-      order: { createdAt: 'DESC' },
+      order: { displayOrder: 'ASC', createdAt: 'DESC' },
+    });
+  }
+
+  async findAllAdmin(): Promise<Product[]> {
+    return this.productsRepository.find({
+      relations: ['images', 'variants', 'categories'],
+      order: { displayOrder: 'ASC', createdAt: 'DESC' },
+    });
+  }
+
+  async reorder(items: { id: number; displayOrder: number }[]): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      for (const item of items) {
+        await manager.update(Product, item.id, {
+          displayOrder: item.displayOrder,
+        });
+      }
     });
   }
 
@@ -281,7 +298,14 @@ export class ProductsService {
   ): Promise<Product> {
     const { images, categoryIds, unitAmount, currency, ...data } =
       updateProductDto;
-    const product = await this.findOne(id);
+    // Use findOneAdmin so we can update hidden products too (e.g. toggle visibility back on)
+    const product = await this.productsRepository.findOne({
+      where: { id },
+      relations: ['images', 'variants', 'categories'],
+    });
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
 
     // Keep track of what changed
     const nameChanged = data.name !== undefined && data.name !== product.name;
@@ -389,7 +413,13 @@ export class ProductsService {
 
   async remove(id: number): Promise<{ success: boolean }> {
     // 1) Load product with images relation (need URLs before cascade delete)
-    const product = await this.findOne(id);
+    const product = await this.productsRepository.findOne({
+      where: { id },
+      relations: ['images', 'variants', 'categories'],
+    });
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
 
     // 2) Save image URLs BEFORE deleting (ON DELETE CASCADE removes product_images rows)
     const imageUrls = (product.images || []).map((img) => img.imageUrl);
