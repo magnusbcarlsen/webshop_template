@@ -3,7 +3,7 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
 import {
-  fetchProducts,
+  fetchAllProducts,
   createProduct,
   ProductAPI,
   deleteProduct,
@@ -11,6 +11,7 @@ import {
   fetchCategories,
   CategoryAPI,
   createCategory,
+  reorderProducts,
 } from "@/services/product-api";
 import { useProductImage } from "@/hooks/useProductImage";
 
@@ -56,6 +57,8 @@ interface ProductForm {
   description?: string;
   price: number;
   stockQuantity: number;
+  dimensions: string;
+  isActive: boolean;
   selectedCategories: CategoryAPI[];
   categoryInput: string;
 }
@@ -67,9 +70,13 @@ export default function AdminProducts() {
     description: "",
     price: 0,
     stockQuantity: 0,
+    dimensions: "",
+    isActive: true,
     selectedCategories: [],
     categoryInput: "",
   };
+
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   const [products, setProducts] = useState<ProductAPI[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +98,7 @@ export default function AdminProducts() {
   async function loadProducts() {
     setLoading(true);
     try {
-      const data = await fetchProducts();
+      const data = await fetchAllProducts();
       setProducts(data || []);
       setError(null);
     } catch (err: unknown) {
@@ -193,6 +200,8 @@ export default function AdminProducts() {
       description: p.description ?? "",
       price: p.price,
       stockQuantity: p.stockQuantity,
+      dimensions: p.dimensions ?? "",
+      isActive: p.isActive,
       selectedCategories: (p.categories as CategoryAPI[]) || [],
       categoryInput: "",
     });
@@ -222,9 +231,11 @@ export default function AdminProducts() {
         stockQuantity: form.stockQuantity,
         sku: null,
         weight: null,
-        dimensions: null,
-        isFeatured: false,
-        isActive: true,
+        dimensions: form.dimensions || null,
+        isFeatured: isEditing
+          ? (products.find((p) => p.id === editingId)?.isFeatured ?? false)
+          : false,
+        isActive: form.isActive,
         categoryIds: form.selectedCategories.map((c) => c.id),
         // STRIPE //
         unitAmount: Math.round(form.price * 100),
@@ -269,6 +280,65 @@ export default function AdminProducts() {
     }
   }
 
+  function handleDragStart(idx: number) {
+    setDraggedIdx(idx);
+  }
+
+  function handleDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+
+    const updated = [...products];
+    const [dragged] = updated.splice(draggedIdx, 1);
+    updated.splice(idx, 0, dragged);
+    setProducts(updated);
+    setDraggedIdx(idx);
+  }
+
+  async function handleDragEnd() {
+    setDraggedIdx(null);
+    const reorderPayload = products.map((p, i) => ({
+      id: p.id,
+      displayOrder: i,
+    }));
+    try {
+      await reorderProducts(reorderPayload);
+    } catch {
+      setError("Failed to reorder products");
+      await loadProducts();
+    }
+  }
+
+  async function handleToggleVisibility(product: ProductAPI) {
+    const payload = {
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      salePrice: product.salePrice,
+      stockQuantity: product.stockQuantity,
+      sku: product.sku,
+      weight: product.weight,
+      dimensions: product.dimensions,
+      isFeatured: product.isFeatured,
+      isActive: !product.isActive,
+      stripeProductId: product.stripeProductId,
+      stripePriceId: product.stripePriceId,
+      categoryIds: product.categories.map((c) => c.id),
+      unitAmount: Math.round(product.price * 100),
+      currency: "DKK",
+    };
+    try {
+      await updateProduct(product.id, payload);
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id ? { ...p, isActive: !p.isActive } : p,
+        ),
+      );
+    } catch {
+      setError("Failed to update product visibility");
+    }
+  }
+
   async function handleDelete(id: number) {
     if (
       !confirm(
@@ -296,7 +366,6 @@ export default function AdminProducts() {
   }
 
   const activeProducts = products.filter((p) => p.isActive);
-  const inactiveProducts = products.filter((p) => !p.isActive);
 
   return (
     <div className="p-8 space-y-8">
@@ -447,13 +516,14 @@ export default function AdminProducts() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     {[
+                      "",
                       "Image",
-                      "ID",
                       "Name",
-                      "Slug",
                       "Price",
+                      "Dimensions",
                       "Categories",
                       "Stock",
+                      "Visibility",
                       "Actions",
                     ].map((header) => (
                       <th
@@ -466,33 +536,52 @@ export default function AdminProducts() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {products.map((product) => (
+                  {products.map((product, idx) => (
                     <tr
                       key={product.id}
-                      className="hover:bg-gray-50 transition-colors"
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      className={`transition-colors ${
+                        draggedIdx === idx
+                          ? "bg-blue-50 opacity-50"
+                          : product.isActive
+                            ? "hover:bg-gray-50"
+                            : "bg-gray-50 opacity-60"
+                      }`}
                     >
-                      <td className="px-6 py-4">
-                        <AdminThumbnail
-                          slug={product.slug}
-                          images={product.images}
-                          name={product.name}
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 font-mono">
-                        #{product.id}
+                      <td className="px-3 py-4 cursor-grab active:cursor-grabbing">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                        </svg>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
+                        <a href={`/products/${product.slug}`} target="_blank" rel="noopener noreferrer">
+                          <AdminThumbnail
+                            slug={product.slug}
+                            images={product.images}
+                            name={product.name}
+                          />
+                        </a>
+                      </td>
+                      <td className="px-6 py-4">
+                        <a
+                          href={`/products/${product.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-gray-900 hover:text-blue-600 hover:underline"
+                        >
                           {product.name}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {product.slug}
+                        </a>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-lg font-semibold text-gray-900">
                           DKK {product.price}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {product.dimensions || "—"}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
@@ -525,7 +614,30 @@ export default function AdminProducts() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <button
+                          onClick={() => handleToggleVisibility(product)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                            product.isActive
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                          title={product.isActive ? "Click to hide" : "Click to show"}
+                        >
+                          {product.isActive ? (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                            </svg>
+                          )}
+                          {product.isActive ? "Visible" : "Hidden"}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
                           <Button
                             size="sm"
                             variant="flat"
@@ -671,6 +783,45 @@ export default function AdminProducts() {
                         placeholder="0"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dimensions
+                    </label>
+                    <input
+                      name="dimensions"
+                      value={form.dimensions}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={submitting}
+                      placeholder="e.g. 80 x 100 cm"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Show Product
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({ ...f, isActive: !f.isActive }))
+                      }
+                      disabled={submitting}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        form.isActive ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          form.isActive ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-gray-500">
+                      {form.isActive ? "Visible" : "Hidden"}
+                    </span>
                   </div>
 
                   <div>

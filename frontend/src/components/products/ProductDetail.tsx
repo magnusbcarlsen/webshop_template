@@ -184,13 +184,11 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
           {/* Dimensions */}
           {product.dimensions && (
-            <div className="text-left">
-              <div className="inline-block p-4 bg-white/60 rounded-lg">
-                <div className="font-semibold text-sm uppercase tracking-wide mb-1">
-                  Dimensions
-                </div>
-                <div className="text-gray-700">{product.dimensions}</div>
+            <div className="text-left space-y-1">
+              <div className="font-semibold text-sm uppercase tracking-wide">
+                Dimensions
               </div>
+              <div className="text-gray-700">{product.dimensions}</div>
             </div>
           )}
 

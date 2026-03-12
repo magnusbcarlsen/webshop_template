@@ -77,6 +77,10 @@ export class ProductsController {
       createProductDto.salePrice =
         parseFloat(createProductDto.salePrice) || undefined;
     }
+    if (typeof createProductDto.displayOrder === 'string') {
+      createProductDto.displayOrder =
+        parseInt(createProductDto.displayOrder, 10) || 0;
+    }
 
     // Handle boolean fields from FormData (they come as strings)
     if (typeof createProductDto.isFeatured === 'string') {
@@ -105,6 +109,21 @@ export class ProductsController {
   @Get()
   findAll() {
     return this.productsService.findAll();
+  }
+
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  findAllAdmin() {
+    return this.productsService.findAllAdmin();
+  }
+
+  @Patch('reorder')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async reorder(@Body() items: { id: number; displayOrder: number }[]) {
+    await this.productsService.reorder(items);
+    return { success: true };
   }
 
   @Get(':id')
@@ -166,6 +185,10 @@ export class ProductsController {
     if (typeof updateProductDto.salePrice === 'string') {
       updateProductDto.salePrice =
         parseFloat(updateProductDto.salePrice) || undefined;
+    }
+    if (typeof updateProductDto.displayOrder === 'string') {
+      updateProductDto.displayOrder =
+        parseInt(updateProductDto.displayOrder, 10) || 0;
     }
 
     // Handle boolean fields from FormData (they come as strings)
