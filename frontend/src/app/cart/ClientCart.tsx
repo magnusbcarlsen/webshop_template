@@ -173,7 +173,7 @@ export default function ClientCart() {
                         <div className="flex items-center space-x-6">
                           <div className="text-xl font-bold">
                             DKK{" "}
-                            {(item.quantity * item.product.price).toFixed(2)}
+                            {Math.round(item.quantity * item.product.price)}
                           </div>
                           <Button
                             size="sm"
@@ -227,7 +227,7 @@ export default function ClientCart() {
                       </p>
                     </div>
                     <div className="text-xs lg:text-sm font-semibold">
-                      DKK {(item.quantity * item.product.price).toFixed(2)}
+                      DKK {Math.round(item.quantity * item.product.price)}
                     </div>
                   </div>
                 );
@@ -240,18 +240,18 @@ export default function ClientCart() {
           <div className="space-y-2 lg:space-y-3">
             <div className="flex justify-between text-base lg:text-lg">
               <span>Subtotal</span>
-              <span>DKK {subtotal.toFixed(2)}</span>
+              <span>DKK {Math.round(subtotal)}</span>
             </div>
             <div className="flex justify-between text-base lg:text-lg">
               <span>Shipping</span>
               <span>
-                {shipping === 0 ? "Free" : `DKK ${shipping.toFixed(2)}`}
+                {shipping === 0 ? "Free" : `DKK ${Math.round(shipping)}`}
               </span>
             </div>
             <div className="border-b border-gray-300"></div>
             <div className="flex justify-between text-lg lg:text-xl font-bold">
               <span>Total</span>
-              <span>DKK {total.toFixed(2)}</span>
+              <span>DKK {Math.round(total)}</span>
             </div>
           </div>
 

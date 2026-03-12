@@ -55,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Row 2: Product Price */}
         <div>
-          <p className="text-default-500 font-semibold">DKK {product.price}</p>
+          <p className="text-default-500 font-semibold">DKK {Math.round(product.price)}</p>
         </div>
 
         {/* Row 3: Add To Cart Button */}

@@ -195,10 +195,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           {/* Price */}
           <div className="text-left space-y-2">
             <div className="text-3xl lg:text-4xl font-bold">
-              DKK {product.salePrice || product.price}
+              DKK {Math.round(product.salePrice || product.price)}
               {product.salePrice && (
                 <span className="text-xl text-gray-400 line-through ml-3">
-                  DKK {product.price}
+                  DKK {Math.round(product.price)}
                 </span>
               )}
             </div>

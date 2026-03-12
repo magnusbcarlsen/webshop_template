@@ -577,7 +577,7 @@ export default function AdminProducts() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-lg font-semibold text-gray-900">
-                          DKK {product.price}
+                          DKK {Math.round(product.price)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">

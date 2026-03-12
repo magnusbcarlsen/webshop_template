@@ -376,7 +376,7 @@ export default function AdminOrders() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-lg font-semibold text-gray-900">
-                          DKK {order.totalAmount}
+                          DKK {Math.round(order.totalAmount)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -516,7 +516,7 @@ export default function AdminOrders() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-lg font-semibold text-gray-900">
-                          DKK {order.totalAmount}
+                          DKK {Math.round(order.totalAmount)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -608,7 +608,7 @@ export default function AdminOrders() {
                       <p>
                         <strong>Total:</strong>{" "}
                         <span className="text-lg font-semibold">
-                          DKK {selectedOrder.totalAmount}
+                          DKK {Math.round(selectedOrder.totalAmount)}
                         </span>
                       </p>
                     </div>
@@ -652,7 +652,7 @@ export default function AdminOrders() {
                             {item.quantity} × {displayName || "Unknown Item"}
                           </span>
                           <span className="text-sm text-gray-600">
-                            DKK {(item.unitPrice * item.quantity).toFixed(2)}
+                            DKK {Math.round(item.unitPrice * item.quantity)}
                           </span>
                         </div>
                       );

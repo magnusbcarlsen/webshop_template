@@ -375,7 +375,7 @@ export default function ClientCheckout() {
                       </p>
                     </div>
                     <div className="text-sm font-semibold">
-                      DKK {(item.quantity * item.product.price).toFixed(2)}
+                      DKK {Math.round(item.quantity * item.product.price)}
                     </div>
                   </div>
                 );
@@ -385,17 +385,17 @@ export default function ClientCheckout() {
             <div className="border-b border-gray-300 pb-4">
               <div className="flex justify-between items-center text-lg">
                 <span>Subtotal</span>
-                <span className="font-bold">DKK {subtotal.toFixed(2)}</span>
+                <span className="font-bold">DKK {Math.round(subtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-lg">
                 <span>Shipping</span>
                 <span className="font-bold">
-                  {shipping === 0 ? "Free" : `DKK ${shipping.toFixed(2)}`}
+                  {shipping === 0 ? "Free" : `DKK ${Math.round(shipping)}`}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xl font-bold mt-2 pt-2 border-t border-gray-300">
                 <span>Total</span>
-                <span>DKK {total.toFixed(2)}</span>
+                <span>DKK {Math.round(total)}</span>
               </div>
               <p className="text-left text-sm text-gray-600 mt-2">
                 Taxes included in price
