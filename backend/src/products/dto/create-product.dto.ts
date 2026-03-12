@@ -75,6 +75,11 @@ export class CreateProductDto {
   dimensions?: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  displayOrder?: number;
+
+  @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;
 

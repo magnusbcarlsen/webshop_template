@@ -52,6 +52,9 @@ export class Product extends BaseEntity {
   @Column({ nullable: true })
   dimensions: string;
 
+  @Column({ name: 'display_order', default: 0 })
+  displayOrder: number;
+
   @Column({ name: 'is_featured', default: false })
   isFeatured: boolean;
 
