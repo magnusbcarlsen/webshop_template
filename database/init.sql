@@ -95,6 +95,7 @@ CREATE TABLE products (
     sku VARCHAR(50) UNIQUE,
     weight DECIMAL(8, 2) CHECK (weight >= 0),
     dimensions VARCHAR(50),
+    display_order INT NOT NULL DEFAULT 0,
     is_featured BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -372,57 +373,57 @@ VALUES
   ('Dancing on the Square',
    'dancing-on-the-square',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '80 x 100 cm', false, true),
 
   ('Everything is Possible',
    'everything-is-possible',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '60 x 80 cm', false, true),
 
   ('Into the Water',
    'into-the-water',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '100 x 120 cm', false, true),
 
   ('Into the Woods',
    'into-the-woods',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '90 x 110 cm', false, true),
 
   ('Love My Hair',
    'love-my-hair',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '50 x 70 cm', false, true),
 
   ('Nukaka Greenland Forever',
    'nukaka-greenland-forever',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '100 x 130 cm', false, true),
 
   ('Perfect Storm',
    'perfect-storm',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '120 x 150 cm', false, true),
 
   ('Rainy Day',
    'rainy-day',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '60 x 90 cm', false, true),
 
   ('Saved',
    'saved',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '70 x 100 cm', false, true),
 
   ('Silent Retreat',
    'silent-retreat',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true),
+   8000.00, NULL, 1, NULL, NULL, '80 x 80 cm', false, true),
 
   ('Stitching Up',
    'stitching-up',
    'Original artwork',
-   8000.00, NULL, 1, NULL, NULL, NULL, false, true);
+   8000.00, NULL, 1, NULL, NULL, '50 x 60 cm', false, true);
 
 
 -- Link all paintings to the "Oliemaleri" category
