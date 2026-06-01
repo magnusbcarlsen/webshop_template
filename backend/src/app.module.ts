@@ -13,6 +13,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { StorageModule } from './storage/storage.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { StripeModule } from './stripe/stripe.module';
+import { ExhibitionsModule } from './exhibitions/exhibitions.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { StripeModule } from './stripe/stripe.module';
     S3Module,
     StorageModule,
     CheckoutModule,
+    ExhibitionsModule,
   ],
   controllers: [AdminController], // ← add this line
 })
