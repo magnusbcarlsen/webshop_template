@@ -124,7 +124,9 @@ export class ExhibitionsController {
 
   /**
    * Multipart form data arrives as strings. Convert booleans before
-   * class-validator runs against the merged DTO.
+   * the merged DTO reaches the service. Also strips `imageUrl` so a
+   * client cannot inject an arbitrary URL — only file uploads or
+   * `removeImage` can set/clear it.
    */
   private coerceMultipart(
     dto: Partial<CreateExhibitionDto> & { isActive?: boolean | string },
@@ -132,5 +134,6 @@ export class ExhibitionsController {
     if (typeof dto.isActive === 'string') {
       dto.isActive = dto.isActive === 'true';
     }
+    delete dto.imageUrl;
   }
 }
