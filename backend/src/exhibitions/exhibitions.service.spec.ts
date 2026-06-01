@@ -2,7 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { ExhibitionsService } from './exhibitions.service';
 import { Exhibition } from './entities/exhibition.entity';
 
@@ -37,8 +37,9 @@ describe('ExhibitionsService', () => {
       expect(repo.find).toHaveBeenCalledTimes(1);
       const args = repo.find.mock.calls[0][0]!;
       expect(args.where).toMatchObject({ isActive: true });
-      expect(args.where).toHaveProperty('displayFrom');
-      expect(args.where).toHaveProperty('displayUntil');
+      const where = args.where as Record<string, unknown>;
+      expect(where.displayFrom).toEqual(LessThanOrEqual('2026-06-15'));
+      expect(where.displayUntil).toEqual(MoreThanOrEqual('2026-06-15'));
       expect(args.order).toEqual({ eventStartDate: 'ASC' });
     });
 

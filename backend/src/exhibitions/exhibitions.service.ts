@@ -126,6 +126,7 @@ export class ExhibitionsService {
       const bucket = this.config.get<string>('do_spaces_bucket')!;
       const url = new URL(imageUrl);
       const parts = url.pathname.split('/').filter(Boolean);
+      // Key is always a flat UUID filename — uploadImage never adds a subfolder prefix.
       const key = parts[parts.length - 1];
       await this.s3.send(
         new DeleteObjectCommand({ Bucket: bucket, Key: key }),
