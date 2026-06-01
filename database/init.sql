@@ -96,8 +96,7 @@ CREATE TABLE exhibitions (
     display_until DATE NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_exhibitions_visibility (is_active, display_from, display_until)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Products table
@@ -368,6 +367,7 @@ CREATE INDEX idx_product_variants_product ON product_variants(product_id);
 CREATE INDEX idx_reviews_product ON reviews(product_id);
 CREATE INDEX idx_order_items_product ON order_items(product_id);
 CREATE INDEX idx_cart_items_product ON cart_items(product_id);
+CREATE INDEX idx_exhibitions_visibility ON exhibitions(is_active, display_from, display_until);
 
 -- Insert dummy data
 
