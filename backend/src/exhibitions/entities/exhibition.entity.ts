@@ -1,3 +1,4 @@
+// backend/src/exhibitions/entities/exhibition.entity.ts
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 
