@@ -1,3 +1,4 @@
+// backend/src/exhibitions/dto/create-exhibition.dto.ts
 import {
   IsBoolean,
   IsDateString,
