@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS product_images;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS user_addresses;
+DROP TABLE IF EXISTS exhibitions;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
 
@@ -79,6 +80,24 @@ CREATE TABLE categories (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (parent_category_id) REFERENCES categories(category_id) ON DELETE SET NULL
+);
+
+-- Exhibitions / upcoming-show announcements
+CREATE TABLE exhibitions (
+    exhibition_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500) NULL,
+    external_url VARCHAR(500) NULL,
+    event_start_date DATE NOT NULL,
+    event_end_date DATE NOT NULL,
+    display_from DATE NOT NULL,
+    display_until DATE NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_exhibitions_visibility (is_active, display_from, display_until)
 );
 
 -- Products table
