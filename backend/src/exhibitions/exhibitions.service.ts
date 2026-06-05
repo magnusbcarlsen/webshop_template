@@ -113,8 +113,12 @@ export class ExhibitionsService {
       throw new InternalServerErrorException('Failed to upload image');
     }
 
+    // R2_PUBLIC_URL (custom domain) serves objects at `<domain>/<key>` without the
+    // bucket prefix. The MinIO fallback uses path-style URLs and must include the
+    // bucket name. Compose accordingly so both deploys produce a browser-loadable URL.
     const publicUrl =
-      this.config.get<string>('R2_PUBLIC_URL') || 'http://localhost:9000';
+      this.config.get<string>('R2_PUBLIC_URL') ||
+      `http://localhost:9000/${bucket}`;
     return `${publicUrl.replace(/\/$/, '')}/${key}`;
   }
 
