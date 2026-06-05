@@ -2,6 +2,7 @@
 import React, { useState, KeyboardEvent } from "react";
 import AdminProducts from "../../components/adminComponents/AdminProducts";
 import AdminOrders from "../../components/adminComponents/AdminOrders";
+import AdminExhibitions from "../../components/adminComponents/AdminExhibitions";
 import { Button } from "@heroui/react";
 import { LogoutButton } from "@/components/LogoutButton";
 
@@ -17,9 +18,17 @@ const OrdersView: React.FC = () => (
   </div>
 );
 
+const ExhibitionsView: React.FC = () => (
+  <div>
+    <AdminExhibitions />
+  </div>
+);
+
 export default function AdminPage() {
   const [isOpen, setIsOpen] = useState(true);
-  const [view, setView] = useState<"products" | "orders">("products");
+  const [view, setView] = useState<"products" | "orders" | "exhibitions">(
+    "products",
+  );
 
   function keyToggle(toggle: () => void) {
     return (e: KeyboardEvent<HTMLElement>) => {
@@ -30,7 +39,7 @@ export default function AdminPage() {
     };
   }
 
-  const selectView = (newView: "products" | "orders") => {
+  const selectView = (newView: "products" | "orders" | "exhibitions") => {
     setView(newView);
   };
 
@@ -134,6 +143,36 @@ export default function AdminPage() {
                   <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
                 )}
               </div>
+
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => selectView("exhibitions")}
+                onKeyDown={keyToggle(() => selectView("exhibitions"))}
+                className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
+                  view === "exhibitions"
+                    ? "bg-gray-50 text-black border-r-4 border-black shadow-sm"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 7h18M3 12h18M3 17h18"
+                  />
+                </svg>
+                <span className="font-medium">Exhibitions</span>
+                {view === "exhibitions" && (
+                  <div className="ml-auto w-2 h-2 bg-black rounded-full"></div>
+                )}
+              </div>
               {/* Logout Button at Bottom */}
               <div className="p-4 border-t border-gray-200">
                 <LogoutButton />
@@ -173,7 +212,9 @@ export default function AdminPage() {
 
         {/* Content Container */}
         <div className="h-full overflow-auto bg-white m-4 rounded-lg shadow-sm border border-gray-200">
-          {view === "products" ? <ProductsView /> : <OrdersView />}
+          {view === "products" && <ProductsView />}
+          {view === "orders" && <OrdersView />}
+          {view === "exhibitions" && <ExhibitionsView />}
         </div>
       </main>
     </div>
