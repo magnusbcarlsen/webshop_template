@@ -62,6 +62,7 @@ export class ExhibitionsService {
   }
 
   async create(dto: CreateExhibitionDto): Promise<Exhibition> {
+    this.assertSafeExternalUrl(dto.externalUrl);
     const entity = this.repo.create({
       ...dto,
       isActive: dto.isActive ?? true,
@@ -70,9 +71,30 @@ export class ExhibitionsService {
   }
 
   async update(id: number, dto: UpdateExhibitionDto): Promise<Exhibition> {
+    if ('externalUrl' in dto) this.assertSafeExternalUrl(dto.externalUrl);
     const existing = await this.findOne(id);
     Object.assign(existing, dto);
     return this.repo.save(existing);
+  }
+
+  /**
+   * externalUrl is rendered as <a href> on the public page. Reject anything
+   * that isn't http(s) so a "javascript:..." or "data:..." link can't slip
+   * past the missing global ValidationPipe.
+   */
+  private assertSafeExternalUrl(url: string | null | undefined): void {
+    if (!url) return;
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new BadRequestException('externalUrl is not a valid URL');
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new BadRequestException(
+        'externalUrl must use http or https',
+      );
+    }
   }
 
   async remove(id: number): Promise<{ success: true }> {

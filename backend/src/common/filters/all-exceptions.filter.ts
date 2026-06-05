@@ -42,11 +42,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = exception.message;
       }
     } else if (exception instanceof QueryFailedError) {
+      // Never expose raw SQL fragments or schema names to clients.
+      // The full message + stack are still logged below for ops.
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = exception.message;
+      message = 'Database error';
       error = 'QueryFailedError';
     } else if (exception instanceof Error) {
-      message = exception.message || 'Internal server error';
+      // Generic Error.message could also leak internals (e.g. file paths,
+      // third-party SDK output). Keep the default "Internal server error"
+      // message and surface only the error name for triage.
       error = exception.name;
     }
 
