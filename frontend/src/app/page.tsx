@@ -1,6 +1,7 @@
 // app/page.tsx
 import ProductList from "@/components/products/ProductList";
 import HeroSection from "@/components/HeroSection";
+import ExhibitionsSection from "@/components/ExhibitionsSection";
 import { fallbackProducts } from "@/data/fallbackProduct ";
 import { ProductAPI, fetchProducts } from "@/services/product-api";
 
@@ -41,6 +42,8 @@ export default async function Home() {
   return (
     <>
       <HeroSection />
+
+      <ExhibitionsSection />
 
       <div>
         <section className="text-center p-8">
