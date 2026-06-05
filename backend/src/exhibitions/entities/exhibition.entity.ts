@@ -7,13 +7,13 @@ export class Exhibition extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'exhibition_id', unsigned: true })
   id: number;
 
-  @Column({ length: 255 })
+  @Column({ type: 'varchar', length: 255, default: '' })
   title: string;
 
-  @Column({ type: 'text' })
-  description: string;
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
 
-  @Column({ length: 255 })
+  @Column({ type: 'varchar', length: 255, default: '' })
   location: string;
 
   @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
@@ -22,17 +22,17 @@ export class Exhibition extends BaseEntity {
   @Column({ name: 'external_url', type: 'varchar', length: 500, nullable: true })
   externalUrl: string | null;
 
-  @Column({ name: 'event_start_date', type: 'date' })
-  eventStartDate: string; // YYYY-MM-DD
+  @Column({ name: 'event_start_date', type: 'date', nullable: true })
+  eventStartDate: string | null; // YYYY-MM-DD
 
-  @Column({ name: 'event_end_date', type: 'date' })
-  eventEndDate: string;
+  @Column({ name: 'event_end_date', type: 'date', nullable: true })
+  eventEndDate: string | null;
 
-  @Column({ name: 'display_from', type: 'date' })
-  displayFrom: string;
+  @Column({ name: 'display_from', type: 'date', nullable: true })
+  displayFrom: string | null;
 
-  @Column({ name: 'display_until', type: 'date' })
-  displayUntil: string;
+  @Column({ name: 'display_until', type: 'date', nullable: true })
+  displayUntil: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;

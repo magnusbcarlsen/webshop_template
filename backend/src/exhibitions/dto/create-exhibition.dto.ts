@@ -6,23 +6,22 @@ import {
   IsString,
   IsUrl,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 
 export class CreateExhibitionDto {
+  @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(255)
-  title: string;
+  title?: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(1)
-  description: string;
+  description?: string | null;
 
+  @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(255)
-  location: string;
+  location?: string;
 
   @IsOptional()
   @IsString()
@@ -34,17 +33,21 @@ export class CreateExhibitionDto {
   @MaxLength(500)
   externalUrl?: string | null;
 
+  @IsOptional()
   @IsDateString({ strict: true })
-  eventStartDate: string;
+  eventStartDate?: string | null;
 
+  @IsOptional()
   @IsDateString({ strict: true })
-  eventEndDate: string;
+  eventEndDate?: string | null;
 
+  @IsOptional()
   @IsDateString({ strict: true })
-  displayFrom: string;
+  displayFrom?: string | null;
 
+  @IsOptional()
   @IsDateString({ strict: true })
-  displayUntil: string;
+  displayUntil?: string | null;
 
   @IsOptional()
   @IsBoolean()

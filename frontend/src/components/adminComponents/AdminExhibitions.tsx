@@ -46,7 +46,8 @@ const blankForm: ExhibitionForm = {
   removeImage: false,
 };
 
-function formatDate(d: string): string {
+function formatDate(d: string | null): string {
+  if (!d) return "—";
   return new Intl.DateTimeFormat("da-DK", {
     day: "numeric",
     month: "short",
@@ -100,14 +101,14 @@ export default function AdminExhibitions() {
     try {
       const row = await fetchExhibition(id);
       setForm({
-        title: row.title,
-        description: row.description,
-        location: row.location,
+        title: row.title ?? "",
+        description: row.description ?? "",
+        location: row.location ?? "",
         externalUrl: row.externalUrl ?? "",
-        eventStartDate: row.eventStartDate,
-        eventEndDate: row.eventEndDate,
-        displayFrom: row.displayFrom,
-        displayUntil: row.displayUntil,
+        eventStartDate: row.eventStartDate ?? "",
+        eventEndDate: row.eventEndDate ?? "",
+        displayFrom: row.displayFrom ?? "",
+        displayUntil: row.displayUntil ?? "",
         isActive: row.isActive,
         removeImage: false,
       });
@@ -319,65 +320,60 @@ export default function AdminExhibitions() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Title *
+                      Title
                     </label>
                     <input
                       name="title"
                       value={form.title}
                       onChange={handleChange}
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description *
+                      Description
                     </label>
                     <textarea
                       name="description"
                       value={form.description}
                       onChange={handleChange}
-                      required
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Location *
+                      Location
                     </label>
                     <input
                       name="location"
                       value={form.location}
                       onChange={handleChange}
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Event start *
+                        Event start
                       </label>
                       <input
                         type="date"
                         name="eventStartDate"
                         value={form.eventStartDate}
                         onChange={handleChange}
-                        required
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Event end *
+                        Event end
                       </label>
                       <input
                         type="date"
                         name="eventEndDate"
                         value={form.eventEndDate}
                         onChange={handleChange}
-                        required
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
                     </div>
@@ -385,27 +381,25 @@ export default function AdminExhibitions() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Display from *
+                        Display from
                       </label>
                       <input
                         type="date"
                         name="displayFrom"
                         value={form.displayFrom}
                         onChange={handleChange}
-                        required
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Display until *
+                        Display until
                       </label>
                       <input
                         type="date"
                         name="displayUntil"
                         value={form.displayUntil}
                         onChange={handleChange}
-                        required
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       />
                     </div>

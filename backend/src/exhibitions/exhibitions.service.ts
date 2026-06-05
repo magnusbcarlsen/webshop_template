@@ -62,8 +62,6 @@ export class ExhibitionsService {
   }
 
   async create(dto: CreateExhibitionDto): Promise<Exhibition> {
-    this.assertRequiredFields(dto);
-    this.assertDateOrder(dto);
     const entity = this.repo.create({
       ...dto,
       isActive: dto.isActive ?? true,
@@ -72,10 +70,7 @@ export class ExhibitionsService {
   }
 
   async update(id: number, dto: UpdateExhibitionDto): Promise<Exhibition> {
-    this.assertProvidedNotEmpty(dto);
     const existing = await this.findOne(id);
-    const merged = { ...existing, ...dto };
-    this.assertDateOrder(merged);
     Object.assign(existing, dto);
     return this.repo.save(existing);
   }
@@ -139,67 +134,4 @@ export class ExhibitionsService {
     }
   }
 
-  private static readonly REQUIRED_FIELDS = [
-    'title',
-    'description',
-    'location',
-    'eventStartDate',
-    'eventEndDate',
-    'displayFrom',
-    'displayUntil',
-  ] as const;
-
-  private isNonEmpty(v: unknown): boolean {
-    if (v === undefined || v === null) return false;
-    if (typeof v === 'string') return v.trim() !== '';
-    return true;
-  }
-
-  private assertRequiredFields(dto: Partial<CreateExhibitionDto>): void {
-    const missing = ExhibitionsService.REQUIRED_FIELDS.filter(
-      (f) => !this.isNonEmpty((dto as Record<string, unknown>)[f]),
-    );
-    if (missing.length > 0) {
-      throw new BadRequestException(
-        `Missing required fields: ${missing.join(', ')}`,
-      );
-    }
-  }
-
-  private assertProvidedNotEmpty(dto: Partial<CreateExhibitionDto>): void {
-    const blank = ExhibitionsService.REQUIRED_FIELDS.filter(
-      (f) => f in dto && !this.isNonEmpty((dto as Record<string, unknown>)[f]),
-    );
-    if (blank.length > 0) {
-      throw new BadRequestException(
-        `Fields cannot be empty: ${blank.join(', ')}`,
-      );
-    }
-  }
-
-  private assertDateOrder(dto: {
-    eventStartDate?: string;
-    eventEndDate?: string;
-    displayFrom?: string;
-    displayUntil?: string;
-  }): void {
-    if (
-      dto.eventStartDate &&
-      dto.eventEndDate &&
-      dto.eventEndDate < dto.eventStartDate
-    ) {
-      throw new BadRequestException(
-        'eventEndDate must be on or after eventStartDate',
-      );
-    }
-    if (
-      dto.displayFrom &&
-      dto.displayUntil &&
-      dto.displayUntil < dto.displayFrom
-    ) {
-      throw new BadRequestException(
-        'displayUntil must be on or after displayFrom',
-      );
-    }
-  }
 }

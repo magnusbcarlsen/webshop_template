@@ -4,14 +4,14 @@ import { API_ROOT } from "@/config/api";
 export type ExhibitionAPI = {
   id: number;
   title: string;
-  description: string;
+  description: string | null;
   location: string;
   imageUrl: string | null;
   externalUrl: string | null;
-  eventStartDate: string; // YYYY-MM-DD
-  eventEndDate: string;
-  displayFrom: string;
-  displayUntil: string;
+  eventStartDate: string | null; // YYYY-MM-DD
+  eventEndDate: string | null;
+  displayFrom: string | null;
+  displayUntil: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

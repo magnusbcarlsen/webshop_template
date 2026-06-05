@@ -85,15 +85,15 @@ CREATE TABLE categories (
 -- Exhibitions / upcoming-show announcements
 CREATE TABLE exhibitions (
     exhibition_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    location VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL DEFAULT '',
+    description TEXT NULL,
+    location VARCHAR(255) NOT NULL DEFAULT '',
     image_url VARCHAR(500) NULL,
     external_url VARCHAR(500) NULL,
-    event_start_date DATE NOT NULL,
-    event_end_date DATE NOT NULL,
-    display_from DATE NOT NULL,
-    display_until DATE NOT NULL,
+    event_start_date DATE NULL,
+    event_end_date DATE NULL,
+    display_from DATE NULL,
+    display_until DATE NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

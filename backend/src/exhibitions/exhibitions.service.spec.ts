@@ -44,9 +44,7 @@ describe('ExhibitionsService', () => {
     });
 
     it('returns the rows the repository returns', async () => {
-      const rows = [
-        { id: 1, title: 'Summer show' } as unknown as Exhibition,
-      ];
+      const rows = [{ id: 1, title: 'Summer show' } as unknown as Exhibition];
       repo.find.mockResolvedValue(rows);
 
       const result = await service.findActive(new Date('2026-06-15'));

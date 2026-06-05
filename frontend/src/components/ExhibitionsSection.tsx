@@ -5,12 +5,11 @@ import {
   ExhibitionAPI,
 } from "@/services/exhibition-api";
 
-function formatDateRange(start: string, end: string): string {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const sameMonth =
-    startDate.getUTCFullYear() === endDate.getUTCFullYear() &&
-    startDate.getUTCMonth() === endDate.getUTCMonth();
+function formatDateRange(
+  start: string | null,
+  end: string | null,
+): string | null {
+  if (!start && !end) return null;
 
   const fullFormatter = new Intl.DateTimeFormat("da-DK", {
     day: "numeric",
@@ -18,6 +17,17 @@ function formatDateRange(start: string, end: string): string {
     year: "numeric",
     timeZone: "UTC",
   });
+
+  if (!start || !end) {
+    const only = (start ?? end) as string;
+    return fullFormatter.format(new Date(only));
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const sameMonth =
+    startDate.getUTCFullYear() === endDate.getUTCFullYear() &&
+    startDate.getUTCMonth() === endDate.getUTCMonth();
 
   if (sameMonth) {
     const dayFormatter = new Intl.DateTimeFormat("da-DK", {
@@ -67,16 +77,28 @@ export default async function ExhibitionsSection() {
               </div>
             )}
             <div className="flex-1">
-              <h3 className="text-xl font-semibold mb-1">{ex.title}</h3>
-              <p className="text-sm text-gray-500 mb-1">
-                {formatDateRange(ex.eventStartDate, ex.eventEndDate)}
-              </p>
-              <p className="text-sm font-medium text-gray-700 mb-3">
-                {ex.location}
-              </p>
-              <p className="text-gray-700 mb-4 whitespace-pre-line">
-                {ex.description}
-              </p>
+              {ex.title && (
+                <h3 className="text-xl font-semibold mb-1">{ex.title}</h3>
+              )}
+              {(() => {
+                const range = formatDateRange(
+                  ex.eventStartDate,
+                  ex.eventEndDate,
+                );
+                return range ? (
+                  <p className="text-sm text-gray-500 mb-1">{range}</p>
+                ) : null;
+              })()}
+              {ex.location && (
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  {ex.location}
+                </p>
+              )}
+              {ex.description && (
+                <p className="text-gray-700 mb-4 whitespace-pre-line">
+                  {ex.description}
+                </p>
+              )}
               {ex.externalUrl && (
                 <a
                   href={ex.externalUrl}

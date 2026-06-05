@@ -123,16 +123,32 @@ export class ExhibitionsController {
   }
 
   /**
-   * Multipart form data arrives as strings. Convert booleans before
-   * the merged DTO reaches the service. Also strips `imageUrl` so a
-   * client cannot inject an arbitrary URL — only file uploads or
-   * `removeImage` can set/clear it.
+   * Multipart form data arrives as strings. Normalize values before
+   * the merged DTO reaches the service:
+   *  - boolean isActive: "true"/"false" string -> real boolean
+   *  - empty date strings -> null (DATE columns reject "")
+   *  - imageUrl is stripped so a client cannot inject an arbitrary URL
+   *    (only file uploads or `removeImage` can set/clear it)
    */
   private coerceMultipart(
-    dto: Partial<CreateExhibitionDto> & { isActive?: boolean | string },
+    dto: Partial<CreateExhibitionDto> & {
+      isActive?: boolean | string;
+      eventStartDate?: string | null;
+      eventEndDate?: string | null;
+      displayFrom?: string | null;
+      displayUntil?: string | null;
+    },
   ): void {
     if (typeof dto.isActive === 'string') {
       dto.isActive = dto.isActive === 'true';
+    }
+    for (const k of [
+      'eventStartDate',
+      'eventEndDate',
+      'displayFrom',
+      'displayUntil',
+    ] as const) {
+      if (dto[k] === '') dto[k] = null;
     }
     delete dto.imageUrl;
   }
