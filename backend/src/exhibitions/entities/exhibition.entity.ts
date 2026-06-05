@@ -16,10 +16,10 @@ export class Exhibition extends BaseEntity {
   @Column({ length: 255 })
   location: string;
 
-  @Column({ name: 'image_url', length: 500, nullable: true })
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
   imageUrl: string | null;
 
-  @Column({ name: 'external_url', length: 500, nullable: true })
+  @Column({ name: 'external_url', type: 'varchar', length: 500, nullable: true })
   externalUrl: string | null;
 
   @Column({ name: 'event_start_date', type: 'date' })
