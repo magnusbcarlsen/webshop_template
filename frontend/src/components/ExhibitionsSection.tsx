@@ -24,8 +24,9 @@ function formatDateRange(start: string, end: string): string {
       day: "numeric",
       timeZone: "UTC",
     });
+    // da-DK day formatter already emits "15." with trailing period; do not add another.
     // e.g. "15.–30. juni 2026"
-    return `${dayFormatter.format(startDate)}.–${fullFormatter.format(endDate)}`;
+    return `${dayFormatter.format(startDate)}–${fullFormatter.format(endDate)}`;
   }
   return `${fullFormatter.format(startDate)} – ${fullFormatter.format(endDate)}`;
 }
