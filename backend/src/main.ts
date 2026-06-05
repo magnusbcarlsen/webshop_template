@@ -3,6 +3,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as bodyParser from 'body-parser';
@@ -57,6 +58,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Enhanced Helmet configuration
   app.use(
