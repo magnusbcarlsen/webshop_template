@@ -23,7 +23,10 @@ async function handleResponse<T = unknown>(res: Response): Promise<T> {
   }
   if (!res.ok) {
     const errPayload = await res.json().catch(() => null);
-    const msg = errPayload?.message || `Request failed: ${res.status}`;
+    const raw = errPayload?.message;
+    const msg = Array.isArray(raw)
+      ? raw.join("; ")
+      : raw || `Request failed: ${res.status}`;
     throw new Error(msg);
   }
   return res.json();
